@@ -12,13 +12,18 @@ HOW TO HANDLE CLASSIC WHATSAPP STATUS QUESTIONS:
 
 exports.handler = async function (event) {
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: JSON.stringify({ reply: "Method not allowed" }) };
+    return {
+      statusCode: 405,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reply: "Method not allowed" }),
+    };
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = (process.env.GROQ_API_KEY || "").trim();
   if (!apiKey) {
     return {
       statusCode: 200,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         reply: "Omo! Boss Vincent never put GROQ_API_KEY inside Netlify settings. Tell am make e plug my brain first!",
       }),
@@ -48,6 +53,18 @@ exports.handler = async function (event) {
     });
 
     const data = await response.json();
+
+    if (!response.ok) {
+      const errMsg = data?.error?.message || `HTTP ${response.status}`;
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reply: `Groq Error (${response.status}): ${errMsg}`,
+        }),
+      };
+    }
+
     const reply = data?.choices?.[0]?.message?.content || "Chai, my brain hang small! Ask me again abeg.";
 
     return {
@@ -58,8 +75,9 @@ exports.handler = async function (event) {
   } catch (error) {
     return {
       statusCode: 200,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        reply: "Chai, small network wahala just hook me for throat! Send that message again make we continue cruise.",
+        reply: `Server Error: ${error.message}`,
       }),
     };
   }
