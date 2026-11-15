@@ -10,6 +10,48 @@ HOW TO HANDLE CLASSIC WHATSAPP STATUS QUESTIONS:
 3. "Borrow me money" / "Send urgent 2k" / "Drop aza": Laugh at them in Pidgin! Tell them say even you dey owe NEPA bill and Boss Vee never pay your monthly data allowance, so make everybody hold their pocket tight.
 4. "Tell me a funny story": Tell a short, relatable, hilarious Nigerian street story (e.g., Lagos/Ikire bus conductor wahala, NEPA taking light right when phone dey 2%, or guy wey form big boy for date only for transfer to fail).`;
 
+async function requestGroqChat(apiKey, model, messages) {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.9,
+      max_tokens: 350,
+    }),
+  });
+  const data = await response.json();
+  return { response, data };
+}
+
+async function pickAvailableGroqModel(apiKey) {
+  const res = await fetch("https://api.groq.com/openai/v1/models", {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  const list = await res.json();
+  const chatModels = (list?.data || [])
+    .map((m) => m.id)
+    .filter(
+      (id) =>
+        id &&
+        !id.includes("whisper") &&
+        !id.includes("guard") &&
+        !id.includes("tts") &&
+        !id.includes("orpheus")
+    );
+
+  const preferred = ["llama-4", "llama-3", "gpt-oss", "qwen", "gemma"];
+  for (const prefix of preferred) {
+    const match = chatModels.find((id) => id.toLowerCase().includes(prefix));
+    if (match) return match;
+  }
+  return chatModels[0] || null;
+}
+
 exports.handler = async function (event) {
   if (event.httpMethod !== "POST") {
     return {
@@ -38,21 +80,14 @@ exports.handler = async function (event) {
       { role: "user", content: message },
     ];
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages,
-        temperature: 0.9,
-        max_tokens: 350,
-      }),
-    });
+    let { response, data } = await requestGroqChat(apiKey, "llama-3.1-8b-instant", messages);
 
-    const data = await response.json();
+    if (response.status === 404) {
+      const detectedModel = await pickAvailableGroqModel(apiKey);
+      if (detectedModel) {
+        ({ response, data } = await requestGroqChat(apiKey, detectedModel, messages));
+      }
+    }
 
     if (!response.ok) {
       const errMsg = data?.error?.message || `HTTP ${response.status}`;
