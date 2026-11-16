@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#FFFFFF" id="metaThemeColor" />
-  <title>Vincent AI — Intelligent Nigerian AI Companion</title>
+  <meta name="description" content="VAI — Intelligent Nigerian AI Companion created and developed by Vincent." />
+  <title>VAI — Intelligent Nigerian AI Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -607,6 +608,17 @@
       color: var(--orange);
     }
 
+    .storage-notice {
+      align-self: center;
+      font-size: 11.5px;
+      color: var(--orange);
+      background: var(--orange-soft);
+      border: 1px solid rgba(241, 76, 21, 0.3);
+      padding: 6px 12px;
+      border-radius: 999px;
+      text-align: center;
+    }
+
     /* AI Reasoning Indicator */
     .ai-thinking-bubble {
       display: inline-flex;
@@ -836,6 +848,24 @@
       font-weight: 800;
     }
 
+    .branch-pill-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: var(--orange-soft);
+      border: 1px solid rgba(241, 76, 21, 0.24);
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    .branch-pill-bar strong {
+      color: var(--orange);
+      font-family: "JetBrains Mono", monospace;
+    }
+
     .history-list {
       overflow-y: auto;
       display: flex;
@@ -919,7 +949,7 @@
         </div>
         <div class="brand-meta">
           <div class="brand-title-row">
-            <span class="brand-title">Vincent AI</span>
+            <span class="brand-title">VAI</span>
             <span class="brand-badge">Liquid Glass</span>
           </div>
           <div class="brand-sub">
@@ -934,7 +964,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span class="btn-label">New</span>
         </button>
-        <button type="button" class="icon-btn" onclick="veeOpenModal('historyModal')" title="Chat History">
+        <button type="button" class="icon-btn" onclick="veeOpenModal('historyModal')" title="Chat History (30 Days)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span class="btn-label">History</span>
         </button>
@@ -964,7 +994,7 @@
         </div>
 
         <h1 class="welcome-headline">How far? Wetin we dey reason today?</h1>
-        <p class="welcome-sub">Your intelligent AI companion. Ready to think, create, explore and gist with you.</p>
+        <p class="welcome-sub">Meet VAI — your intelligent AI companion created by Vincent. Ready to think, create, explore and gist with you.</p>
 
         <div class="prompt-grid">
           <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Who created you and what is his story?')">
@@ -1016,7 +1046,7 @@
       </div>
 
       <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
-        <textarea id="userInput" rows="1" placeholder="Yarn with Vincent AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
+        <textarea id="userInput" rows="1" placeholder="Yarn with VAI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
         <div class="composer-controls">
           <button type="button" class="mic-btn" id="micBtn" title="Voice Input">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
@@ -1027,7 +1057,7 @@
           </button>
         </div>
       </div>
-      <div class="composer-footer">Vincent AI • Multilingual Intelligence & Nigerian Innovation</div>
+      <div class="composer-footer">VAI • Created by Vincent • Multilingual Intelligence & Nigerian Innovation</div>
     </div>
   </div>
 
@@ -1035,11 +1065,15 @@
   <div class="modal-backdrop" id="historyModal" onclick="if(event.target===this) veeCloseModal('historyModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>Conversation History</h2>
+        <h2>Recent Conversations (30 Days)</h2>
         <button type="button" class="icon-btn" onclick="veeCloseModal('historyModal')">✕</button>
       </div>
+      <div class="branch-pill-bar">
+        <span>Network Branch: <strong id="activeBranchLabel">Syncing...</strong></span>
+        <span id="visitorUidShort" style="font-family: 'JetBrains Mono', monospace;"></span>
+      </div>
       <div class="history-list" id="historyList"></div>
-      <button type="button" class="icon-btn" style="width: 100%; justify-content: center; color: var(--orange);" onclick="veeClearHistory()">Clear All Conversations</button>
+      <button type="button" class="icon-btn" style="width: 100%; justify-content: center; color: var(--orange);" onclick="veeNewChat()">+ Start New Conversation</button>
     </div>
   </div>
 
@@ -1047,7 +1081,7 @@
   <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) veeCloseModal('settingsModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>Vincent AI Settings</h2>
+        <h2>VAI Settings</h2>
         <button type="button" class="icon-btn" onclick="veeCloseModal('settingsModal')">✕</button>
       </div>
       <div class="setting-row">
@@ -1059,9 +1093,9 @@
         <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
       </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-        <span style="color: var(--orange);">About Vincent AI</span>
+        <span style="color: var(--orange);">About VAI</span>
         <p style="font-size: 12.5px; font-weight: 400; color: var(--text-secondary); line-height: 1.5;">
-          Engineered by <strong>Agboola Vincent Oluwaseyi</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
+          Engineered by <strong>Agboola Vincent Oluwaseyi (Vincent)</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
         </p>
       </div>
     </div>
@@ -1069,23 +1103,20 @@
 
   <script>
     /* =========================================================
-       CORE STATE & SAFE STORAGE
+       CORE STATE & FIREBASE REALTIME BRIDGE
        ========================================================= */
-    var veeSessions = [];
-    var veeCurrentSessionId = null;
+    var veeRecentChats = [];
+    var veeCurrentChatId = null;
     var veeHistory = [];
     var veeIsGenerating = false;
     var veeParticlesEnabled = true;
 
     try {
-      veeSessions = JSON.parse(localStorage.getItem("vincent_ai_sessions") || "[]");
-      veeParticlesEnabled = localStorage.getItem("vincent_ai_particles") !== "false";
+      veeParticlesEnabled = localStorage.getItem("vai_particles") !== "false";
     } catch (e) {}
 
-    function veeSaveSessions() {
-      try {
-        localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
-      } catch (e) {}
+    function veeGenerateId(prefix) {
+      return prefix + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
     }
 
     /* =========================================================
@@ -1093,7 +1124,7 @@
        ========================================================= */
     function veeApplyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      try { localStorage.setItem("vincent_ai_theme", theme); } catch (e) {}
+      try { localStorage.setItem("vai_theme", theme); } catch (e) {}
       var meta = document.getElementById("metaThemeColor");
       if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0B0B" : "#FFFFFF");
       var label = document.getElementById("modalThemeToggle");
@@ -1124,12 +1155,12 @@
 
     function veeShare() {
       var url = window.location.href;
-      var text = "Come chat with Vincent AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
+      var text = "Come chat with VAI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
       window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     }
 
     /* =========================================================
-       CHAT NAVIGATION & HISTORY
+       CHAT NAVIGATION & REALTIME HISTORY
        ========================================================= */
     function veeShowChatView() {
       document.getElementById("welcomeScreen").classList.add("hidden");
@@ -1139,8 +1170,11 @@
 
     function veeNewChat() {
       veeIsGenerating = false;
-      veeCurrentSessionId = null;
+      veeCurrentChatId = null;
       veeHistory = [];
+      if (window.vaiFirebase && window.vaiFirebase.detachActiveChatListener) {
+        window.vaiFirebase.detachActiveChatListener();
+      }
       var stream = document.getElementById("chatStream");
       stream.innerHTML = "";
       stream.classList.remove("active");
@@ -1151,64 +1185,42 @@
       if (input) input.focus();
     }
 
-    function veeUpdateSessionRecord(firstUserMsg) {
-      if (!veeCurrentSessionId) {
-        veeCurrentSessionId = "sess_" + Date.now();
-        veeSessions.unshift({
-          id: veeCurrentSessionId,
-          title: firstUserMsg.slice(0, 42) + (firstUserMsg.length > 42 ? "..." : ""),
-          updatedAt: new Date().toLocaleDateString(),
-          messages: veeHistory.slice()
-        });
-      } else {
-        for (var i = 0; i < veeSessions.length; i++) {
-          if (veeSessions[i].id === veeCurrentSessionId) {
-            veeSessions[i].messages = veeHistory.slice();
-            veeSessions[i].updatedAt = new Date().toLocaleDateString();
-            break;
-          }
-        }
-      }
-      veeSaveSessions();
-    }
-
-    function veeLoadSession(id) {
-      var found = null;
-      for (var i = 0; i < veeSessions.length; i++) {
-        if (veeSessions[i].id === id) { found = veeSessions[i]; break; }
-      }
-      if (!found) return;
-      veeCurrentSessionId = found.id;
-      veeHistory = found.messages.slice();
+    function veeLoadConversation(id) {
+      veeCurrentChatId = id;
       var stream = document.getElementById("chatStream");
       stream.innerHTML = "";
       veeShowChatView();
-      for (var j = 0; j < veeHistory.length; j++) {
-        veeAppendMessage(veeHistory[j].content, veeHistory[j].role === "user" ? "user" : "bot");
-      }
       veeCloseModal("historyModal");
-    }
 
-    function veeClearHistory() {
-      veeSessions = [];
-      veeSaveSessions();
-      veeRenderHistoryList();
-      veeNewChat();
+      if (window.vaiFirebase && window.vaiFirebase.subscribeToConversation) {
+        window.vaiFirebase.subscribeToConversation(id);
+      }
     }
 
     function veeRenderHistoryList() {
       var list = document.getElementById("historyList");
+      var branchLabel = document.getElementById("activeBranchLabel");
+      var uidLabel = document.getElementById("visitorUidShort");
+
+      if (window.vaiFirebase) {
+        if (branchLabel) branchLabel.textContent = window.vaiFirebase.activeNetwork || "network_001";
+        if (uidLabel && window.vaiFirebase.uid) {
+          uidLabel.textContent = "UID: " + window.vaiFirebase.uid.slice(0, 8) + "...";
+        }
+      }
+
       if (!list) return;
-      if (!veeSessions.length) {
-        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vincent AI!</p>';
+      if (!veeRecentChats.length) {
+        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations on this network branch yet. Start chatting with VAI!</p>';
         return;
       }
-      list.innerHTML = veeSessions.map(function (s) {
-        var activeClass = s.id === veeCurrentSessionId ? "active" : "";
-        return '<div class="history-item ' + activeClass + '" onclick="veeLoadSession(\'' + s.id + '\')">' +
+      list.innerHTML = veeRecentChats.map(function (c) {
+        var activeClass = c.id === veeCurrentChatId ? "active" : "";
+        var dateStr = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : "Recent";
+        return '<div class="history-item ' + activeClass + '" onclick="veeLoadConversation(\'' + veeEscapeHtml(c.id) + '\')">' +
           '<div style="min-width: 0;">' +
-            '<div class="history-title">' + veeEscapeHtml(s.title) + '</div>' +
-            '<div class="history-date">' + s.updatedAt + ' • ' + s.messages.length + ' messages</div>' +
+            '<div class="history-title">' + veeEscapeHtml(c.title || "Conversation") + '</div>' +
+            '<div class="history-date">' + dateStr + '</div>' +
           '</div>' +
           '<span style="color: var(--orange); font-weight: 700;">→</span>' +
         '</div>';
@@ -1220,10 +1232,11 @@
        ========================================================= */
     function veeEscapeHtml(str) {
       return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+        .replace(/&/g, "&")
+        .replace(/</g, "<")
+        .replace(/>/g, ">")
+        .replace(/"/g, """)
+        .replace(/'/g, "'");
     }
 
     function veeRenderMarkdown(rawText) {
@@ -1301,14 +1314,19 @@
       }
     }
 
-    function veeAppendMessage(text, sender) {
+    function veeAppendMessage(text, sender, msgId) {
       var stream = document.getElementById("chatStream");
+      if (msgId && document.getElementById("dom_" + msgId)) {
+        return;
+      }
+
       var row = document.createElement("div");
       row.className = "msg-row " + sender;
+      if (msgId) row.id = "dom_" + msgId;
 
       var label = document.createElement("div");
       label.className = "msg-sender";
-      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vincent AI';
+      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> VAI';
       row.appendChild(label);
 
       var bubble = document.createElement("div");
@@ -1337,12 +1355,21 @@
       stream.scrollTop = stream.scrollHeight;
     }
 
+    function veeAppendStorageNotice(msg) {
+      var stream = document.getElementById("chatStream");
+      var note = document.createElement("div");
+      note.className = "storage-notice";
+      note.textContent = msg;
+      stream.appendChild(note);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
     function veeAppendThinking() {
       var stream = document.getElementById("chatStream");
       var row = document.createElement("div");
       row.className = "msg-row bot";
       row.innerHTML =
-        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vincent AI</div>' +
+        '<div class="msg-sender"><span style="color: var(--orange);">●</span> VAI</div>' +
         '<div class="ai-thinking-bubble glass-surface">' +
           '<div class="orb-spinner"></div>' +
           '<div class="wave-bars"><span></span><span></span><span></span></div>' +
@@ -1384,7 +1411,7 @@
       }
       var lastUser = veeHistory[veeHistory.length - 1];
       if (!lastUser || lastUser.role !== "user") return;
-      await veeRequestBackend(lastUser.content, veeHistory.slice(0, -1), false);
+      await veeRequestBackend(lastUser.content, veeHistory.slice(0, -1), false, veeGenerateId("msg"));
     }
 
     async function veeSubmitChat() {
@@ -1396,16 +1423,21 @@
         return;
       }
 
+      if (!veeCurrentChatId) {
+        veeCurrentChatId = veeGenerateId("chat");
+      }
+      var userMsgId = veeGenerateId("msg");
+
       veeShowChatView();
-      veeAppendMessage(message, "user");
+      veeAppendMessage(message, "user", userMsgId);
       input.value = "";
       input.style.height = "auto";
 
       var contextSnapshot = veeHistory.slice();
-      await veeRequestBackend(message, contextSnapshot, true);
+      await veeRequestBackend(message, contextSnapshot, true, userMsgId);
     }
 
-    async function veeRequestBackend(message, contextHistory, addUserToHistory) {
+    async function veeRequestBackend(message, contextHistory, addUserToHistory, userMsgId) {
       veeIsGenerating = true;
       var sendBtnText = document.getElementById("sendBtnText");
       if (sendBtnText) sendBtnText.textContent = "...";
@@ -1413,23 +1445,57 @@
       var thinkingRow = veeAppendThinking();
 
       try {
+        var idToken = null;
+        if (window.vaiFirebase && window.vaiFirebase.getFreshToken) {
+          idToken = await window.vaiFirebase.getFreshToken();
+        }
+
+        if (!idToken) {
+          thinkingRow.remove();
+          veeAppendMessage("Authentication is still initializing. Please try sending again in a moment.", "bot");
+          return;
+        }
+
         var res = await fetch("/.netlify/functions/chat", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: message, history: contextHistory })
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + idToken
+          },
+          body: JSON.stringify({
+            message: message,
+            history: contextHistory,
+            chatId: veeCurrentChatId,
+            userMsgId: userMsgId
+          })
         });
         var data = await res.json();
+
+        if (!res.ok) {
+          thinkingRow.remove();
+          veeAppendMessage(data.error || "Session error. Please refresh and try again.", "bot");
+          return;
+        }
+
         var reply = data.reply || "Chai, small network blink! Try send am again.";
+        if (data.chatId) veeCurrentChatId = data.chatId;
 
         thinkingRow.remove();
-        veeAppendMessage(reply, "bot");
+        veeAppendMessage(reply, "bot", data.botMsgId || veeGenerateId("msg"));
 
         if (addUserToHistory) {
           veeHistory.push({ role: "user", content: message });
         }
         veeHistory.push({ role: "assistant", content: reply });
         if (veeHistory.length > 20) veeHistory = veeHistory.slice(-20);
-        veeUpdateSessionRecord(message);
+
+        if (data.storageSaved === false && data.storageError) {
+          veeAppendStorageNotice(data.storageError);
+        }
+
+        if (window.vaiFirebase && window.vaiFirebase.syncNetworkFromServer && data.activeNetwork) {
+          window.vaiFirebase.syncNetworkFromServer(data.activeNetwork, veeCurrentChatId);
+        }
       } catch (err) {
         thinkingRow.remove();
         veeAppendMessage("Omo, small network wahala happen! Check your connection and try again.", "bot");
@@ -1445,7 +1511,7 @@
     (function initVisualEffects() {
       try {
         var savedTheme = "light";
-        try { savedTheme = localStorage.getItem("vincent_ai_theme") || "light"; } catch (e) {}
+        try { savedTheme = localStorage.getItem("vai_theme") || "light"; } catch (e) {}
         veeApplyTheme(savedTheme);
 
         // Mobile virtual keyboard height sync
@@ -1513,7 +1579,7 @@
 
         window.veeToggleParticles = function () {
           veeParticlesEnabled = !veeParticlesEnabled;
-          try { localStorage.setItem("vincent_ai_particles", veeParticlesEnabled); } catch (e) {}
+          try { localStorage.setItem("vai_particles", veeParticlesEnabled); } catch (e) {}
           var btn = document.getElementById("particleToggleBtn");
           if (btn) btn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
           if (veeParticlesEnabled) { setupCanvas(); drawFrame(); }
@@ -1529,6 +1595,195 @@
         }
       } catch (e) {}
     })();
+  </script>
+
+  <!-- Firebase Anonymous Auth & Realtime Database Module -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      query,
+      orderByChild,
+      limitToLast,
+      onValue
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",
+      authDomain: "vee-ai-e745e.firebaseapp.com",
+      databaseURL: "https://vee-ai-e745e-default-rtdb.firebaseio.com",
+      projectId: "vee-ai-e745e",
+      storageBucket: "vee-ai-e745e.firebasestorage.app",
+      messagingSenderId: "351206567728",
+      appId: "1:351206567728:web:10a197b7c9752daf12e2f5",
+      measurementId: "G-CC61N9WKSJ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentUser = null;
+    let unsubConversations = null;
+    let unsubActiveMessages = null;
+    let resolveAuthReady = null;
+    const authReadyPromise = new Promise((resolve) => {
+      resolveAuthReady = resolve;
+    });
+
+    const bridge = {
+      uid: null,
+      activeNetwork: "network_001",
+
+      async getFreshToken() {
+        if (!currentUser) {
+          await Promise.race([
+            authReadyPromise,
+            new Promise((r) => setTimeout(r, 4500))
+          ]);
+        }
+        if (!currentUser) return null;
+        return currentUser.getIdToken();
+      },
+
+      detachActiveChatListener() {
+        if (typeof unsubActiveMessages === "function") {
+          unsubActiveMessages();
+          unsubActiveMessages = null;
+        }
+      },
+
+      subscribeToConversations(uid, networkId) {
+        if (typeof unsubConversations === "function") {
+          unsubConversations();
+        }
+        const convRef = query(
+          ref(db, `visitors/${uid}/networks/${networkId}/conversations`),
+          orderByChild("updatedAt"),
+          limitToLast(50)
+        );
+        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+        unsubConversations = onValue(
+          convRef,
+          (snapshot) => {
+            const list = [];
+            snapshot.forEach((child) => {
+              const val = child.val() || {};
+              const updated = Number(val.updatedAt || val.createdAt || 0);
+              if (updated >= thirtyDaysAgo || updated === 0) {
+                list.push({
+                  id: child.key,
+                  title: val.title || "Conversation",
+                  createdAt: val.createdAt || 0,
+                  updatedAt: updated
+                });
+              }
+            });
+            list.sort((a, b) => b.updatedAt - a.updatedAt);
+            window.veeRecentChats = list;
+            const modal = document.getElementById("historyModal");
+            if (modal && modal.classList.contains("open")) {
+              window.veeRenderHistoryList();
+            }
+          },
+          () => {}
+        );
+      },
+
+      subscribeToConversation(chatId) {
+        this.detachActiveChatListener();
+        if (!this.uid || !this.activeNetwork || !chatId) return;
+
+        const msgRef = query(
+          ref(db, `visitors/${this.uid}/networks/${this.activeNetwork}/conversations/${chatId}/messages`),
+          orderByChild("createdAt"),
+          limitToLast(100)
+        );
+
+        unsubActiveMessages = onValue(
+          msgRef,
+          (snapshot) => {
+            const msgs = [];
+            snapshot.forEach((child) => {
+              const val = child.val();
+              if (val && (val.role === "user" || val.role === "assistant") && val.content) {
+                msgs.push({
+                  id: child.key,
+                  role: val.role,
+                  content: val.content,
+                  createdAt: Number(val.createdAt || 0)
+                });
+              }
+            });
+            msgs.sort((a, b) => a.createdAt - b.createdAt);
+
+            window.veeHistory = msgs.slice(-20).map((m) => ({
+              role: m.role,
+              content: m.content
+            }));
+
+            for (const m of msgs) {
+              window.veeAppendMessage(
+                m.content,
+                m.role === "user" ? "user" : "bot",
+                m.id
+              );
+            }
+          },
+          () => {}
+        );
+      },
+
+      syncNetworkFromServer(networkId, chatId) {
+        if (networkId && networkId !== this.activeNetwork) {
+          this.activeNetwork = networkId;
+          if (this.uid) {
+            this.subscribeToConversations(this.uid, networkId);
+          }
+        }
+        if (chatId && !unsubActiveMessages) {
+          this.subscribeToConversation(chatId);
+        }
+      }
+    };
+
+    window.vaiFirebase = bridge;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        try {
+          await signInAnonymously(auth);
+        } catch (err) {
+          if (resolveAuthReady) resolveAuthReady(null);
+        }
+        return;
+      }
+
+      currentUser = user;
+      bridge.uid = user.uid;
+      if (resolveAuthReady) resolveAuthReady(user);
+
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/.netlify/functions/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({ action: "init_session" })
+        });
+        const sessionData = await res.json();
+        if (sessionData && sessionData.activeNetwork) {
+          bridge.activeNetwork = sessionData.activeNetwork;
+        }
+      } catch (_) {}
+
+      bridge.subscribeToConversations(user.uid, bridge.activeNetwork);
+    });
   </script>
 </body>
 </html>
