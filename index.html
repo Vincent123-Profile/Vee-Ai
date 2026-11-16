@@ -13,7 +13,6 @@
       --orange: #F14C15;
       --orange-light: #ff6a38;
       --orange-soft: rgba(241, 76, 21, 0.12);
-      --orange-glow: rgba(241, 76, 21, 0.28);
       --white: #FFFFFF;
       --black: #0B0B0B;
       --grey: #A1A1AA;
@@ -23,20 +22,14 @@
       --text-primary: #0B0B0B;
       --text-secondary: #52525B;
       --text-muted: #A1A1AA;
-      --glass-bg: rgba(255, 255, 255, 0.78);
-      --glass-bg-strong: rgba(255, 255, 255, 0.9);
-      --glass-card: rgba(255, 255, 255, 0.84);
+      --glass-chrome: rgba(255, 255, 255, 0.88);
+      --glass-surface: rgba(255, 255, 255, 0.82);
       --glass-border: rgba(11, 11, 11, 0.1);
       --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.95);
-      --glass-shadow: 0 12px 32px -8px rgba(11, 11, 11, 0.08), 0 2px 8px rgba(11, 11, 11, 0.04);
-      --bot-bubble: rgba(255, 255, 255, 0.9);
+      --glass-shadow: 0 10px 30px -8px rgba(11, 11, 11, 0.08), 0 2px 6px rgba(11, 11, 11, 0.04);
+      --bot-bubble: rgba(255, 255, 255, 0.92);
       --user-bubble: #0B0B0B;
       --user-text: #FFFFFF;
-      --chip-hover-bg: rgba(241, 76, 21, 0.09);
-      --blur-amount: 18px;
-      --radius-xl: 26px;
-      --radius-lg: 20px;
-      --radius-md: 14px;
       --spring: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -45,16 +38,14 @@
       --text-primary: #FFFFFF;
       --text-secondary: #D4D4D8;
       --text-muted: #A1A1AA;
-      --glass-bg: rgba(18, 18, 18, 0.76);
-      --glass-bg-strong: rgba(22, 22, 22, 0.9);
-      --glass-card: rgba(26, 26, 26, 0.84);
+      --glass-chrome: rgba(20, 20, 20, 0.88);
+      --glass-surface: rgba(26, 26, 26, 0.82);
       --glass-border: rgba(255, 255, 255, 0.12);
-      --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-      --glass-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
-      --bot-bubble: rgba(26, 26, 26, 0.88);
+      --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      --glass-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.65);
+      --bot-bubble: rgba(26, 26, 26, 0.9);
       --user-bubble: #F14C15;
       --user-text: #FFFFFF;
-      --chip-hover-bg: rgba(241, 76, 21, 0.18);
     }
 
     * {
@@ -71,15 +62,15 @@
       background-color: var(--bg-base);
       color: var(--text-primary);
       font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      transition: background-color 0.4s var(--spring), color 0.3s ease;
+      transition: background-color 0.35s ease, color 0.3s ease;
     }
 
-    /* Decorative Futuristic Background (Strictly non-interactive) */
+    /* Non-Blocking Futuristic Background */
     .ambient-layer {
       position: fixed;
       inset: 0;
       z-index: 0;
-      pointer-events: none !important;
+      pointer-events: none;
       overflow: hidden;
     }
 
@@ -89,99 +80,94 @@
       width: 100%;
       height: 100%;
       display: block;
-      pointer-events: none !important;
+      pointer-events: none;
     }
 
     .orb {
       position: absolute;
       border-radius: 50%;
       filter: blur(80px);
-      opacity: 0.4;
-      pointer-events: none !important;
-      will-change: transform;
+      opacity: 0.38;
+      pointer-events: none;
       animation: orbFloat 18s ease-in-out infinite alternate;
     }
 
     [data-theme="dark"] .orb {
-      opacity: 0.26;
+      opacity: 0.24;
     }
 
     .orb-1 {
-      width: 420px;
-      height: 420px;
-      background: radial-gradient(circle, rgba(241, 76, 21, 0.35) 0%, rgba(241, 76, 21, 0) 70%);
-      top: -120px;
-      right: -80px;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(241, 76, 21, 0.34) 0%, transparent 70%);
+      top: -110px;
+      right: -70px;
     }
 
     .orb-2 {
-      width: 360px;
-      height: 360px;
-      background: radial-gradient(circle, rgba(241, 76, 21, 0.24) 0%, rgba(241, 76, 21, 0) 72%);
-      bottom: -100px;
-      left: -90px;
-      animation-delay: -7s;
-      animation-duration: 22s;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle, rgba(241, 76, 21, 0.22) 0%, transparent 72%);
+      bottom: -90px;
+      left: -80px;
+      animation-delay: -8s;
     }
 
     @keyframes orbFloat {
       0% { transform: translate3d(0, 0, 0) scale(1); }
-      50% { transform: translate3d(24px, -20px, 0) scale(1.06); }
-      100% { transform: translate3d(-18px, 16px, 0) scale(0.96); }
+      100% { transform: translate3d(22px, -18px, 0) scale(1.06); }
     }
 
     .cursor-aura {
       position: fixed;
-      width: 380px;
-      height: 380px;
+      width: 360px;
+      height: 360px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(241, 76, 21, 0.11) 0%, rgba(241, 76, 21, 0) 68%);
-      pointer-events: none !important;
+      background: radial-gradient(circle, rgba(241, 76, 21, 0.1) 0%, transparent 68%);
+      pointer-events: none;
       transform: translate3d(-50%, -50%, 0);
       z-index: 1;
       opacity: 0;
-      transition: opacity 0.35s ease;
+      transition: opacity 0.3s ease;
     }
 
     @media (hover: none), (pointer: coarse) {
-      .cursor-aura { display: none !important; }
+      .cursor-aura { display: none; }
     }
 
-    /* Liquid Glass Surfaces (No overflow:hidden on interactive wrappers) */
+    /* Liquid Glass Surfaces */
     .glass-chrome {
-      background: var(--glass-bg-strong);
-      backdrop-filter: blur(var(--blur-amount)) saturate(160%);
-      -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(160%);
+      background: var(--glass-chrome);
+      backdrop-filter: blur(16px) saturate(155%);
+      -webkit-backdrop-filter: blur(16px) saturate(155%);
       border: 1px solid var(--glass-border);
       box-shadow: var(--glass-shadow), var(--glass-highlight);
     }
 
     .glass-surface {
-      background: var(--glass-card);
+      background: var(--glass-surface);
       border: 1px solid var(--glass-border);
       box-shadow: var(--glass-shadow), var(--glass-highlight);
     }
 
-    /* Main Interactive Application Shell */
+    /* Interactive App Container */
     .app-shell {
       position: relative;
       z-index: 10;
-      pointer-events: auto;
       display: flex;
       flex-direction: column;
-      min-height: 100dvh;
       height: 100dvh;
+      min-height: 100dvh;
       width: 100%;
-      max-width: 960px;
+      max-width: 920px;
       margin: 0 auto;
       padding: max(10px, env(safe-area-inset-top)) 14px max(10px, env(safe-area-inset-bottom)) 14px;
     }
 
-    /* Floating Navigation Bar */
+    /* Floating Top Navigation */
     .top-nav {
       position: relative;
       z-index: 30;
-      pointer-events: auto;
       flex-shrink: 0;
       padding: 10px 14px;
       border-radius: 999px;
@@ -194,10 +180,14 @@
     .brand-group {
       display: flex;
       align-items: center;
-      gap: 11px;
+      gap: 10px;
       min-width: 0;
+      background: transparent;
+      border: none;
+      color: inherit;
+      text-align: left;
+      font-family: inherit;
       cursor: pointer;
-      touch-action: manipulation;
     }
 
     .brand-emblem {
@@ -209,30 +199,22 @@
       align-items: center;
       justify-content: center;
       color: #FFFFFF;
-      box-shadow: 0 6px 16px rgba(241, 76, 21, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+      box-shadow: 0 6px 16px rgba(241, 76, 21, 0.35);
       flex-shrink: 0;
-      transition: transform 0.3s var(--spring);
     }
 
-    .brand-group:hover .brand-emblem {
-      transform: rotate(-4deg) scale(1.05);
-    }
-
-    .brand-meta {
-      min-width: 0;
-    }
+    .brand-meta { min-width: 0; }
 
     .brand-title-row {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
     }
 
     .brand-title {
       font-size: 15px;
       font-weight: 800;
       letter-spacing: -0.02em;
-      color: var(--text-primary);
       white-space: nowrap;
     }
 
@@ -240,7 +222,7 @@
       font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       padding: 2px 7px;
       border-radius: 999px;
       background: var(--orange-soft);
@@ -264,7 +246,6 @@
       height: 7px;
       border-radius: 50%;
       background: var(--orange);
-      box-shadow: 0 0 0 0 rgba(241, 76, 21, 0.6);
       animation: pulseDot 2.2s infinite;
       flex-shrink: 0;
     }
@@ -287,7 +268,7 @@
       padding: 0 11px;
       border-radius: 999px;
       border: 1px solid var(--glass-border);
-      background: var(--glass-card);
+      background: var(--glass-surface);
       color: var(--text-primary);
       display: inline-flex;
       align-items: center;
@@ -297,14 +278,12 @@
       font-weight: 600;
       cursor: pointer;
       touch-action: manipulation;
-      pointer-events: auto;
-      transition: transform 0.2s var(--spring), border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+      transition: transform 0.2s var(--spring), border-color 0.2s ease, color 0.2s ease;
       font-family: inherit;
     }
 
     .icon-btn:hover {
-      border-color: rgba(241, 76, 21, 0.45);
-      background: var(--chip-hover-bg);
+      border-color: rgba(241, 76, 21, 0.5);
       color: var(--orange);
       transform: translateY(-1px);
     }
@@ -320,21 +299,16 @@
       pointer-events: none;
     }
 
-    .btn-label {
-      display: inline;
-    }
-
     @media (max-width: 640px) {
       .btn-label { display: none; }
       .icon-btn { width: 36px; padding: 0; }
       .brand-sub { font-size: 11px; }
     }
 
-    /* Main Stage (Non-overlapping Flow) */
+    /* Main Stage */
     .stage {
       position: relative;
       z-index: 15;
-      pointer-events: auto;
       flex: 1;
       min-height: 0;
       display: flex;
@@ -350,21 +324,20 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 18px 10px 20px;
+      padding: 16px 8px 18px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      pointer-events: auto;
     }
 
     .welcome-screen.hidden {
-      display: none !important;
+      display: none;
     }
 
     .hero-orb-wrap {
       position: relative;
-      width: 76px;
-      height: 76px;
-      margin-bottom: 18px;
+      width: 72px;
+      height: 72px;
+      margin-bottom: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -374,22 +347,10 @@
     .hero-ring {
       position: absolute;
       inset: -6px;
-      border-radius: 26px;
+      border-radius: 24px;
       border: 1.5px solid rgba(241, 76, 21, 0.35);
       pointer-events: none;
       animation: spinSlow 12s linear infinite;
-    }
-
-    .hero-ring::after {
-      content: "";
-      position: absolute;
-      top: -4px;
-      left: 50%;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--orange);
-      box-shadow: 0 0 12px var(--orange);
     }
 
     @keyframes spinSlow {
@@ -397,49 +358,32 @@
     }
 
     .hero-core {
-      width: 68px;
-      height: 68px;
-      border-radius: 22px;
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
       background: linear-gradient(145deg, #F14C15 0%, #c83505 100%);
       display: flex;
       align-items: center;
       justify-content: center;
       color: #FFFFFF;
-      box-shadow: 0 16px 34px -6px rgba(241, 76, 21, 0.45), inset 0 2px 3px rgba(255, 255, 255, 0.45);
+      box-shadow: 0 14px 30px -6px rgba(241, 76, 21, 0.45);
     }
 
     .welcome-headline {
-      font-size: clamp(1.55rem, 4.3vw, 2.45rem);
+      font-size: clamp(1.5rem, 4.2vw, 2.35rem);
       font-weight: 800;
-      letter-spacing: -0.035em;
-      line-height: 1.16;
-      max-width: 680px;
+      letter-spacing: -0.03em;
+      line-height: 1.18;
+      max-width: 660px;
       margin-bottom: 10px;
-      color: var(--text-primary);
-    }
-
-    .char-reveal {
-      display: inline-block;
-      animation: charIn 0.5s var(--spring) both;
-    }
-
-    @keyframes charIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
 
     .welcome-sub {
-      font-size: clamp(0.92rem, 2.1vw, 1.05rem);
+      font-size: clamp(0.92rem, 2.1vw, 1.04rem);
       color: var(--text-secondary);
-      max-width: 520px;
+      max-width: 500px;
       line-height: 1.5;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
 
     .prompt-grid {
@@ -447,7 +391,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       width: 100%;
-      max-width: 640px;
+      max-width: 620px;
     }
 
     @media (max-width: 560px) {
@@ -460,11 +404,10 @@
     .prompt-card {
       text-align: left;
       padding: 13px 15px;
-      border-radius: var(--radius-lg);
+      border-radius: 18px;
       cursor: pointer;
       touch-action: manipulation;
-      pointer-events: auto;
-      transition: transform 0.25s var(--spring), border-color 0.2s ease, box-shadow 0.25s ease;
+      transition: transform 0.22s var(--spring), border-color 0.2s ease, box-shadow 0.22s ease;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -475,8 +418,8 @@
 
     .prompt-card:hover {
       transform: translateY(-2px);
-      border-color: rgba(241, 76, 21, 0.5);
-      box-shadow: 0 12px 28px -8px rgba(241, 76, 21, 0.2), var(--glass-highlight);
+      border-color: rgba(241, 76, 21, 0.55);
+      box-shadow: 0 12px 26px -8px rgba(241, 76, 21, 0.2);
     }
 
     .prompt-card:active {
@@ -487,7 +430,6 @@
       font-size: 13.5px;
       font-weight: 700;
       margin-bottom: 2px;
-      color: var(--text-primary);
     }
 
     .prompt-card-desc {
@@ -507,16 +449,9 @@
       justify-content: center;
       flex-shrink: 0;
       pointer-events: none;
-      transition: transform 0.25s var(--spring), background 0.2s ease, color 0.2s ease;
     }
 
-    .prompt-card:hover .prompt-arrow {
-      background: var(--orange);
-      color: #FFFFFF;
-      transform: translate(2px, -2px);
-    }
-
-    /* Active Chat Messages Stream */
+    /* Active Chat Stream */
     .chat-stream {
       display: none;
       flex: 1;
@@ -527,27 +462,17 @@
       flex-direction: column;
       gap: 15px;
       scroll-behavior: smooth;
-      pointer-events: auto;
     }
 
     .chat-stream.active {
       display: flex;
     }
 
-    .chat-stream::-webkit-scrollbar {
-      width: 5px;
-    }
-
-    .chat-stream::-webkit-scrollbar-thumb {
-      background: rgba(161, 161, 170, 0.35);
-      border-radius: 999px;
-    }
-
     .msg-row {
       display: flex;
       flex-direction: column;
       max-width: 86%;
-      animation: msgEnter 0.35s var(--spring) both;
+      animation: msgEnter 0.32s var(--spring) both;
     }
 
     @media (max-width: 600px) {
@@ -555,14 +480,8 @@
     }
 
     @keyframes msgEnter {
-      from {
-        opacity: 0;
-        transform: translateY(12px) scale(0.98);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .msg-row.user {
@@ -592,15 +511,13 @@
       font-size: 14.8px;
       line-height: 1.58;
       word-wrap: break-word;
-      user-select: text;
-      -webkit-user-select: text;
     }
 
     .msg-row.user .msg-bubble {
       background: var(--user-bubble);
       color: var(--user-text);
       border-bottom-right-radius: 6px;
-      box-shadow: 0 10px 24px -6px rgba(241, 76, 21, 0.25);
+      box-shadow: 0 8px 22px -6px rgba(241, 76, 21, 0.25);
     }
 
     .msg-row.bot .msg-bubble {
@@ -609,95 +526,64 @@
       border-bottom-left-radius: 6px;
     }
 
-    /* Markdown Formatting inside Bot Messages */
-    .md-content p { margin-bottom: 10px; }
+    /* Markdown Formatting */
+    .md-content p { margin-bottom: 9px; }
     .md-content p:last-child { margin-bottom: 0; }
-    .md-content h1, .md-content h2, .md-content h3 {
-      font-weight: 800;
-      margin: 12px 0 6px;
-      line-height: 1.3;
-      color: var(--text-primary);
-    }
-    .md-content h1 { font-size: 1.16rem; }
-    .md-content h2 { font-size: 1.06rem; }
-    .md-content h3 { font-size: 0.98rem; }
-    .md-content ul, .md-content ol {
-      margin: 8px 0 10px 20px;
-    }
+    .md-content h1, .md-content h2, .md-content h3 { font-weight: 800; margin: 10px 0 5px; }
+    .md-content ul, .md-content ol { margin: 8px 0 10px 20px; }
     .md-content li { margin-bottom: 4px; }
     .md-content blockquote {
       border-left: 3px solid var(--orange);
       padding: 6px 12px;
-      margin: 10px 0;
+      margin: 8px 0;
       background: var(--orange-soft);
       border-radius: 0 10px 10px 0;
-      color: var(--text-secondary);
-      font-style: italic;
-    }
-    .md-content a {
-      color: var(--orange);
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      font-weight: 600;
     }
     .md-content code:not(pre code) {
       font-family: "JetBrains Mono", monospace;
       font-size: 0.86em;
       padding: 2px 6px;
       border-radius: 6px;
-      background: rgba(241, 76, 21, 0.11);
+      background: rgba(241, 76, 21, 0.12);
       color: var(--orange);
     }
     .code-block-wrap {
-      margin: 12px 0;
-      border-radius: 14px;
+      margin: 10px 0;
+      border-radius: 12px;
       overflow: hidden;
       background: #0B0B0B;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.14);
     }
     .code-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 7px 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      align-items: center;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.06);
       font-family: "JetBrains Mono", monospace;
       font-size: 11px;
       color: #A1A1AA;
     }
     .copy-code-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
       color: #FFFFFF;
       font-size: 11px;
-      padding: 3px 9px;
+      padding: 3px 8px;
       border-radius: 6px;
       cursor: pointer;
-      touch-action: manipulation;
-      font-family: inherit;
-    }
-    .copy-code-btn:hover {
-      background: var(--orange);
-      border-color: var(--orange);
     }
     .code-block-wrap pre {
-      padding: 13px 14px;
+      padding: 12px;
       overflow-x: auto;
       font-family: "JetBrains Mono", monospace;
-      font-size: 12.8px;
-      line-height: 1.55;
+      font-size: 12.5px;
+      line-height: 1.5;
       color: #F4F4F5;
     }
-    .tok-kw { color: #F14C15; font-weight: 500; }
-    .tok-str { color: #FDBA74; }
-    .tok-num { color: #FFFFFF; font-weight: 600; }
-    .tok-com { color: #71717A; font-style: italic; }
 
-    /* Message Action Bar */
     .msg-actions {
       display: flex;
-      align-items: center;
       gap: 4px;
       margin-top: 5px;
       padding-left: 4px;
@@ -711,60 +597,45 @@
       font-weight: 600;
       padding: 4px 8px;
       border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
       cursor: pointer;
       touch-action: manipulation;
       font-family: inherit;
     }
 
     .act-btn:hover {
-      background: var(--glass-card);
       border-color: var(--glass-border);
       color: var(--orange);
     }
 
-    /* Futuristic AI Typing Indicator */
+    /* AI Reasoning Indicator */
     .ai-thinking-bubble {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 18px;
+      gap: 10px;
+      padding: 12px 16px;
       border-radius: 22px;
       border-bottom-left-radius: 6px;
     }
 
     .orb-spinner {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #ff7b4d, #F14C15);
-      box-shadow: 0 0 16px rgba(241, 76, 21, 0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: orbBreathe 1.6s ease-in-out infinite;
-      flex-shrink: 0;
-    }
-
-    .orb-spinner svg {
-      width: 13px;
-      height: 13px;
-      color: #FFFFFF;
-      animation: spinSlow 3s linear infinite;
+      box-shadow: 0 0 14px rgba(241, 76, 21, 0.6);
+      animation: orbBreathe 1.4s ease-in-out infinite;
     }
 
     @keyframes orbBreathe {
-      0%, 100% { transform: scale(0.92); box-shadow: 0 0 10px rgba(241, 76, 21, 0.4); }
-      50% { transform: scale(1.08); box-shadow: 0 0 22px rgba(241, 76, 21, 0.75); }
+      0%, 100% { transform: scale(0.9); }
+      50% { transform: scale(1.1); }
     }
 
     .wave-bars {
       display: flex;
       align-items: center;
-      gap: 3.5px;
-      height: 16px;
+      gap: 3px;
+      height: 14px;
     }
 
     .wave-bars span {
@@ -772,31 +643,24 @@
       height: 6px;
       border-radius: 999px;
       background: var(--orange);
-      animation: wavePulse 1.1s ease-in-out infinite;
+      animation: wavePulse 1s ease-in-out infinite;
     }
 
     .wave-bars span:nth-child(2) { animation-delay: 0.15s; }
     .wave-bars span:nth-child(3) { animation-delay: 0.3s; }
-    .wave-bars span:nth-child(4) { animation-delay: 0.45s; }
 
     @keyframes wavePulse {
       0%, 100% { height: 5px; opacity: 0.45; }
-      50% { height: 16px; opacity: 1; }
+      50% { height: 14px; opacity: 1; }
     }
 
-    .thinking-label {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    /* Quick Prompt Strip above Composer */
+    /* Quick Strip */
     .quick-strip {
       display: none;
       gap: 8px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 6px 2px 9px;
+      padding: 6px 2px 8px;
       scrollbar-width: none;
     }
 
@@ -811,63 +675,51 @@
       white-space: nowrap;
       cursor: pointer;
       touch-action: manipulation;
-      pointer-events: auto;
       font-family: inherit;
     }
 
     .quick-pill:hover {
       color: var(--orange);
-      border-color: rgba(241, 76, 21, 0.45);
+      border-color: rgba(241, 76, 21, 0.5);
     }
 
-    /* Floating Liquid Glass Composer (Guaranteed Interactive) */
+    /* Floating Composer */
     .composer-wrap {
       position: relative;
       z-index: 30;
       flex-shrink: 0;
-      pointer-events: auto;
       padding-top: 4px;
     }
 
     .composer-box {
-      border-radius: var(--radius-xl);
+      border-radius: 26px;
       padding: 8px 10px 8px 16px;
       display: flex;
       align-items: flex-end;
       gap: 8px;
       cursor: text;
-      pointer-events: auto;
-      transition: border-color 0.25s ease, box-shadow 0.25s ease;
     }
 
     .composer-box:focus-within {
       border-color: rgba(241, 76, 21, 0.75);
-      box-shadow: 0 12px 32px -8px rgba(241, 76, 21, 0.22), 0 0 0 3px rgba(241, 76, 21, 0.14), var(--glass-highlight);
-    }
-
-    .composer-box.recording {
-      border-color: var(--orange);
-      box-shadow: 0 0 0 3px rgba(241, 76, 21, 0.24), var(--glass-shadow);
+      box-shadow: 0 10px 28px -8px rgba(241, 76, 21, 0.22), 0 0 0 3px rgba(241, 76, 21, 0.12);
     }
 
     textarea#userInput {
       flex: 1;
       min-width: 0;
       min-height: 36px;
-      max-height: 132px;
+      max-height: 128px;
       border: none;
       background: transparent;
       color: var(--text-primary);
       font-family: inherit;
-      font-size: 16px; /* Prevents iOS Safari auto-zoom on focus */
+      font-size: 16px;
       line-height: 1.45;
       resize: none;
       padding: 6px 0;
       outline: none;
-      pointer-events: auto !important;
       touch-action: manipulation;
-      user-select: text !important;
-      -webkit-user-select: text !important;
     }
 
     textarea#userInput::placeholder {
@@ -887,21 +739,19 @@
       height: 38px;
       border-radius: 50%;
       border: 1px solid var(--glass-border);
-      background: var(--glass-card);
+      background: var(--glass-surface);
       color: var(--text-secondary);
       display: none;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       touch-action: manipulation;
-      pointer-events: auto;
     }
 
     .mic-btn.active {
       background: var(--orange);
       color: #FFFFFF;
       border-color: var(--orange);
-      animation: pulseDot 1.4s infinite;
     }
 
     .send-btn {
@@ -920,27 +770,16 @@
       gap: 6px;
       cursor: pointer;
       touch-action: manipulation;
-      pointer-events: auto !important;
       box-shadow: 0 6px 18px rgba(241, 76, 21, 0.36);
-      transition: transform 0.2s var(--spring), box-shadow 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+      transition: transform 0.2s var(--spring), background 0.2s ease;
     }
 
-    .send-btn.idle {
-      opacity: 0.72;
-    }
-
-    .send-btn.busy {
-      opacity: 0.55;
-      cursor: wait;
-    }
-
-    .send-btn:hover:not(.busy) {
+    .send-btn:hover {
       background: var(--orange-light);
       transform: scale(1.03);
-      box-shadow: 0 8px 24px rgba(241, 76, 21, 0.48);
     }
 
-    .send-btn:active:not(.busy) {
+    .send-btn:active {
       transform: scale(0.95);
     }
 
@@ -957,11 +796,11 @@
       margin-top: 6px;
     }
 
-    /* Modals (Fully hidden with display:none when closed so they never block taps) */
+    /* Modals */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(11, 11, 11, 0.48);
+      background: rgba(11, 11, 11, 0.5);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 100;
@@ -969,24 +808,21 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
-      pointer-events: none;
     }
 
     .modal-backdrop.open {
       display: flex;
-      pointer-events: auto;
     }
 
     .modal-panel {
       width: 100%;
       max-width: 440px;
       max-height: 82dvh;
-      border-radius: var(--radius-xl);
+      border-radius: 24px;
       padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 14px;
-      pointer-events: auto;
     }
 
     .modal-head {
@@ -1010,15 +846,14 @@
 
     .history-item {
       padding: 11px 14px;
-      border-radius: var(--radius-md);
+      border-radius: 14px;
       border: 1px solid var(--glass-border);
-      background: var(--glass-card);
+      background: var(--glass-surface);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
       cursor: pointer;
-      touch-action: manipulation;
     }
 
     .history-item:hover, .history-item.active {
@@ -1044,9 +879,9 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 14px;
-      border-radius: var(--radius-md);
+      border-radius: 14px;
       border: 1px solid var(--glass-border);
-      background: var(--glass-card);
+      background: var(--glass-surface);
       font-size: 13.5px;
       font-weight: 600;
     }
@@ -1060,16 +895,6 @@
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
-      touch-action: manipulation;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-      .orb, .cursor-aura { display: none !important; }
     }
   </style>
 </head>
@@ -1082,11 +907,10 @@
   </div>
   <div class="cursor-aura" id="cursorAura" aria-hidden="true"></div>
 
-  <!-- Interactive Application Shell -->
+  <!-- Main Interactive App -->
   <div class="app-shell" id="appShell">
-    <!-- Floating Navigation Bar -->
     <header class="top-nav glass-chrome">
-      <div class="brand-group" id="brandHomeBtn" title="Start New Conversation">
+      <button type="button" class="brand-group" onclick="veeNewChat()" title="Start New Conversation">
         <div class="brand-emblem">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 5l8 14 8-14" />
@@ -1103,48 +927,47 @@
             <span>Created by Agboola Vincent Oluwaseyi</span>
           </div>
         </div>
-      </div>
+      </button>
 
       <div class="nav-actions">
-        <button type="button" class="icon-btn" id="newChatBtn" title="New Chat">
+        <button type="button" class="icon-btn" onclick="veeNewChat()" title="New Chat">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span class="btn-label">New</span>
         </button>
-        <button type="button" class="icon-btn" id="historyBtn" title="Chat History">
+        <button type="button" class="icon-btn" onclick="veeOpenModal('historyModal')" title="Chat History">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span class="btn-label">History</span>
         </button>
-        <button type="button" class="icon-btn" id="themeBtn" title="Switch Theme">
+        <button type="button" class="icon-btn" onclick="veeToggleTheme()" title="Switch Light/Dark Mode">
           <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
-        <button type="button" class="icon-btn" id="shareBtn" title="Share on WhatsApp">
+        <button type="button" class="icon-btn" onclick="veeShare()" title="Share on WhatsApp">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
-        <button type="button" class="icon-btn" id="settingsBtn" title="Settings & Info">
+        <button type="button" class="icon-btn" onclick="veeOpenModal('settingsModal')" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
       </div>
     </header>
 
-    <!-- Main Stage -->
     <main class="stage">
-      <!-- Cinematic Welcome Experience -->
+      <!-- Welcome Screen -->
       <section class="welcome-screen" id="welcomeScreen">
         <div class="hero-orb-wrap">
           <div class="hero-ring"></div>
           <div class="hero-core">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 5l8 14 8-14" />
               <circle cx="12" cy="8" r="2.2" fill="currentColor" stroke="none" />
             </svg>
           </div>
         </div>
 
-        <h1 class="welcome-headline" id="heroHeadline">How far? Wetin we dey reason today?</h1>
+        <h1 class="welcome-headline">How far? Wetin we dey reason today?</h1>
         <p class="welcome-sub">Your intelligent AI companion. Ready to think, create, explore and gist with you.</p>
 
-        <div class="prompt-grid" id="welcomePrompts">
-          <button type="button" class="prompt-card glass-surface" data-prompt="Who created you and what is his story?">
+        <div class="prompt-grid">
+          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Who created you and what is his story?')">
             <div>
               <div class="prompt-card-title">Meet the Creator</div>
               <div class="prompt-card-desc">Ask about Agboola Vincent Oluwaseyi & his tech ventures</div>
@@ -1152,7 +975,7 @@
             <div class="prompt-arrow">↗</div>
           </button>
 
-          <button type="button" class="prompt-card glass-surface" data-prompt="Wetin dey happen my guy? Give me sharp Nigerian street cruise">
+          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Wetin dey happen my guy? Give me sharp Nigerian street cruise')">
             <div>
               <div class="prompt-card-title">Pidgin Street Cruise</div>
               <div class="prompt-card-desc">Authentic Nigerian humour, banter & real talk</div>
@@ -1160,7 +983,7 @@
             <div class="prompt-arrow">↗</div>
           </button>
 
-          <button type="button" class="prompt-card glass-surface" data-prompt="Explain how SOC analysts detect cyber attacks in simple terms">
+          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Explain how SOC analysts detect cyber attacks in simple terms')">
             <div>
               <div class="prompt-card-title">Tech & Cybersecurity</div>
               <div class="prompt-card-desc">Gadgets, SOC analysis, coding & practical troubleshooting</div>
@@ -1168,7 +991,7 @@
             <div class="prompt-arrow">↗</div>
           </button>
 
-          <button type="button" class="prompt-card glass-surface" data-prompt="Greet me in Yoruba, Hausa, and Igbo with style!">
+          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Greet me in Yoruba, Hausa, and Igbo with style!')">
             <div>
               <div class="prompt-card-title">Multilingual Intelligence</div>
               <div class="prompt-card-desc">Switch seamlessly across English, Pidgin, Yoruba, Hausa & Igbo</div>
@@ -1182,58 +1005,58 @@
       <section class="chat-stream" id="chatStream" aria-live="polite"></section>
     </main>
 
-    <!-- Floating Liquid Glass Composer -->
+    <!-- Floating Composer -->
     <div class="composer-wrap">
       <div class="quick-strip" id="quickStrip">
-        <button type="button" class="quick-pill glass-surface" data-prompt="Who built you?">Who built you?</button>
-        <button type="button" class="quick-pill glass-surface" data-prompt="You don't know anything">Test Savage Mode 🔥</button>
-        <button type="button" class="quick-pill glass-surface" data-prompt="Bawo ni, se daadaa ni?">Yoruba</button>
-        <button type="button" class="quick-pill glass-surface" data-prompt="Sannu, yaya dai?">Hausa</button>
-        <button type="button" class="quick-pill glass-surface" data-prompt="Kedu, nwanne m?">Igbo</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Who built you?')">Who built you?</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('You don\'t know anything')">Test Savage Mode 🔥</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Bawo ni, se daadaa ni?')">Yoruba</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Sannu, yaya dai?')">Hausa</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Kedu, nwanne m?')">Igbo</button>
       </div>
 
-      <form class="composer-box glass-chrome" id="chatForm" novalidate>
-        <textarea id="userInput" rows="1" placeholder="Yarn with Vincent AI in any language..." autocomplete="off" enterkeyhint="send"></textarea>
+      <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
+        <textarea id="userInput" rows="1" placeholder="Yarn with Vincent AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
         <div class="composer-controls">
           <button type="button" class="mic-btn" id="micBtn" title="Voice Input">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
           </button>
-          <button type="submit" class="send-btn idle" id="sendBtn">
+          <button type="button" class="send-btn" id="sendBtn" onclick="veeSubmitChat()">
             <span id="sendBtnText">Send</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
         </div>
-      </form>
+      </div>
       <div class="composer-footer">Vincent AI • Multilingual Intelligence & Nigerian Innovation</div>
     </div>
   </div>
 
-  <!-- Chat History Modal -->
-  <div class="modal-backdrop" id="historyModal">
+  <!-- History Modal -->
+  <div class="modal-backdrop" id="historyModal" onclick="if(event.target===this) veeCloseModal('historyModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
         <h2>Conversation History</h2>
-        <button type="button" class="icon-btn" data-close-modal="historyModal">✕</button>
+        <button type="button" class="icon-btn" onclick="veeCloseModal('historyModal')">✕</button>
       </div>
       <div class="history-list" id="historyList"></div>
-      <button type="button" class="icon-btn" id="clearHistoryBtn" style="width: 100%; justify-content: center; color: var(--orange);">Clear All Conversations</button>
+      <button type="button" class="icon-btn" style="width: 100%; justify-content: center; color: var(--orange);" onclick="veeClearHistory()">Clear All Conversations</button>
     </div>
   </div>
 
-  <!-- Settings & Identity Modal -->
-  <div class="modal-backdrop" id="settingsModal">
+  <!-- Settings Modal -->
+  <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) veeCloseModal('settingsModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
         <h2>Vincent AI Settings</h2>
-        <button type="button" class="icon-btn" data-close-modal="settingsModal">✕</button>
+        <button type="button" class="icon-btn" onclick="veeCloseModal('settingsModal')">✕</button>
       </div>
       <div class="setting-row">
         <span>Appearance Mode</span>
-        <button type="button" class="toggle-pill" id="modalThemeToggle">Light (70% White)</button>
+        <button type="button" class="toggle-pill" id="modalThemeToggle" onclick="veeToggleTheme()">Light (70% White)</button>
       </div>
       <div class="setting-row">
         <span>Ambient AI Particles</span>
-        <button type="button" class="toggle-pill" id="particleToggleBtn">Enabled</button>
+        <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
       </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
         <span style="color: var(--orange);">About Vincent AI</span>
@@ -1245,730 +1068,466 @@
   </div>
 
   <script>
-    (function () {
-      "use strict";
+    /* =========================================================
+       CORE STATE & SAFE STORAGE
+       ========================================================= */
+    var veeSessions = [];
+    var veeCurrentSessionId = null;
+    var veeHistory = [];
+    var veeIsGenerating = false;
+    var veeParticlesEnabled = true;
 
-      /* =========================================================
-         1. MOBILE VIRTUAL VIEWPORT & KEYBOARD RESIZE HANDLER
-         ========================================================= */
-      const appShell = document.getElementById("appShell");
-      function syncViewportHeight() {
-        if (window.visualViewport) {
-          appShell.style.height = `${window.visualViewport.height}px`;
-        } else {
-          appShell.style.height = `${window.innerHeight}px`;
-        }
-      }
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", syncViewportHeight, { passive: true });
-        window.visualViewport.addEventListener("scroll", syncViewportHeight, { passive: true });
-      }
-      window.addEventListener("resize", syncViewportHeight, { passive: true });
-      syncViewportHeight();
+    try {
+      veeSessions = JSON.parse(localStorage.getItem("vincent_ai_sessions") || "[]");
+      veeParticlesEnabled = localStorage.getItem("vincent_ai_particles") !== "false";
+    } catch (e) {}
 
-      /* =========================================================
-         2. CINEMATIC HEADLINE CHARACTER REVEAL
-         ========================================================= */
-      const HEADLINE_TEXT = "How far? Wetin we dey reason today?";
-      const heroHeadline = document.getElementById("heroHeadline");
+    function veeSaveSessions() {
+      try {
+        localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
+      } catch (e) {}
+    }
 
-      function renderHeadlineReveal() {
-        if (!heroHeadline) return;
-        heroHeadline.innerHTML = "";
-        let charIndex = 0;
-        const words = HEADLINE_TEXT.split(" ");
-        words.forEach((word, wIdx) => {
-          const wordSpan = document.createElement("span");
-          wordSpan.style.display = "inline-block";
-          wordSpan.style.whiteSpace = "nowrap";
-          for (const ch of word) {
-            const span = document.createElement("span");
-            span.className = "char-reveal";
-            span.textContent = ch;
-            span.style.animationDelay = `${0.04 + charIndex * 0.015}s`;
-            wordSpan.appendChild(span);
-            charIndex++;
-          }
-          heroHeadline.appendChild(wordSpan);
-          if (wIdx < words.length - 1) {
-            heroHeadline.appendChild(document.createTextNode(" "));
-          }
-        });
-      }
-      renderHeadlineReveal();
-
-      /* =========================================================
-         3. THEME & CURSOR AURA
-         ========================================================= */
-      const rootEl = document.documentElement;
-      const metaTheme = document.getElementById("metaThemeColor");
-      const themeIcon = document.getElementById("themeIcon");
-      const modalThemeToggle = document.getElementById("modalThemeToggle");
-
-      function applyTheme(theme) {
-        rootEl.setAttribute("data-theme", theme);
-        try { localStorage.setItem("vincent_ai_theme", theme); } catch (_) {}
-        metaTheme.setAttribute("content", theme === "dark" ? "#0B0B0B" : "#FFFFFF");
-        modalThemeToggle.textContent = theme === "dark" ? "Dark (#0B0B0B)" : "Light (70% White)";
-        themeIcon.innerHTML = theme === "dark"
+    /* =========================================================
+       THEME & MODALS (DIRECT GLOBAL FUNCTIONS)
+       ========================================================= */
+    function veeApplyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      try { localStorage.setItem("vincent_ai_theme", theme); } catch (e) {}
+      var meta = document.getElementById("metaThemeColor");
+      if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0B0B" : "#FFFFFF");
+      var label = document.getElementById("modalThemeToggle");
+      if (label) label.textContent = theme === "dark" ? "Dark (#0B0B0B)" : "Light (70% White)";
+      var icon = document.getElementById("themeIcon");
+      if (icon) {
+        icon.innerHTML = theme === "dark"
           ? '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>'
           : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
       }
+    }
 
-      function toggleTheme() {
-        const current = rootEl.getAttribute("data-theme") || "light";
-        applyTheme(current === "light" ? "dark" : "light");
-      }
+    function veeToggleTheme() {
+      var current = document.documentElement.getAttribute("data-theme") || "light";
+      veeApplyTheme(current === "light" ? "dark" : "light");
+    }
 
-      let savedTheme = "light";
-      try { savedTheme = localStorage.getItem("vincent_ai_theme") || "light"; } catch (_) {}
-      applyTheme(savedTheme);
+    function veeOpenModal(id) {
+      if (id === "historyModal") veeRenderHistoryList();
+      var el = document.getElementById(id);
+      if (el) el.classList.add("open");
+    }
 
-      const cursorAura = document.getElementById("cursorAura");
-      const isTouchDevice = matchMedia("(hover: none), (pointer: coarse)").matches;
+    function veeCloseModal(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove("open");
+    }
 
-      if (!isTouchDevice && cursorAura) {
-        document.addEventListener("pointermove", (e) => {
-          cursorAura.style.opacity = "1";
-          cursorAura.style.left = `${e.clientX}px`;
-          cursorAura.style.top = `${e.clientY}px`;
-        }, { passive: true });
-      }
+    function veeShare() {
+      var url = window.location.href;
+      var text = "Come chat with Vincent AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
+      window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+    }
 
-      /* =========================================================
-         4. LIGHTWEIGHT NON-BLOCKING AI PARTICLE CANVAS
-         ========================================================= */
-      const canvas = document.getElementById("aiCanvas");
-      const ctx = canvas.getContext("2d");
-      let particlesEnabled = true;
-      try { particlesEnabled = localStorage.getItem("vincent_ai_particles") !== "false"; } catch (_) {}
-      let aiProcessingBoost = 0;
-      let width = 0, height = 0, dpr = 1;
-      let particles = [];
-      let animFrameId = null;
+    /* =========================================================
+       CHAT NAVIGATION & HISTORY
+       ========================================================= */
+    function veeShowChatView() {
+      document.getElementById("welcomeScreen").classList.add("hidden");
+      document.getElementById("chatStream").classList.add("active");
+      document.getElementById("quickStrip").style.display = "flex";
+    }
 
-      function resizeCanvas() {
-        dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    function veeNewChat() {
+      veeIsGenerating = false;
+      veeCurrentSessionId = null;
+      veeHistory = [];
+      var stream = document.getElementById("chatStream");
+      stream.innerHTML = "";
+      stream.classList.remove("active");
+      document.getElementById("quickStrip").style.display = "none";
+      document.getElementById("welcomeScreen").classList.remove("hidden");
+      veeCloseModal("historyModal");
+      var input = document.getElementById("userInput");
+      if (input) input.focus();
+    }
 
-        const count = width < 640 ? 18 : 34;
-        particles = Array.from({ length: count }, () => ({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.32,
-          vy: (Math.random() - 0.5) * 0.32,
-          r: Math.random() * 1.7 + 0.8,
-          orange: Math.random() > 0.42
-        }));
-      }
-
-      let wavePhase = 0;
-      function renderCanvas() {
-        if (document.hidden || !particlesEnabled) return;
-        ctx.clearRect(0, 0, width, height);
-
-        const isDark = rootEl.getAttribute("data-theme") === "dark";
-        wavePhase += 0.011 + aiProcessingBoost * 0.022;
-
-        ctx.beginPath();
-        for (let x = 0; x <= width; x += 24) {
-          const y = height * 0.52 + Math.sin(x * 0.004 + wavePhase) * (24 + aiProcessingBoost * 20);
-          if (x === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.strokeStyle = isDark ? "rgba(241, 76, 21, 0.13)" : "rgba(241, 76, 21, 0.1)";
-        ctx.lineWidth = 1.3;
-        ctx.stroke();
-
-        const speedMult = 1 + aiProcessingBoost * 2.2;
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          p.x += p.vx * speedMult;
-          p.y += p.vy * speedMult;
-
-          if (p.x < 0) p.x = width;
-          if (p.x > width) p.x = 0;
-          if (p.y < 0) p.y = height;
-          if (p.y > height) p.y = 0;
-
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = p.orange
-            ? (isDark ? "rgba(241, 76, 21, 0.5)" : "rgba(241, 76, 21, 0.45)")
-            : (isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(11, 11, 11, 0.16)");
-          ctx.fill();
-
-          for (let j = i + 1; j < particles.length; j++) {
-            const p2 = particles[j];
-            const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-            if (dist < 110) {
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
-              ctx.lineTo(p2.x, p2.y);
-              const alpha = (1 - dist / 110) * (isDark ? 0.13 : 0.09);
-              ctx.strokeStyle = `rgba(241, 76, 21, ${alpha})`;
-              ctx.lineWidth = 0.8;
-              ctx.stroke();
-            }
+    function veeUpdateSessionRecord(firstUserMsg) {
+      if (!veeCurrentSessionId) {
+        veeCurrentSessionId = "sess_" + Date.now();
+        veeSessions.unshift({
+          id: veeCurrentSessionId,
+          title: firstUserMsg.slice(0, 42) + (firstUserMsg.length > 42 ? "..." : ""),
+          updatedAt: new Date().toLocaleDateString(),
+          messages: veeHistory.slice()
+        });
+      } else {
+        for (var i = 0; i < veeSessions.length; i++) {
+          if (veeSessions[i].id === veeCurrentSessionId) {
+            veeSessions[i].messages = veeHistory.slice();
+            veeSessions[i].updatedAt = new Date().toLocaleDateString();
+            break;
           }
         }
-
-        animFrameId = requestAnimationFrame(renderCanvas);
       }
+      veeSaveSessions();
+    }
 
-      const particleToggleBtn = document.getElementById("particleToggleBtn");
-      function toggleParticles() {
-        particlesEnabled = !particlesEnabled;
-        try { localStorage.setItem("vincent_ai_particles", particlesEnabled); } catch (_) {}
-        particleToggleBtn.textContent = particlesEnabled ? "Enabled" : "Disabled";
-        if (particlesEnabled) {
-          resizeCanvas();
-          renderCanvas();
-        } else {
-          cancelAnimationFrame(animFrameId);
-          ctx.clearRect(0, 0, width, height);
-        }
+    function veeLoadSession(id) {
+      var found = null;
+      for (var i = 0; i < veeSessions.length; i++) {
+        if (veeSessions[i].id === id) { found = veeSessions[i]; break; }
       }
+      if (!found) return;
+      veeCurrentSessionId = found.id;
+      veeHistory = found.messages.slice();
+      var stream = document.getElementById("chatStream");
+      stream.innerHTML = "";
+      veeShowChatView();
+      for (var j = 0; j < veeHistory.length; j++) {
+        veeAppendMessage(veeHistory[j].content, veeHistory[j].role === "user" ? "user" : "bot");
+      }
+      veeCloseModal("historyModal");
+    }
 
-      particleToggleBtn.textContent = particlesEnabled ? "Enabled" : "Disabled";
-      window.addEventListener("resize", resizeCanvas, { passive: true });
-      document.addEventListener("visibilitychange", () => {
-        if (!document.hidden && particlesEnabled) {
-          cancelAnimationFrame(animFrameId);
-          renderCanvas();
-        }
+    function veeClearHistory() {
+      veeSessions = [];
+      veeSaveSessions();
+      veeRenderHistoryList();
+      veeNewChat();
+    }
+
+    function veeRenderHistoryList() {
+      var list = document.getElementById("historyList");
+      if (!list) return;
+      if (!veeSessions.length) {
+        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vincent AI!</p>';
+        return;
+      }
+      list.innerHTML = veeSessions.map(function (s) {
+        var activeClass = s.id === veeCurrentSessionId ? "active" : "";
+        return '<div class="history-item ' + activeClass + '" onclick="veeLoadSession(\'' + s.id + '\')">' +
+          '<div style="min-width: 0;">' +
+            '<div class="history-title">' + veeEscapeHtml(s.title) + '</div>' +
+            '<div class="history-date">' + s.updatedAt + ' • ' + s.messages.length + ' messages</div>' +
+          '</div>' +
+          '<span style="color: var(--orange); font-weight: 700;">→</span>' +
+        '</div>';
+      }).join("");
+    }
+
+    /* =========================================================
+       MARKDOWN & MESSAGE RENDERING
+       ========================================================= */
+    function veeEscapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function veeRenderMarkdown(rawText) {
+      if (!rawText) return "";
+      var codeBlocks = [];
+      var text = rawText.replace(/```(\w*)\n([\s\S]*?)```/g, function (_, lang, code) {
+        var idx = codeBlocks.length;
+        var safeLang = veeEscapeHtml(lang || "code");
+        codeBlocks.push(
+          '<div class="code-block-wrap">' +
+            '<div class="code-header"><span>' + safeLang + '</span><button type="button" class="copy-code-btn" onclick="veeCopyCode(this)">Copy</button></div>' +
+            '<pre><code>' + veeEscapeHtml(code.trim()) + '</code></pre>' +
+          '</div>'
+        );
+        return "@@CODEBLOCK_" + idx + "@@";
       });
 
-      if (!matchMedia("(prefers-reduced-motion: reduce)").matches && particlesEnabled) {
-        resizeCanvas();
-        renderCanvas();
-      }
+      text = veeEscapeHtml(text);
+      text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+      text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      text = text.replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
-      /* =========================================================
-         5. MARKDOWN + SYNTAX HIGHLIGHTING
-         ========================================================= */
-      function escapeHtml(str) {
-        return str
-          .replace(/&/g, "&")
-          .replace(/</g, "<")
-          .replace(/>/g, ">")
-          .replace(/"/g, """);
-      }
+      var lines = text.split("\n");
+      var out = [];
+      var inUl = false;
 
-      function highlightCode(code) {
-        let html = escapeHtml(code);
-        html = html.replace(/(\/\/.*$|#.*$)/gm, '<span class="tok-com">$1</span>');
-        html = html.replace(/(".*?"|'.*?'|`.*?`)/g, '<span class="tok-str">$1</span>');
-        html = html.replace(/\b(const|let|var|function|return|if|else|for|while|async|await|import|from|export|class|def|try|catch|throw|new)\b/g, '<span class="tok-kw">$1</span>');
-        html = html.replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>');
-        return html;
-      }
-
-      function renderMarkdown(rawText) {
-        if (!rawText) return "";
-        const codeBlocks = [];
-        let text = rawText.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-          const idx = codeBlocks.length;
-          const safeLang = escapeHtml(lang || "code");
-          const highlighted = highlightCode(code.trimEnd());
-          codeBlocks.push(
-            `<div class="code-block-wrap">
-              <div class="code-header">
-                <span>${safeLang}</span>
-                <button type="button" class="copy-code-btn">Copy</button>
-              </div>
-              <pre><code>${highlighted}</code></pre>
-            </div>`
-          );
-          return `@@CODEBLOCK_${idx}@@`;
-        });
-
-        text = escapeHtml(text);
-        text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
-        text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-        text = text.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-        text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-
-        const lines = text.split("\n");
-        const out = [];
-        let inUl = false;
-        let inOl = false;
-
-        function closeLists() {
+      for (var i = 0; i < lines.length; i++) {
+        var trimmed = lines[i].trim();
+        if (trimmed.indexOf("@@CODEBLOCK_") === 0) {
           if (inUl) { out.push("</ul>"); inUl = false; }
-          if (inOl) { out.push("</ol>"); inOl = false; }
-        }
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith("@@CODEBLOCK_")) {
-            closeLists();
-            out.push(trimmed);
-            continue;
-          }
-          if (/^###\s+/.test(trimmed)) {
-            closeLists();
-            out.push(`<h3>${trimmed.replace(/^###\s+/, "")}</h3>`);
-          } else if (/^##\s+/.test(trimmed)) {
-            closeLists();
-            out.push(`<h2>${trimmed.replace(/^##\s+/, "")}</h2>`);
-          } else if (/^#\s+/.test(trimmed)) {
-            closeLists();
-            out.push(`<h1>${trimmed.replace(/^#\s+/, "")}</h1>`);
-          } else if (/^>\s+/.test(trimmed)) {
-            closeLists();
-            out.push(`<blockquote>${trimmed.replace(/^>\s+/, "")}</blockquote>`);
-          } else if (/^[-*]\s+/.test(trimmed)) {
-            if (inOl) { out.push("</ol>"); inOl = false; }
-            if (!inUl) { out.push("<ul>"); inUl = true; }
-            out.push(`<li>${trimmed.replace(/^[-*]\s+/, "")}</li>`);
-          } else if (/^\d+\.\s+/.test(trimmed)) {
-            if (inUl) { out.push("</ul>"); inUl = false; }
-            if (!inOl) { out.push("<ol>"); inOl = true; }
-            out.push(`<li>${trimmed.replace(/^\d+\.\s+/, "")}</li>`);
-          } else if (trimmed === "") {
-            closeLists();
-          } else {
-            closeLists();
-            out.push(`<p>${trimmed}</p>`);
-          }
-        }
-        closeLists();
-
-        let finalHtml = out.join("");
-        codeBlocks.forEach((block, i) => {
-          finalHtml = finalHtml.replace(`@@CODEBLOCK_${i}@@`, block);
-        });
-        return finalHtml;
-      }
-
-      /* =========================================================
-         6. CHAT STATE, INPUT, SEND & BACKEND INTEGRATION
-         ========================================================= */
-      const welcomeScreen = document.getElementById("welcomeScreen");
-      const chatStream = document.getElementById("chatStream");
-      const quickStrip = document.getElementById("quickStrip");
-      const chatForm = document.getElementById("chatForm");
-      const userInput = document.getElementById("userInput");
-      const sendBtn = document.getElementById("sendBtn");
-      const sendBtnText = document.getElementById("sendBtnText");
-
-      let sessions = [];
-      try { sessions = JSON.parse(localStorage.getItem("vincent_ai_sessions") || "[]"); } catch (_) {}
-      let currentSessionId = null;
-      let history = [];
-      let isGenerating = false;
-
-      function saveSessions() {
-        try { localStorage.setItem("vincent_ai_sessions", JSON.stringify(sessions.slice(0, 25))); } catch (_) {}
-      }
-
-      function updateSessionRecord(firstUserMsg) {
-        if (!currentSessionId) {
-          currentSessionId = "sess_" + Date.now();
-          sessions.unshift({
-            id: currentSessionId,
-            title: firstUserMsg.slice(0, 42) + (firstUserMsg.length > 42 ? "..." : ""),
-            updatedAt: new Date().toLocaleDateString(),
-            messages: [...history]
-          });
+          out.push(trimmed);
+        } else if (/^###\s+/.test(trimmed)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push("<h3>" + trimmed.replace(/^###\s+/, "") + "</h3>");
+        } else if (/^##\s+/.test(trimmed)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push("<h2>" + trimmed.replace(/^##\s+/, "") + "</h2>");
+        } else if (/^#\s+/.test(trimmed)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push("<h1>" + trimmed.replace(/^#\s+/, "") + "</h1>");
+        } else if (/^[-*]\s+/.test(trimmed)) {
+          if (!inUl) { out.push("<ul>"); inUl = true; }
+          out.push("<li>" + trimmed.replace(/^[-*]\s+/, "") + "</li>");
+        } else if (trimmed === "") {
+          if (inUl) { out.push("</ul>"); inUl = false; }
         } else {
-          const idx = sessions.findIndex((s) => s.id === currentSessionId);
-          if (idx !== -1) {
-            sessions[idx].messages = [...history];
-            sessions[idx].updatedAt = new Date().toLocaleDateString();
-          }
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push("<p>" + trimmed + "</p>");
         }
-        saveSessions();
       }
+      if (inUl) out.push("</ul>");
 
-      function updateComposerState() {
-        const hasText = userInput.value.trim().length > 0;
-        sendBtn.classList.toggle("idle", !hasText && !isGenerating);
-        sendBtn.classList.toggle("busy", isGenerating);
-        sendBtnText.textContent = isGenerating ? "..." : "Send";
+      var html = out.join("");
+      for (var j = 0; j < codeBlocks.length; j++) {
+        html = html.replace("@@CODEBLOCK_" + j + "@@", codeBlocks[j]);
       }
+      return html;
+    }
 
-      function autoResizeInput() {
-        userInput.style.height = "auto";
-        userInput.style.height = Math.min(userInput.scrollHeight, 132) + "px";
-        updateComposerState();
+    function veeCopyCode(btn) {
+      var codeEl = btn.closest(".code-block-wrap").querySelector("code");
+      if (navigator.clipboard && codeEl) {
+        navigator.clipboard.writeText(codeEl.innerText);
+        btn.textContent = "Copied ✓";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
       }
+    }
 
-      function switchToChatView() {
-        welcomeScreen.classList.add("hidden");
-        chatStream.classList.add("active");
-        quickStrip.style.display = "flex";
+    function veeCopyMessage(btn) {
+      var raw = btn.parentElement.getAttribute("data-raw") || "";
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(raw);
+        btn.textContent = "Copied ✓";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
       }
+    }
 
-      function startNewChat() {
-        if (isGenerating) return;
-        currentSessionId = null;
-        history = [];
-        chatStream.innerHTML = "";
-        chatStream.classList.remove("active");
-        quickStrip.style.display = "none";
-        welcomeScreen.classList.remove("hidden");
-        renderHeadlineReveal();
-        closeModal("historyModal");
-        userInput.focus();
-      }
+    function veeAppendMessage(text, sender) {
+      var stream = document.getElementById("chatStream");
+      var row = document.createElement("div");
+      row.className = "msg-row " + sender;
 
-      function loadSession(id) {
-        const found = sessions.find((s) => s.id === id);
-        if (!found) return;
-        currentSessionId = found.id;
-        history = [...found.messages];
-        chatStream.innerHTML = "";
-        switchToChatView();
-        history.forEach((m) => {
-          appendMessageBubble(m.content, m.role === "user" ? "user" : "bot", false);
-        });
-        scrollToBottom();
-        closeModal("historyModal");
-      }
+      var label = document.createElement("div");
+      label.className = "msg-sender";
+      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vincent AI';
+      row.appendChild(label);
 
-      function clearAllSessions() {
-        sessions = [];
-        saveSessions();
-        renderHistoryList();
-        startNewChat();
-      }
+      var bubble = document.createElement("div");
+      bubble.className = sender === "user" ? "msg-bubble" : "msg-bubble glass-surface";
 
-      function renderHistoryList() {
-        const list = document.getElementById("historyList");
-        if (!sessions.length) {
-          list.innerHTML = `<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vincent AI!</p>`;
-          return;
-        }
-        list.innerHTML = sessions.map((s) => `
-          <div class="history-item ${s.id === currentSessionId ? "active" : ""}" data-session-id="${s.id}">
-            <div style="min-width: 0;">
-              <div class="history-title">${escapeHtml(s.title)}</div>
-              <div class="history-date">${s.updatedAt} • ${s.messages.length} messages</div>
-            </div>
-            <span style="color: var(--orange); font-weight: 700;">→</span>
-          </div>
-        `).join("");
-      }
-
-      function scrollToBottom() {
-        chatStream.scrollTop = chatStream.scrollHeight;
-      }
-
-      function appendMessageBubble(text, sender, animateReveal = false) {
-        const row = document.createElement("div");
-        row.className = `msg-row ${sender}`;
-
-        const label = document.createElement("div");
-        label.className = "msg-sender";
-        label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vincent AI';
-        row.appendChild(label);
-
-        const bubble = document.createElement("div");
-        bubble.className = sender === "user" ? "msg-bubble" : "msg-bubble glass-surface";
-
-        if (sender === "user") {
-          bubble.textContent = text;
-          row.appendChild(bubble);
-          chatStream.appendChild(row);
-          scrollToBottom();
-          return bubble;
-        }
-
-        const contentDiv = document.createElement("div");
-        contentDiv.className = "md-content";
-        bubble.appendChild(contentDiv);
+      if (sender === "user") {
+        bubble.textContent = text;
+        row.appendChild(bubble);
+      } else {
+        var md = document.createElement("div");
+        md.className = "md-content";
+        md.innerHTML = veeRenderMarkdown(text);
+        bubble.appendChild(md);
         row.appendChild(bubble);
 
-        const actions = document.createElement("div");
+        var actions = document.createElement("div");
         actions.className = "msg-actions";
-        actions.dataset.rawText = text;
-        actions.innerHTML = `
-          <button type="button" class="act-btn" data-action="copy">Copy</button>
-          <button type="button" class="act-btn" data-action="regen">Regenerate</button>
-          ${"speechSynthesis" in window ? '<button type="button" class="act-btn" data-action="listen">Listen</button>' : ""}
-        `;
+        actions.setAttribute("data-raw", text);
+        actions.innerHTML =
+          '<button type="button" class="act-btn" onclick="veeCopyMessage(this)">Copy</button>' +
+          '<button type="button" class="act-btn" onclick="veeRegenerate()">Regenerate</button>';
         row.appendChild(actions);
-
-        chatStream.appendChild(row);
-
-        if (!animateReveal || matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          contentDiv.innerHTML = renderMarkdown(text);
-          scrollToBottom();
-          return contentDiv;
-        }
-
-        const words = text.split(/(\s+)/);
-        let idx = 0;
-        const stepSize = Math.max(2, Math.ceil(words.length / 40));
-
-        function stepReveal() {
-          idx = Math.min(words.length, idx + stepSize);
-          contentDiv.innerHTML = renderMarkdown(words.slice(0, idx).join(""));
-          scrollToBottom();
-          if (idx < words.length) {
-            requestAnimationFrame(stepReveal);
-          }
-        }
-        requestAnimationFrame(stepReveal);
-        return contentDiv;
       }
 
-      function appendThinkingIndicator() {
-        const row = document.createElement("div");
-        row.className = "msg-row bot";
-        row.innerHTML = `
-          <div class="msg-sender"><span style="color: var(--orange);">●</span> Vincent AI</div>
-          <div class="ai-thinking-bubble glass-surface">
-            <div class="orb-spinner">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 5l8 14 8-14" /></svg>
-            </div>
-            <div class="wave-bars"><span></span><span></span><span></span><span></span></div>
-            <span class="thinking-label">Reasoning...</span>
-          </div>
-        `;
-        chatStream.appendChild(row);
-        scrollToBottom();
-        return row;
-      }
+      stream.appendChild(row);
+      stream.scrollTop = stream.scrollHeight;
+    }
 
-      async function regenerateLast() {
-        if (isGenerating || history.length < 2) return;
-        if (history[history.length - 1].role === "assistant") {
-          history.pop();
-          if (chatStream.lastElementChild) chatStream.lastElementChild.remove();
-        }
-        const lastUser = history[history.length - 1];
-        if (!lastUser || lastUser.role !== "user") return;
-        const priorHistory = history.slice(0, -1);
-        await fetchAssistantReply(lastUser.content, priorHistory, false);
-      }
+    function veeAppendThinking() {
+      var stream = document.getElementById("chatStream");
+      var row = document.createElement("div");
+      row.className = "msg-row bot";
+      row.innerHTML =
+        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vincent AI</div>' +
+        '<div class="ai-thinking-bubble glass-surface">' +
+          '<div class="orb-spinner"></div>' +
+          '<div class="wave-bars"><span></span><span></span><span></span></div>' +
+          '<span style="font-size: 12.5px; font-weight: 600; color: var(--text-secondary);">Reasoning...</span>' +
+        '</div>';
+      stream.appendChild(row);
+      stream.scrollTop = stream.scrollHeight;
+      return row;
+    }
 
-      async function fetchAssistantReply(message, contextHistory, pushUserToHistory = true) {
-        isGenerating = true;
-        aiProcessingBoost = 1;
-        updateComposerState();
+    /* =========================================================
+       INPUT & BACKEND API SUBMISSION
+       ========================================================= */
+    function veeResizeInput(el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 128) + "px";
+    }
 
-        const thinkingRow = appendThinkingIndicator();
-
-        try {
-          const res = await fetch("/.netlify/functions/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message, history: contextHistory })
-          });
-          const data = await res.json();
-          const reply = data.reply || "Chai, small network blink! Try send am again.";
-
-          thinkingRow.remove();
-          appendMessageBubble(reply, "bot", true);
-
-          if (pushUserToHistory) {
-            history.push({ role: "user", content: message });
-          }
-          history.push({ role: "assistant", content: reply });
-          if (history.length > 20) history = history.slice(-20);
-          updateSessionRecord(message);
-        } catch (err) {
-          thinkingRow.remove();
-          appendMessageBubble("Omo, small network wahala happen! Check your connection and try again.", "bot", false);
-        } finally {
-          isGenerating = false;
-          aiProcessingBoost = 0;
-          updateComposerState();
-          if (!isTouchDevice) userInput.focus();
-        }
-      }
-
-      async function handleSendMessage(overrideText) {
-        if (isGenerating) return;
-        const raw = typeof overrideText === "string" ? overrideText : userInput.value;
-        const message = raw.trim();
-
-        if (!message) {
-          userInput.focus();
-          return;
-        }
-
-        switchToChatView();
-        appendMessageBubble(message, "user");
-
-        userInput.value = "";
-        userInput.style.height = "auto";
-        updateComposerState();
-
-        const contextSnapshot = [...history];
-        await fetchAssistantReply(message, contextSnapshot, true);
-      }
-
-      /* =========================================================
-         7. DIRECT & DELEGATED EVENT LISTENERS
-         ========================================================= */
-      userInput.addEventListener("input", autoResizeInput);
-      userInput.addEventListener("change", autoResizeInput);
-
-      userInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          handleSendMessage();
-        }
-      });
-
-      chatForm.addEventListener("submit", (e) => {
+    function veeHandleKey(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        handleSendMessage();
-      });
+        veeSubmitChat();
+      }
+    }
 
-      // Tapping anywhere in the composer glass bar focuses the textarea immediately
-      chatForm.addEventListener("click", (e) => {
-        if (!e.target.closest("button")) {
-          userInput.focus();
+    function veeSendPrompt(promptText) {
+      if (veeIsGenerating) return;
+      var input = document.getElementById("userInput");
+      input.value = promptText;
+      veeSubmitChat();
+    }
+
+    async function veeRegenerate() {
+      if (veeIsGenerating || veeHistory.length < 2) return;
+      if (veeHistory[veeHistory.length - 1].role === "assistant") {
+        veeHistory.pop();
+        var stream = document.getElementById("chatStream");
+        if (stream.lastElementChild) stream.lastElementChild.remove();
+      }
+      var lastUser = veeHistory[veeHistory.length - 1];
+      if (!lastUser || lastUser.role !== "user") return;
+      await veeRequestBackend(lastUser.content, veeHistory.slice(0, -1), false);
+    }
+
+    async function veeSubmitChat() {
+      if (veeIsGenerating) return;
+      var input = document.getElementById("userInput");
+      var message = (input.value || "").trim();
+      if (!message) {
+        input.focus();
+        return;
+      }
+
+      veeShowChatView();
+      veeAppendMessage(message, "user");
+      input.value = "";
+      input.style.height = "auto";
+
+      var contextSnapshot = veeHistory.slice();
+      await veeRequestBackend(message, contextSnapshot, true);
+    }
+
+    async function veeRequestBackend(message, contextHistory, addUserToHistory) {
+      veeIsGenerating = true;
+      var sendBtnText = document.getElementById("sendBtnText");
+      if (sendBtnText) sendBtnText.textContent = "...";
+
+      var thinkingRow = veeAppendThinking();
+
+      try {
+        var res = await fetch("/.netlify/functions/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message, history: contextHistory })
+        });
+        var data = await res.json();
+        var reply = data.reply || "Chai, small network blink! Try send am again.";
+
+        thinkingRow.remove();
+        veeAppendMessage(reply, "bot");
+
+        if (addUserToHistory) {
+          veeHistory.push({ role: "user", content: message });
         }
-      });
+        veeHistory.push({ role: "assistant", content: reply });
+        if (veeHistory.length > 20) veeHistory = veeHistory.slice(-20);
+        veeUpdateSessionRecord(message);
+      } catch (err) {
+        thinkingRow.remove();
+        veeAppendMessage("Omo, small network wahala happen! Check your connection and try again.", "bot");
+      } finally {
+        veeIsGenerating = false;
+        if (sendBtnText) sendBtnText.textContent = "Send";
+      }
+    }
 
-      // Navigation controls
-      document.getElementById("brandHomeBtn").addEventListener("click", startNewChat);
-      document.getElementById("newChatBtn").addEventListener("click", startNewChat);
-      document.getElementById("historyBtn").addEventListener("click", () => openModal("historyModal"));
-      document.getElementById("themeBtn").addEventListener("click", toggleTheme);
-      document.getElementById("modalThemeToggle").addEventListener("click", toggleTheme);
-      document.getElementById("particleToggleBtn").addEventListener("click", toggleParticles);
-      document.getElementById("clearHistoryBtn").addEventListener("click", clearAllSessions);
+    /* =========================================================
+       ISOLATED VISUAL EFFECTS & VIEWPORT SYNC
+       ========================================================= */
+    (function initVisualEffects() {
+      try {
+        var savedTheme = "light";
+        try { savedTheme = localStorage.getItem("vincent_ai_theme") || "light"; } catch (e) {}
+        veeApplyTheme(savedTheme);
 
-      document.getElementById("shareBtn").addEventListener("click", () => {
-        const url = window.location.href;
-        const text = `Come chat with Vincent AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 ${url}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-      });
+        // Mobile virtual keyboard height sync
+        var appShell = document.getElementById("appShell");
+        function syncHeight() {
+          if (appShell) {
+            appShell.style.height = (window.visualViewport ? window.visualViewport.height : window.innerHeight) + "px";
+          }
+        }
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener("resize", syncHeight, { passive: true });
+        }
+        window.addEventListener("resize", syncHeight, { passive: true });
+        syncHeight();
 
-      document.getElementById("settingsBtn").addEventListener("click", () => openModal("settingsModal"));
-
-      // Prompt cards & quick pills delegation
-      document.addEventListener("click", (e) => {
-        const promptBtn = e.target.closest("[data-prompt]");
-        if (promptBtn) {
-          e.preventDefault();
-          handleSendMessage(promptBtn.getAttribute("data-prompt"));
-          return;
+        // Desktop cursor glow
+        var aura = document.getElementById("cursorAura");
+        if (aura && !window.matchMedia("(hover: none), (pointer: coarse)").matches) {
+          document.addEventListener("pointermove", function (e) {
+            aura.style.opacity = "1";
+            aura.style.left = e.clientX + "px";
+            aura.style.top = e.clientY + "px";
+          }, { passive: true });
         }
 
-        const closeBtn = e.target.closest("[data-close-modal]");
-        if (closeBtn) {
-          closeModal(closeBtn.getAttribute("data-close-modal"));
-          return;
-        }
+        // Background Canvas Particles
+        var canvas = document.getElementById("aiCanvas");
+        var ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
+        var particles = [];
+        var w = 0, h = 0, rafId = null;
 
-        const sessionItem = e.target.closest("[data-session-id]");
-        if (sessionItem) {
-          loadSession(sessionItem.getAttribute("data-session-id"));
-          return;
-        }
-
-        const copyCodeBtn = e.target.closest(".copy-code-btn");
-        if (copyCodeBtn) {
-          const codeEl = copyCodeBtn.closest(".code-block-wrap").querySelector("code");
-          navigator.clipboard.writeText(codeEl.innerText).then(() => {
-            copyCodeBtn.textContent = "Copied ✓";
-            setTimeout(() => (copyCodeBtn.textContent = "Copy"), 1500);
-          });
-          return;
-        }
-
-        const actionBtn = e.target.closest("[data-action]");
-        if (actionBtn) {
-          const action = actionBtn.getAttribute("data-action");
-          const raw = actionBtn.parentElement.dataset.rawText || "";
-          if (action === "copy") {
-            navigator.clipboard.writeText(raw).then(() => {
-              actionBtn.textContent = "Copied ✓";
-              setTimeout(() => (actionBtn.textContent = "Copy"), 1500);
+        function setupCanvas() {
+          if (!canvas || !ctx) return;
+          w = window.innerWidth;
+          h = window.innerHeight;
+          canvas.width = w;
+          canvas.height = h;
+          var count = w < 640 ? 16 : 30;
+          particles = [];
+          for (var i = 0; i < count; i++) {
+            particles.push({
+              x: Math.random() * w,
+              y: Math.random() * h,
+              vx: (Math.random() - 0.5) * 0.35,
+              vy: (Math.random() - 0.5) * 0.35,
+              r: Math.random() * 1.6 + 0.8
             });
-          } else if (action === "regen") {
-            regenerateLast();
-          } else if (action === "listen" && "speechSynthesis" in window) {
-            if (window.speechSynthesis.speaking) {
-              window.speechSynthesis.cancel();
-              actionBtn.textContent = "Listen";
-            } else {
-              const utter = new SpeechSynthesisUtterance(raw.replace(/[*#`]/g, ""));
-              utter.onend = () => (actionBtn.textContent = "Listen");
-              actionBtn.textContent = "Stop";
-              window.speechSynthesis.speak(utter);
-            }
           }
         }
-      });
 
-      /* =========================================================
-         8. MODALS & VOICE INPUT
-         ========================================================= */
-      function openModal(id) {
-        if (id === "historyModal") renderHistoryList();
-        const el = document.getElementById(id);
-        if (el) el.classList.add("open");
-      }
-
-      function closeModal(id) {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove("open");
-      }
-
-      document.querySelectorAll(".modal-backdrop").forEach((backdrop) => {
-        backdrop.addEventListener("click", (e) => {
-          if (e.target === backdrop) backdrop.classList.remove("open");
-        });
-      });
-
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const micBtn = document.getElementById("micBtn");
-
-      if (SpeechRecognition) {
-        micBtn.style.display = "flex";
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        let listening = false;
-
-        micBtn.addEventListener("click", () => {
-          if (listening) recognition.stop();
-          else recognition.start();
-        });
-
-        recognition.onstart = () => {
-          listening = true;
-          micBtn.classList.add("active");
-          chatForm.classList.add("recording");
-          userInput.placeholder = "Listening... speak now";
-        };
-
-        recognition.onresult = (event) => {
-          let transcript = "";
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
+        function drawFrame() {
+          if (!ctx || !veeParticlesEnabled || document.hidden) return;
+          ctx.clearRect(0, 0, w, h);
+          for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            p.x = (p.x + p.vx + w) % w;
+            p.y = (p.y + p.vy + h) % h;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(241, 76, 21, 0.45)";
+            ctx.fill();
           }
-          userInput.value = transcript;
-          autoResizeInput();
+          rafId = requestAnimationFrame(drawFrame);
+        }
+
+        window.veeToggleParticles = function () {
+          veeParticlesEnabled = !veeParticlesEnabled;
+          try { localStorage.setItem("vincent_ai_particles", veeParticlesEnabled); } catch (e) {}
+          var btn = document.getElementById("particleToggleBtn");
+          if (btn) btn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
+          if (veeParticlesEnabled) { setupCanvas(); drawFrame(); }
+          else if (ctx) { cancelAnimationFrame(rafId); ctx.clearRect(0, 0, w, h); }
         };
 
-        recognition.onend = () => {
-          listening = false;
-          micBtn.classList.remove("active");
-          chatForm.classList.remove("recording");
-          userInput.placeholder = "Yarn with Vincent AI in any language...";
-        };
-
-        recognition.onerror = () => {
-          listening = false;
-          micBtn.classList.remove("active");
-          chatForm.classList.remove("recording");
-          userInput.placeholder = "Yarn with Vincent AI in any language...";
-        };
-      }
+        var pBtn = document.getElementById("particleToggleBtn");
+        if (pBtn) pBtn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
+        if (veeParticlesEnabled) {
+          setupCanvas();
+          drawFrame();
+          window.addEventListener("resize", setupCanvas, { passive: true });
+        }
+      } catch (e) {}
     })();
   </script>
 </body>
