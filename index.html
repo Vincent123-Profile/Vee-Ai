@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#FFFFFF" id="metaThemeColor" />
-  <meta name="description" content="VAI — Intelligent Nigerian-built multilingual AI assistant created and developed by Vincent." />
-  <title>VAI — Intelligent AI Companion</title>
+  <title>Vincent AI — Intelligent Nigerian AI Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -18,6 +17,7 @@
       --black: #0B0B0B;
       --grey: #A1A1AA;
 
+      /* Light Theme (70% White, 15% Orange, 10% Black, 5% Grey) */
       --bg-base: #FFFFFF;
       --text-primary: #0B0B0B;
       --text-secondary: #52525B;
@@ -212,7 +212,7 @@
     }
 
     .brand-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       letter-spacing: -0.02em;
       white-space: nowrap;
@@ -607,17 +607,6 @@
       color: var(--orange);
     }
 
-    .storage-notice {
-      align-self: center;
-      font-size: 11.5px;
-      color: var(--orange);
-      background: var(--orange-soft);
-      border: 1px solid rgba(241, 76, 21, 0.3);
-      padding: 6px 12px;
-      border-radius: 999px;
-      text-align: center;
-    }
-
     /* AI Reasoning Indicator */
     .ai-thinking-bubble {
       display: inline-flex;
@@ -697,7 +686,7 @@
     /* Floating Composer */
     .composer-wrap {
       position: relative;
-      z-index: 40;
+      z-index: 30;
       flex-shrink: 0;
       padding-top: 4px;
     }
@@ -717,8 +706,6 @@
     }
 
     textarea#userInput {
-      position: relative;
-      z-index: 50;
       flex: 1;
       min-width: 0;
       min-height: 36px;
@@ -732,9 +719,6 @@
       resize: none;
       padding: 6px 0;
       outline: none;
-      pointer-events: auto;
-      user-select: text;
-      -webkit-user-select: text;
       touch-action: manipulation;
     }
 
@@ -750,9 +734,27 @@
       flex-shrink: 0;
     }
 
+    .mic-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-surface);
+      color: var(--text-secondary);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .mic-btn.active {
+      background: var(--orange);
+      color: #FFFFFF;
+      border-color: var(--orange);
+    }
+
     .send-btn {
-      position: relative;
-      z-index: 50;
       height: 40px;
       padding: 0 17px;
       border-radius: 999px;
@@ -834,24 +836,6 @@
       font-weight: 800;
     }
 
-    .branch-pill-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 12px;
-      background: var(--orange-soft);
-      border: 1px solid rgba(241, 76, 21, 0.24);
-      font-size: 11.5px;
-      color: var(--text-secondary);
-    }
-
-    .branch-pill-bar strong {
-      color: var(--orange);
-      font-family: "JetBrains Mono", monospace;
-    }
-
     .history-list {
       overflow-y: auto;
       display: flex;
@@ -926,7 +910,7 @@
   <!-- Main Interactive App -->
   <div class="app-shell" id="appShell">
     <header class="top-nav glass-chrome">
-      <button type="button" class="brand-group" id="brandNewChatBtn" title="Start New Conversation">
+      <button type="button" class="brand-group" onclick="veeNewChat()" title="Start New Conversation">
         <div class="brand-emblem">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 5l8 14 8-14" />
@@ -935,32 +919,32 @@
         </div>
         <div class="brand-meta">
           <div class="brand-title-row">
-            <span class="brand-title">VAI</span>
+            <span class="brand-title">Vincent AI</span>
             <span class="brand-badge">Liquid Glass</span>
           </div>
           <div class="brand-sub">
             <span class="status-pulse"></span>
-            <span id="liveStatusText">Created by Vincent</span>
+            <span>Created by Agboola Vincent Oluwaseyi</span>
           </div>
         </div>
       </button>
 
       <div class="nav-actions">
-        <button type="button" class="icon-btn" id="newChatBtn" title="New Chat">
+        <button type="button" class="icon-btn" onclick="veeNewChat()" title="New Chat">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span class="btn-label">New</span>
         </button>
-        <button type="button" class="icon-btn" id="historyBtn" title="Recent Chats (30 Days)">
+        <button type="button" class="icon-btn" onclick="veeOpenModal('historyModal')" title="Chat History">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span class="btn-label">History</span>
         </button>
-        <button type="button" class="icon-btn" id="themeBtn" title="Switch Light/Dark Mode">
+        <button type="button" class="icon-btn" onclick="veeToggleTheme()" title="Switch Light/Dark Mode">
           <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
-        <button type="button" class="icon-btn" id="shareBtn" title="Share VAI on WhatsApp">
+        <button type="button" class="icon-btn" onclick="veeShare()" title="Share on WhatsApp">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
-        <button type="button" class="icon-btn" id="settingsBtn" title="Settings">
+        <button type="button" class="icon-btn" onclick="veeOpenModal('settingsModal')" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
       </div>
@@ -980,18 +964,18 @@
         </div>
 
         <h1 class="welcome-headline">How far? Wetin we dey reason today?</h1>
-        <p class="welcome-sub">Meet VAI — your intelligent AI assistant created by Vincent. Ready to think, create, explore and gist with you.</p>
+        <p class="welcome-sub">Your intelligent AI companion. Ready to think, create, explore and gist with you.</p>
 
         <div class="prompt-grid">
-          <button type="button" class="prompt-card glass-surface" data-prompt="Who created you and what is his story?">
+          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Who created you and what is his story?')">
             <div>
               <div class="prompt-card-title">Meet the Creator</div>
-              <div class="prompt-card-desc">Ask about Vincent & his tech ventures</div>
+              <div class="prompt-card-desc">Ask about Agboola Vincent Oluwaseyi & his tech ventures</div>
             </div>
             <div class="prompt-arrow">↗</div>
           </button>
 
-          <button type="button" class="prompt-card glass-surface" data-prompt="Wetin dey happen my guy? Give me sharp Nigerian street cruise">
+          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Wetin dey happen my guy? Give me sharp Nigerian street cruise')">
             <div>
               <div class="prompt-card-title">Pidgin Street Cruise</div>
               <div class="prompt-card-desc">Authentic Nigerian humour, banter & real talk</div>
@@ -999,7 +983,7 @@
             <div class="prompt-arrow">↗</div>
           </button>
 
-          <button type="button" class="prompt-card glass-surface" data-prompt="Explain how SOC analysts detect cyber attacks in simple terms">
+          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Explain how SOC analysts detect cyber attacks in simple terms')">
             <div>
               <div class="prompt-card-title">Tech & Cybersecurity</div>
               <div class="prompt-card-desc">Gadgets, SOC analysis, coding & practical troubleshooting</div>
@@ -1007,7 +991,7 @@
             <div class="prompt-arrow">↗</div>
           </button>
 
-          <button type="button" class="prompt-card glass-surface" data-prompt="Greet me in Yoruba, Hausa, and Igbo with style!">
+          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Greet me in Yoruba, Hausa, and Igbo with style!')">
             <div>
               <div class="prompt-card-title">Multilingual Intelligence</div>
               <div class="prompt-card-desc">Switch seamlessly across English, Pidgin, Yoruba, Hausa & Igbo</div>
@@ -1024,200 +1008,97 @@
     <!-- Floating Composer -->
     <div class="composer-wrap">
       <div class="quick-strip" id="quickStrip">
-        <button type="button" class="quick-pill glass-surface" data-prompt="Who built you?">Who built you?</button>
-        <button type="button" class="quick-pill glass-surface" data-prompt="You don't know anything">Test Savage Mode 🔥</button>
-        <button type="button" class="quick-pill glass-surface" data-prompt="Bawo ni, se daadaa ni?">Yoruba</button>
-        <button type="button" class="quick-pill glass-surface" data-prompt="Sannu, yaya dai?">Hausa</button>
-        <button type="button" class="quick-pill glass-surface" data-prompt="Kedu, nwanne m?">Igbo</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Who built you?')">Who built you?</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('You don\'t know anything')">Test Savage Mode 🔥</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Bawo ni, se daadaa ni?')">Yoruba</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Sannu, yaya dai?')">Hausa</button>
+        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Kedu, nwanne m?')">Igbo</button>
       </div>
 
-      <form class="composer-box glass-chrome" id="chatForm">
-        <textarea id="userInput" rows="1" placeholder="Yarn with VAI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send"></textarea>
+      <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
+        <textarea id="userInput" rows="1" placeholder="Yarn with Vincent AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
         <div class="composer-controls">
-          <button type="submit" class="send-btn" id="sendBtn">
+          <button type="button" class="mic-btn" id="micBtn" title="Voice Input">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+          </button>
+          <button type="button" class="send-btn" id="sendBtn" onclick="veeSubmitChat()">
             <span id="sendBtnText">Send</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
         </div>
-      </form>
-      <div class="composer-footer">VAI • Created by Vincent • Multilingual Intelligence</div>
+      </div>
+      <div class="composer-footer">Vincent AI • Multilingual Intelligence & Nigerian Innovation</div>
     </div>
   </div>
 
   <!-- History Modal -->
-  <div class="modal-backdrop" id="historyModal">
+  <div class="modal-backdrop" id="historyModal" onclick="if(event.target===this) veeCloseModal('historyModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>Recent Conversations (30 Days)</h2>
-        <button type="button" class="icon-btn" id="closeHistoryBtn">✕</button>
-      </div>
-      <div class="branch-pill-bar">
-        <span>Active Branch: <strong id="activeBranchLabel">network_001</strong></span>
-        <span id="visitorUidShort" style="font-family: 'JetBrains Mono', monospace;">Syncing UID...</span>
+        <h2>Conversation History</h2>
+        <button type="button" class="icon-btn" onclick="veeCloseModal('historyModal')">✕</button>
       </div>
       <div class="history-list" id="historyList"></div>
-      <button type="button" class="icon-btn" id="modalNewChatBtn" style="width: 100%; justify-content: center; color: var(--orange);">+ Start New Chat</button>
+      <button type="button" class="icon-btn" style="width: 100%; justify-content: center; color: var(--orange);" onclick="veeClearHistory()">Clear All Conversations</button>
     </div>
   </div>
 
   <!-- Settings Modal -->
-  <div class="modal-backdrop" id="settingsModal">
+  <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) veeCloseModal('settingsModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>VAI Settings</h2>
-        <button type="button" class="icon-btn" id="closeSettingsBtn">✕</button>
+        <h2>Vincent AI Settings</h2>
+        <button type="button" class="icon-btn" onclick="veeCloseModal('settingsModal')">✕</button>
       </div>
       <div class="setting-row">
         <span>Appearance Mode</span>
-        <button type="button" class="toggle-pill" id="modalThemeToggle">Light (70% White)</button>
+        <button type="button" class="toggle-pill" id="modalThemeToggle" onclick="veeToggleTheme()">Light (70% White)</button>
       </div>
       <div class="setting-row">
         <span>Ambient AI Particles</span>
-        <button type="button" class="toggle-pill" id="particleToggleBtn">Enabled</button>
-      </div>
-      <div class="setting-row">
-        <span>Share VAI Link</span>
-        <button type="button" class="toggle-pill" id="copyLinkBtn">Copy URL</button>
+        <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
       </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-        <span style="color: var(--orange);">About VAI</span>
+        <span style="color: var(--orange);">About Vincent AI</span>
         <p style="font-size: 12.5px; font-weight: 400; color: var(--text-secondary); line-height: 1.5;">
-          Created and developed by <strong>Agboola Vincent Oluwaseyi (Vincent)</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
+          Engineered by <strong>Agboola Vincent Oluwaseyi</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
         </p>
       </div>
     </div>
   </div>
 
-  <!-- Unified Application, Visual Effects & Firebase Controller -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-    import { getDatabase, ref, query, orderByChild, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",
-      authDomain: "vee-ai-e745e.firebaseapp.com",
-      databaseURL: "https://vee-ai-e745e-default-rtdb.firebaseio.com",
-      projectId: "vee-ai-e745e",
-      storageBucket: "vee-ai-e745e.firebasestorage.app",
-      messagingSenderId: "351206567728",
-      appId: "1:351206567728:web:10a197b7c9752daf12e2f5",
-      measurementId: "G-CC61N9WKSJ"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
-    let currentUser = null;
-    let visitorUid = null;
-    let activeNetwork = "network_001";
-    let recentChats = [];
-    let currentChatId = null;
-    let chatHistory = [];
-    let isGenerating = false;
-    let particlesEnabled = true;
-    let unsubConversations = null;
-    let unsubActiveMessages = null;
-    let resolveInitialAuth = null;
-
-    const initialAuthReady = new Promise((resolve) => {
-      resolveInitialAuth = resolve;
-    });
+  <script>
+    /* =========================================================
+       CORE STATE & SAFE STORAGE
+       ========================================================= */
+    var veeSessions = [];
+    var veeCurrentSessionId = null;
+    var veeHistory = [];
+    var veeIsGenerating = false;
+    var veeParticlesEnabled = true;
 
     try {
-      particlesEnabled = localStorage.getItem("vai_particles") !== "false";
-    } catch (_) {}
+      veeSessions = JSON.parse(localStorage.getItem("vincent_ai_sessions") || "[]");
+      veeParticlesEnabled = localStorage.getItem("vincent_ai_particles") !== "false";
+    } catch (e) {}
 
-    function generateId(prefix) {
-      return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    function veeSaveSessions() {
+      try {
+        localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
+      } catch (e) {}
     }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&")
-        .replace(/</g, "<")
-        .replace(/>/g, ">")
-        .replace(/"/g, """)
-        .replace(/'/g, "'");
-    }
-
-    function renderMarkdown(rawText) {
-      if (!rawText) return "";
-      const fence = String.fromCharCode(96).repeat(3);
-      const codeBlocks = [];
-      let text = String(rawText);
-
-      let startIdx = text.indexOf(fence);
-      while (startIdx !== -1) {
-        const endIdx = text.indexOf(fence, startIdx + 3);
-        if (endIdx === -1) break;
-        const inner = text.slice(startIdx + 3, endIdx);
-        const firstNewline = inner.indexOf("\n");
-        const lang = firstNewline !== -1 ? inner.slice(0, firstNewline).trim() : "code";
-        const code = firstNewline !== -1 ? inner.slice(firstNewline + 1) : inner;
-        const token = `@@CODEBLOCK_${codeBlocks.length}@@`;
-        codeBlocks.push(
-          `<div class="code-block-wrap"><div class="code-header"><span>${escapeHtml(lang || "code")}</span>` +
-          `<button type="button" class="copy-code-btn">Copy</button></div>` +
-          `<pre><code>${escapeHtml(code.trim())}</code></pre></div>`
-        );
-        text = text.slice(0, startIdx) + token + text.slice(endIdx + 3);
-        startIdx = text.indexOf(fence);
-      }
-
-      text = escapeHtml(text)
-        .replace(/`([^`]+)`/g, "<code>$1</code>")
-        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-        .replace(/\*([^*]+)\*/g, "<em>$1</em>");
-
-      const lines = text.split("\n");
-      const out = [];
-      let inUl = false;
-      for (const line of lines) {
-        const t = line.trim();
-        if (t.startsWith("@@CODEBLOCK_")) {
-          if (inUl) { out.push("</ul>"); inUl = false; }
-          out.push(t);
-        } else if (/^###\s+/.test(t)) {
-          if (inUl) { out.push("</ul>"); inUl = false; }
-          out.push(`<h3>${t.replace(/^###\s+/, "")}</h3>`);
-        } else if (/^##\s+/.test(t)) {
-          if (inUl) { out.push("</ul>"); inUl = false; }
-          out.push(`<h2>${t.replace(/^##\s+/, "")}</h2>`);
-        } else if (/^#\s+/.test(t)) {
-          if (inUl) { out.push("</ul>"); inUl = false; }
-          out.push(`<h1>${t.replace(/^#\s+/, "")}</h1>`);
-        } else if (/^[-*]\s+/.test(t)) {
-          if (!inUl) { out.push("<ul>"); inUl = true; }
-          out.push(`<li>${t.replace(/^[-*]\s+/, "")}</li>`);
-        } else if (/^>\s+/.test(t)) {
-          if (inUl) { out.push("</ul>"); inUl = false; }
-          out.push(`<blockquote>${t.replace(/^>\s+/, "")}</blockquote>`);
-        } else if (t === "") {
-          if (inUl) { out.push("</ul>"); inUl = false; }
-        } else {
-          if (inUl) { out.push("</ul>"); inUl = false; }
-          out.push(`<p>${t}</p>`);
-        }
-      }
-      if (inUl) out.push("</ul>");
-
-      let html = out.join("");
-      codeBlocks.forEach((block, i) => {
-        html = html.replace(`@@CODEBLOCK_${i}@@`, block);
-      });
-      return html;
-    }
-
-    function applyTheme(theme) {
+    /* =========================================================
+       THEME & MODALS (DIRECT GLOBAL FUNCTIONS)
+       ========================================================= */
+    function veeApplyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      try { localStorage.setItem("vai_theme", theme); } catch (_) {}
-      const meta = document.getElementById("metaThemeColor");
+      try { localStorage.setItem("vincent_ai_theme", theme); } catch (e) {}
+      var meta = document.getElementById("metaThemeColor");
       if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0B0B" : "#FFFFFF");
-      const label = document.getElementById("modalThemeToggle");
+      var label = document.getElementById("modalThemeToggle");
       if (label) label.textContent = theme === "dark" ? "Dark (#0B0B0B)" : "Light (70% White)";
-      const icon = document.getElementById("themeIcon");
+      var icon = document.getElementById("themeIcon");
       if (icon) {
         icon.innerHTML = theme === "dark"
           ? '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>'
@@ -1225,97 +1106,230 @@
       }
     }
 
-    function toggleTheme() {
-      const cur = document.documentElement.getAttribute("data-theme") || "light";
-      applyTheme(cur === "light" ? "dark" : "light");
+    function veeToggleTheme() {
+      var current = document.documentElement.getAttribute("data-theme") || "light";
+      veeApplyTheme(current === "light" ? "dark" : "light");
     }
 
-    function openModal(id) {
-      if (id === "historyModal") renderHistoryList();
-      const el = document.getElementById(id);
+    function veeOpenModal(id) {
+      if (id === "historyModal") veeRenderHistoryList();
+      var el = document.getElementById(id);
       if (el) el.classList.add("open");
     }
 
-    function closeModal(id) {
-      const el = document.getElementById(id);
+    function veeCloseModal(id) {
+      var el = document.getElementById(id);
       if (el) el.classList.remove("open");
     }
 
-    function showChatView() {
-      document.getElementById("welcomeScreen")?.classList.add("hidden");
-      document.getElementById("chatStream")?.classList.add("active");
-      const qs = document.getElementById("quickStrip");
-      if (qs) qs.style.display = "flex";
+    function veeShare() {
+      var url = window.location.href;
+      var text = "Come chat with Vincent AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
+      window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     }
 
-    function startNewChat() {
-      isGenerating = false;
-      currentChatId = null;
-      chatHistory = [];
-      if (typeof unsubActiveMessages === "function") {
-        unsubActiveMessages();
-        unsubActiveMessages = null;
-      }
-      const stream = document.getElementById("chatStream");
-      if (stream) {
-        stream.innerHTML = "";
-        stream.classList.remove("active");
-      }
-      const qs = document.getElementById("quickStrip");
-      if (qs) qs.style.display = "none";
-      document.getElementById("welcomeScreen")?.classList.remove("hidden");
-      closeModal("historyModal");
-      document.getElementById("userInput")?.focus();
+    /* =========================================================
+       CHAT NAVIGATION & HISTORY
+       ========================================================= */
+    function veeShowChatView() {
+      document.getElementById("welcomeScreen").classList.add("hidden");
+      document.getElementById("chatStream").classList.add("active");
+      document.getElementById("quickStrip").style.display = "flex";
     }
 
-    function appendMessage(text, sender, msgId) {
-      const stream = document.getElementById("chatStream");
-      if (!stream) return;
-      if (msgId && document.getElementById(`dom_${msgId}`)) return;
+    function veeNewChat() {
+      veeIsGenerating = false;
+      veeCurrentSessionId = null;
+      veeHistory = [];
+      var stream = document.getElementById("chatStream");
+      stream.innerHTML = "";
+      stream.classList.remove("active");
+      document.getElementById("quickStrip").style.display = "none";
+      document.getElementById("welcomeScreen").classList.remove("hidden");
+      veeCloseModal("historyModal");
+      var input = document.getElementById("userInput");
+      if (input) input.focus();
+    }
 
-      const row = document.createElement("div");
-      row.className = `msg-row ${sender}`;
-      if (msgId) row.id = `dom_${msgId}`;
+    function veeUpdateSessionRecord(firstUserMsg) {
+      if (!veeCurrentSessionId) {
+        veeCurrentSessionId = "sess_" + Date.now();
+        veeSessions.unshift({
+          id: veeCurrentSessionId,
+          title: firstUserMsg.slice(0, 42) + (firstUserMsg.length > 42 ? "..." : ""),
+          updatedAt: new Date().toLocaleDateString(),
+          messages: veeHistory.slice()
+        });
+      } else {
+        for (var i = 0; i < veeSessions.length; i++) {
+          if (veeSessions[i].id === veeCurrentSessionId) {
+            veeSessions[i].messages = veeHistory.slice();
+            veeSessions[i].updatedAt = new Date().toLocaleDateString();
+            break;
+          }
+        }
+      }
+      veeSaveSessions();
+    }
 
-      const label = document.createElement("div");
+    function veeLoadSession(id) {
+      var found = null;
+      for (var i = 0; i < veeSessions.length; i++) {
+        if (veeSessions[i].id === id) { found = veeSessions[i]; break; }
+      }
+      if (!found) return;
+      veeCurrentSessionId = found.id;
+      veeHistory = found.messages.slice();
+      var stream = document.getElementById("chatStream");
+      stream.innerHTML = "";
+      veeShowChatView();
+      for (var j = 0; j < veeHistory.length; j++) {
+        veeAppendMessage(veeHistory[j].content, veeHistory[j].role === "user" ? "user" : "bot");
+      }
+      veeCloseModal("historyModal");
+    }
+
+    function veeClearHistory() {
+      veeSessions = [];
+      veeSaveSessions();
+      veeRenderHistoryList();
+      veeNewChat();
+    }
+
+    function veeRenderHistoryList() {
+      var list = document.getElementById("historyList");
+      if (!list) return;
+      if (!veeSessions.length) {
+        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vincent AI!</p>';
+        return;
+      }
+      list.innerHTML = veeSessions.map(function (s) {
+        var activeClass = s.id === veeCurrentSessionId ? "active" : "";
+        return '<div class="history-item ' + activeClass + '" onclick="veeLoadSession(\'' + s.id + '\')">' +
+          '<div style="min-width: 0;">' +
+            '<div class="history-title">' + veeEscapeHtml(s.title) + '</div>' +
+            '<div class="history-date">' + s.updatedAt + ' • ' + s.messages.length + ' messages</div>' +
+          '</div>' +
+          '<span style="color: var(--orange); font-weight: 700;">→</span>' +
+        '</div>';
+      }).join("");
+    }
+
+    /* =========================================================
+       MARKDOWN & MESSAGE RENDERING
+       ========================================================= */
+    function veeEscapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function veeRenderMarkdown(rawText) {
+      if (!rawText) return "";
+      var codeBlocks = [];
+      var text = rawText.replace(/```(\w*)\n([\s\S]*?)```/g, function (_, lang, code) {
+        var idx = codeBlocks.length;
+        var safeLang = veeEscapeHtml(lang || "code");
+        codeBlocks.push(
+          '<div class="code-block-wrap">' +
+            '<div class="code-header"><span>' + safeLang + '</span><button type="button" class="copy-code-btn" onclick="veeCopyCode(this)">Copy</button></div>' +
+            '<pre><code>' + veeEscapeHtml(code.trim()) + '</code></pre>' +
+          '</div>'
+        );
+        return "@@CODEBLOCK_" + idx + "@@";
+      });
+
+      text = veeEscapeHtml(text);
+      text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+      text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      text = text.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+      var lines = text.split("\n");
+      var out = [];
+      var inUl = false;
+
+      for (var i = 0; i < lines.length; i++) {
+        var trimmed = lines[i].trim();
+        if (trimmed.indexOf("@@CODEBLOCK_") === 0) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push(trimmed);
+        } else if (/^###\s+/.test(trimmed)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push("<h3>" + trimmed.replace(/^###\s+/, "") + "</h3>");
+        } else if (/^##\s+/.test(trimmed)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push("<h2>" + trimmed.replace(/^##\s+/, "") + "</h2>");
+        } else if (/^#\s+/.test(trimmed)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push("<h1>" + trimmed.replace(/^#\s+/, "") + "</h1>");
+        } else if (/^[-*]\s+/.test(trimmed)) {
+          if (!inUl) { out.push("<ul>"); inUl = true; }
+          out.push("<li>" + trimmed.replace(/^[-*]\s+/, "") + "</li>");
+        } else if (trimmed === "") {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+        } else {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push("<p>" + trimmed + "</p>");
+        }
+      }
+      if (inUl) out.push("</ul>");
+
+      var html = out.join("");
+      for (var j = 0; j < codeBlocks.length; j++) {
+        html = html.replace("@@CODEBLOCK_" + j + "@@", codeBlocks[j]);
+      }
+      return html;
+    }
+
+    function veeCopyCode(btn) {
+      var codeEl = btn.closest(".code-block-wrap").querySelector("code");
+      if (navigator.clipboard && codeEl) {
+        navigator.clipboard.writeText(codeEl.innerText);
+        btn.textContent = "Copied ✓";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+      }
+    }
+
+    function veeCopyMessage(btn) {
+      var raw = btn.parentElement.getAttribute("data-raw") || "";
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(raw);
+        btn.textContent = "Copied ✓";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+      }
+    }
+
+    function veeAppendMessage(text, sender) {
+      var stream = document.getElementById("chatStream");
+      var row = document.createElement("div");
+      row.className = "msg-row " + sender;
+
+      var label = document.createElement("div");
       label.className = "msg-sender";
-      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> VAI';
+      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vincent AI';
       row.appendChild(label);
 
-      const bubble = document.createElement("div");
+      var bubble = document.createElement("div");
       bubble.className = sender === "user" ? "msg-bubble" : "msg-bubble glass-surface";
 
       if (sender === "user") {
         bubble.textContent = text;
         row.appendChild(bubble);
       } else {
-        const md = document.createElement("div");
+        var md = document.createElement("div");
         md.className = "md-content";
-        md.innerHTML = renderMarkdown(text);
+        md.innerHTML = veeRenderMarkdown(text);
         bubble.appendChild(md);
         row.appendChild(bubble);
 
-        const actions = document.createElement("div");
+        var actions = document.createElement("div");
         actions.className = "msg-actions";
-
-        const copyBtn = document.createElement("button");
-        copyBtn.type = "button";
-        copyBtn.className = "act-btn";
-        copyBtn.textContent = "Copy";
-        copyBtn.addEventListener("click", () => {
-          navigator.clipboard?.writeText(text);
-          copyBtn.textContent = "Copied ✓";
-          setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
-        });
-
-        const regenBtn = document.createElement("button");
-        regenBtn.type = "button";
-        regenBtn.className = "act-btn";
-        regenBtn.textContent = "Regenerate";
-        regenBtn.addEventListener("click", regenerateLastReply);
-
-        actions.appendChild(copyBtn);
-        actions.appendChild(regenBtn);
+        actions.setAttribute("data-raw", text);
+        actions.innerHTML =
+          '<button type="button" class="act-btn" onclick="veeCopyMessage(this)">Copy</button>' +
+          '<button type="button" class="act-btn" onclick="veeRegenerate()">Regenerate</button>';
         row.appendChild(actions);
       }
 
@@ -1323,344 +1337,170 @@
       stream.scrollTop = stream.scrollHeight;
     }
 
-    function appendStorageNotice(msg) {
-      const stream = document.getElementById("chatStream");
-      if (!stream) return;
-      const note = document.createElement("div");
-      note.className = "storage-notice";
-      note.textContent = msg;
-      stream.appendChild(note);
-      stream.scrollTop = stream.scrollHeight;
-    }
-
-    function appendThinking() {
-      const stream = document.getElementById("chatStream");
-      const row = document.createElement("div");
+    function veeAppendThinking() {
+      var stream = document.getElementById("chatStream");
+      var row = document.createElement("div");
       row.className = "msg-row bot";
       row.innerHTML =
-        '<div class="msg-sender"><span style="color: var(--orange);">●</span> VAI</div>' +
+        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vincent AI</div>' +
         '<div class="ai-thinking-bubble glass-surface">' +
           '<div class="orb-spinner"></div>' +
           '<div class="wave-bars"><span></span><span></span><span></span></div>' +
           '<span style="font-size: 12.5px; font-weight: 600; color: var(--text-secondary);">Reasoning...</span>' +
         '</div>';
-      stream?.appendChild(row);
-      if (stream) stream.scrollTop = stream.scrollHeight;
+      stream.appendChild(row);
+      stream.scrollTop = stream.scrollHeight;
       return row;
     }
 
-    function subscribeToConversations(uid, networkId) {
-      if (typeof unsubConversations === "function") unsubConversations();
-      const convRef = query(
-        ref(db, `visitors/${uid}/networks/${networkId}/conversations`),
-        orderByChild("updatedAt"),
-        limitToLast(50)
-      );
-      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-
-      unsubConversations = onValue(convRef, (snap) => {
-        const list = [];
-        snap.forEach((child) => {
-          const val = child.val() || {};
-          const updated = Number(val.updatedAt || val.createdAt || 0);
-          if (updated >= thirtyDaysAgo || updated === 0) {
-            list.push({ id: child.key, title: val.title || "Conversation", updatedAt: updated });
-          }
-        });
-        list.sort((a, b) => b.updatedAt - a.updatedAt);
-        recentChats = list;
-        if (document.getElementById("historyModal")?.classList.contains("open")) {
-          renderHistoryList();
-        }
-      }, () => {});
+    /* =========================================================
+       INPUT & BACKEND API SUBMISSION
+       ========================================================= */
+    function veeResizeInput(el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 128) + "px";
     }
 
-    function subscribeToConversation(chatId) {
-      if (typeof unsubActiveMessages === "function") unsubActiveMessages();
-      if (!visitorUid || !activeNetwork || !chatId) return;
-
-      const msgRef = query(
-        ref(db, `visitors/${visitorUid}/networks/${activeNetwork}/conversations/${chatId}/messages`),
-        orderByChild("createdAt"),
-        limitToLast(100)
-      );
-
-      unsubActiveMessages = onValue(msgRef, (snap) => {
-        const msgs = [];
-        snap.forEach((child) => {
-          const val = child.val();
-          if (val && (val.role === "user" || val.role === "assistant") && val.content) {
-            msgs.push({ id: child.key, role: val.role, content: val.content, createdAt: Number(val.createdAt || 0) });
-          }
-        });
-        msgs.sort((a, b) => a.createdAt - b.createdAt);
-        chatHistory = msgs.slice(-20).map((m) => ({ role: m.role, content: m.content }));
-        for (const m of msgs) {
-          appendMessage(m.content, m.role === "user" ? "user" : "bot", m.id);
-        }
-      }, () => {});
-    }
-
-    function renderHistoryList() {
-      const list = document.getElementById("historyList");
-      const branchLabel = document.getElementById("activeBranchLabel");
-      const uidLabel = document.getElementById("visitorUidShort");
-
-      if (branchLabel) branchLabel.textContent = activeNetwork;
-      if (uidLabel) {
-        uidLabel.textContent = visitorUid ? `UID: ${visitorUid.slice(0, 8)}...` : "Syncing...";
+    function veeHandleKey(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        veeSubmitChat();
       }
+    }
 
-      if (!list) return;
-      if (!recentChats.length) {
-        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No recent conversations on this network branch yet. Start chatting with VAI!</p>';
+    function veeSendPrompt(promptText) {
+      if (veeIsGenerating) return;
+      var input = document.getElementById("userInput");
+      input.value = promptText;
+      veeSubmitChat();
+    }
+
+    async function veeRegenerate() {
+      if (veeIsGenerating || veeHistory.length < 2) return;
+      if (veeHistory[veeHistory.length - 1].role === "assistant") {
+        veeHistory.pop();
+        var stream = document.getElementById("chatStream");
+        if (stream.lastElementChild) stream.lastElementChild.remove();
+      }
+      var lastUser = veeHistory[veeHistory.length - 1];
+      if (!lastUser || lastUser.role !== "user") return;
+      await veeRequestBackend(lastUser.content, veeHistory.slice(0, -1), false);
+    }
+
+    async function veeSubmitChat() {
+      if (veeIsGenerating) return;
+      var input = document.getElementById("userInput");
+      var message = (input.value || "").trim();
+      if (!message) {
+        input.focus();
         return;
       }
 
-      list.innerHTML = "";
-      for (const c of recentChats) {
-        const item = document.createElement("div");
-        item.className = `history-item ${c.id === currentChatId ? "active" : ""}`;
-        const dateStr = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : "Recent";
-        item.innerHTML = `<div style="min-width: 0;"><div class="history-title">${escapeHtml(c.title)}</div><div class="history-date">${dateStr}</div></div><span style="color: var(--orange); font-weight: 700;">→</span>`;
-        item.addEventListener("click", () => {
-          currentChatId = c.id;
-          showChatView();
-          const stream = document.getElementById("chatStream");
-          if (stream) stream.innerHTML = "";
-          closeModal("historyModal");
-          subscribeToConversation(c.id);
-        });
-        list.appendChild(item);
-      }
+      veeShowChatView();
+      veeAppendMessage(message, "user");
+      input.value = "";
+      input.style.height = "auto";
+
+      var contextSnapshot = veeHistory.slice();
+      await veeRequestBackend(message, contextSnapshot, true);
     }
 
-    async function getFreshIdToken() {
-      if (!currentUser) {
-        await Promise.race([
-          initialAuthReady,
-          new Promise((r) => setTimeout(r, 2000))
-        ]);
-      }
-      if (!currentUser) return null;
-      try {
-        return await currentUser.getIdToken();
-      } catch (_) {
-        return null;
-      }
-    }
-
-    async function sendToBackend(message, contextSnapshot, addUserToHistory, userMsgId) {
-      isGenerating = true;
-      const sendBtnText = document.getElementById("sendBtnText");
+    async function veeRequestBackend(message, contextHistory, addUserToHistory) {
+      veeIsGenerating = true;
+      var sendBtnText = document.getElementById("sendBtnText");
       if (sendBtnText) sendBtnText.textContent = "...";
 
-      const thinkingRow = appendThinking();
+      var thinkingRow = veeAppendThinking();
 
       try {
-        const idToken = await getFreshIdToken();
-        const reqHeaders = { "Content-Type": "application/json" };
-        if (idToken) reqHeaders["Authorization"] = `Bearer ${idToken}`;
-
-        const res = await fetch("/.netlify/functions/chat", {
+        var res = await fetch("/.netlify/functions/chat", {
           method: "POST",
-          headers: reqHeaders,
-          body: JSON.stringify({
-            message,
-            history: contextSnapshot,
-            chatId: currentChatId,
-            userMsgId
-          })
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message, history: contextHistory })
         });
+        var data = await res.json();
+        var reply = data.reply || "Chai, small network blink! Try send am again.";
 
-        const data = await res.json();
-        const reply = data.reply || data.error || "Chai, small server blink! Try send am again.";
-        if (data.chatId) currentChatId = data.chatId;
+        thinkingRow.remove();
+        veeAppendMessage(reply, "bot");
 
-        thinkingRow?.remove();
-        appendMessage(reply, "bot", data.botMsgId || generateId("msg"));
-
-        if (addUserToHistory) chatHistory.push({ role: "user", content: message });
-        chatHistory.push({ role: "assistant", content: reply });
-        if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
-
-        if (data.storageSaved === false && data.storageError) {
-          appendStorageNotice(data.storageError);
+        if (addUserToHistory) {
+          veeHistory.push({ role: "user", content: message });
         }
-
-        if (data.activeNetwork && data.activeNetwork !== activeNetwork) {
-          activeNetwork = data.activeNetwork;
-          if (visitorUid) subscribeToConversations(visitorUid, activeNetwork);
-        }
-        if (currentChatId && !unsubActiveMessages) {
-          subscribeToConversation(currentChatId);
-        }
-      } catch (_) {
-        thinkingRow?.remove();
-        appendMessage("Omo, small network wahala happen! Check your connection and try again.", "bot");
+        veeHistory.push({ role: "assistant", content: reply });
+        if (veeHistory.length > 20) veeHistory = veeHistory.slice(-20);
+        veeUpdateSessionRecord(message);
+      } catch (err) {
+        thinkingRow.remove();
+        veeAppendMessage("Omo, small network wahala happen! Check your connection and try again.", "bot");
       } finally {
-        isGenerating = false;
+        veeIsGenerating = false;
         if (sendBtnText) sendBtnText.textContent = "Send";
       }
     }
 
-    async function submitChatMessage() {
-      if (isGenerating) return;
-      const input = document.getElementById("userInput");
-      const message = (input?.value || "").trim();
-      if (!message) {
-        input?.focus();
-        return;
-      }
-
-      if (!currentChatId) currentChatId = generateId("chat");
-      const userMsgId = generateId("msg");
-
-      showChatView();
-      appendMessage(message, "user", userMsgId);
-      input.value = "";
-      input.style.height = "auto";
-
-      await sendToBackend(message, chatHistory.slice(), true, userMsgId);
-    }
-
-    async function regenerateLastReply() {
-      if (isGenerating || chatHistory.length < 2) return;
-      if (chatHistory[chatHistory.length - 1].role === "assistant") {
-        chatHistory.pop();
-        document.getElementById("chatStream")?.lastElementChild?.remove();
-      }
-      const lastUser = chatHistory[chatHistory.length - 1];
-      if (!lastUser || lastUser.role !== "user") return;
-      await sendToBackend(lastUser.content, chatHistory.slice(0, -1), false, generateId("msg"));
-    }
-
-    // Event Listeners
-    document.getElementById("chatForm")?.addEventListener("submit", (e) => {
-      e.preventDefault();
-      submitChatMessage();
-    });
-
-    document.getElementById("chatForm")?.addEventListener("click", (e) => {
-      if (e.target.id !== "sendBtn") document.getElementById("userInput")?.focus();
-    });
-
-    const userInputEl = document.getElementById("userInput");
-    userInputEl?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        submitChatMessage();
-      }
-    });
-    userInputEl?.addEventListener("input", () => {
-      userInputEl.style.height = "auto";
-      userInputEl.style.height = `${Math.min(userInputEl.scrollHeight, 128)}px`;
-    });
-
-    document.getElementById("brandNewChatBtn")?.addEventListener("click", startNewChat);
-    document.getElementById("newChatBtn")?.addEventListener("click", startNewChat);
-    document.getElementById("modalNewChatBtn")?.addEventListener("click", startNewChat);
-    document.getElementById("historyBtn")?.addEventListener("click", () => openModal("historyModal"));
-    document.getElementById("closeHistoryBtn")?.addEventListener("click", () => closeModal("historyModal"));
-    document.getElementById("themeBtn")?.addEventListener("click", toggleTheme);
-    document.getElementById("modalThemeToggle")?.addEventListener("click", toggleTheme);
-    document.getElementById("settingsBtn")?.addEventListener("click", () => openModal("settingsModal"));
-    document.getElementById("closeSettingsBtn")?.addEventListener("click", () => closeModal("settingsModal"));
-
-    document.getElementById("shareBtn")?.addEventListener("click", () => {
-      const text = `Chat with VAI (created by Vincent) — intelligent multilingual AI companion! ${window.location.href}`;
-      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-    });
-
-    document.getElementById("copyLinkBtn")?.addEventListener("click", () => {
-      const btn = document.getElementById("copyLinkBtn");
-      navigator.clipboard?.writeText(window.location.href);
-      if (btn) {
-        btn.textContent = "Copied ✓";
-        setTimeout(() => { btn.textContent = "Copy URL"; }, 1500);
-      }
-    });
-
-    document.querySelectorAll("[data-prompt]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        if (isGenerating) return;
-        const prompt = btn.getAttribute("data-prompt") || "";
-        if (userInputEl) userInputEl.value = prompt;
-        submitChatMessage();
-      });
-    });
-
-    document.getElementById("historyModal")?.addEventListener("click", (e) => {
-      if (e.target.id === "historyModal") closeModal("historyModal");
-    });
-    document.getElementById("settingsModal")?.addEventListener("click", (e) => {
-      if (e.target.id === "settingsModal") closeModal("settingsModal");
-    });
-
-    document.addEventListener("click", (e) => {
-      if (e.target.classList?.contains("copy-code-btn")) {
-        const codeEl = e.target.closest(".code-block-wrap")?.querySelector("code");
-        if (codeEl && navigator.clipboard) {
-          navigator.clipboard.writeText(codeEl.innerText);
-          e.target.textContent = "Copied ✓";
-          setTimeout(() => { e.target.textContent = "Copy"; }, 1500);
-        }
-      }
-    });
-
-    // Ambient Canvas Particles, Cursor Aura & Mobile Viewport Height Sync
+    /* =========================================================
+       ISOLATED VISUAL EFFECTS & VIEWPORT SYNC
+       ========================================================= */
     (function initVisualEffects() {
       try {
-        let savedTheme = "light";
-        try { savedTheme = localStorage.getItem("vai_theme") || "light"; } catch (_) {}
-        applyTheme(savedTheme);
+        var savedTheme = "light";
+        try { savedTheme = localStorage.getItem("vincent_ai_theme") || "light"; } catch (e) {}
+        veeApplyTheme(savedTheme);
 
-        const appShell = document.getElementById("appShell");
-        const syncHeight = () => {
+        // Mobile virtual keyboard height sync
+        var appShell = document.getElementById("appShell");
+        function syncHeight() {
           if (appShell) {
-            appShell.style.height = `${window.visualViewport ? window.visualViewport.height : window.innerHeight}px`;
+            appShell.style.height = (window.visualViewport ? window.visualViewport.height : window.innerHeight) + "px";
           }
-        };
-        window.visualViewport?.addEventListener("resize", syncHeight, { passive: true });
+        }
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener("resize", syncHeight, { passive: true });
+        }
         window.addEventListener("resize", syncHeight, { passive: true });
         syncHeight();
 
-        const aura = document.getElementById("cursorAura");
+        // Desktop cursor glow
+        var aura = document.getElementById("cursorAura");
         if (aura && !window.matchMedia("(hover: none), (pointer: coarse)").matches) {
-          document.addEventListener("pointermove", (e) => {
+          document.addEventListener("pointermove", function (e) {
             aura.style.opacity = "1";
-            aura.style.left = `${e.clientX}px`;
-            aura.style.top = `${e.clientY}px`;
+            aura.style.left = e.clientX + "px";
+            aura.style.top = e.clientY + "px";
           }, { passive: true });
         }
 
-        const canvas = document.getElementById("aiCanvas");
-        const ctx = canvas?.getContext ? canvas.getContext("2d") : null;
-        let particles = [];
-        let w = 0;
-        let h = 0;
-        let rafId = null;
+        // Background Canvas Particles
+        var canvas = document.getElementById("aiCanvas");
+        var ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
+        var particles = [];
+        var w = 0, h = 0, rafId = null;
 
-        const setupCanvas = () => {
+        function setupCanvas() {
           if (!canvas || !ctx) return;
           w = window.innerWidth;
           h = window.innerHeight;
           canvas.width = w;
           canvas.height = h;
-          const count = w < 640 ? 16 : 30;
-          particles = Array.from({ length: count }, () => ({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            vx: (Math.random() - 0.5) * 0.35,
-            vy: (Math.random() - 0.5) * 0.35,
-            r: Math.random() * 1.6 + 0.8
-          }));
-        };
+          var count = w < 640 ? 16 : 30;
+          particles = [];
+          for (var i = 0; i < count; i++) {
+            particles.push({
+              x: Math.random() * w,
+              y: Math.random() * h,
+              vx: (Math.random() - 0.5) * 0.35,
+              vy: (Math.random() - 0.5) * 0.35,
+              r: Math.random() * 1.6 + 0.8
+            });
+          }
+        }
 
-        const drawFrame = () => {
-          if (!ctx || !particlesEnabled || document.hidden) return;
+        function drawFrame() {
+          if (!ctx || !veeParticlesEnabled || document.hidden) return;
           ctx.clearRect(0, 0, w, h);
-          for (const p of particles) {
+          for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
             p.x = (p.x + p.vx + w) % w;
             p.y = (p.y + p.vy + h) % h;
             ctx.beginPath();
@@ -1669,66 +1509,26 @@
             ctx.fill();
           }
           rafId = requestAnimationFrame(drawFrame);
-        };
-
-        const pBtn = document.getElementById("particleToggleBtn");
-        if (pBtn) {
-          pBtn.textContent = particlesEnabled ? "Enabled" : "Disabled";
-          pBtn.addEventListener("click", () => {
-            particlesEnabled = !particlesEnabled;
-            try { localStorage.setItem("vai_particles", String(particlesEnabled)); } catch (_) {}
-            pBtn.textContent = particlesEnabled ? "Enabled" : "Disabled";
-            if (particlesEnabled) {
-              setupCanvas();
-              drawFrame();
-            } else if (ctx) {
-              cancelAnimationFrame(rafId);
-              ctx.clearRect(0, 0, w, h);
-            }
-          });
         }
 
-        if (particlesEnabled) {
+        window.veeToggleParticles = function () {
+          veeParticlesEnabled = !veeParticlesEnabled;
+          try { localStorage.setItem("vincent_ai_particles", veeParticlesEnabled); } catch (e) {}
+          var btn = document.getElementById("particleToggleBtn");
+          if (btn) btn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
+          if (veeParticlesEnabled) { setupCanvas(); drawFrame(); }
+          else if (ctx) { cancelAnimationFrame(rafId); ctx.clearRect(0, 0, w, h); }
+        };
+
+        var pBtn = document.getElementById("particleToggleBtn");
+        if (pBtn) pBtn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
+        if (veeParticlesEnabled) {
           setupCanvas();
           drawFrame();
           window.addEventListener("resize", setupCanvas, { passive: true });
         }
-      } catch (_) {}
+      } catch (e) {}
     })();
-
-    // Firebase Anonymous Auth & Session Handshake
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        try {
-          await signInAnonymously(auth);
-        } catch (_) {
-          resolveInitialAuth?.(null);
-        }
-        return;
-      }
-
-      currentUser = user;
-      visitorUid = user.uid;
-      resolveInitialAuth?.(user);
-
-      try {
-        const token = await user.getIdToken();
-        const res = await fetch("/.netlify/functions/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ action: "init_session" })
-        });
-        const data = await res.json();
-        if (data?.activeNetwork) activeNetwork = data.activeNetwork;
-      } catch (_) {}
-
-      const statusEl = document.getElementById("liveStatusText");
-      if (statusEl) statusEl.textContent = `Vincent • ${activeNetwork}`;
-      subscribeToConversations(user.uid, activeNetwork);
-    });
   </script>
 </body>
 </html>
