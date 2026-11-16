@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#FFFFFF" id="metaThemeColor" />
-  <meta name="description" content="VAI — Intelligent Nigerian AI Companion created and developed by Vincent." />
-  <title>VAI — Intelligent Nigerian AI Companion</title>
+  <meta name="description" content="Vee-Ai — Intelligent Nigerian AI Companion created and developed by Agboola Vincent Oluwaseyi." />
+  <title>Vee-Ai — Intelligent Nigerian AI Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -940,7 +940,7 @@
   <!-- Main Interactive App -->
   <div class="app-shell" id="appShell">
     <header class="top-nav glass-chrome">
-      <button type="button" class="brand-group" onclick="veeNewChat()" title="Start New Conversation">
+      <button type="button" class="brand-group" id="brandHomeBtn" title="Start New Conversation">
         <div class="brand-emblem">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 5l8 14 8-14" />
@@ -949,7 +949,7 @@
         </div>
         <div class="brand-meta">
           <div class="brand-title-row">
-            <span class="brand-title">VAI</span>
+            <span class="brand-title">Vee-Ai</span>
             <span class="brand-badge">Liquid Glass</span>
           </div>
           <div class="brand-sub">
@@ -960,21 +960,21 @@
       </button>
 
       <div class="nav-actions">
-        <button type="button" class="icon-btn" onclick="veeNewChat()" title="New Chat">
+        <button type="button" class="icon-btn" id="navNewBtn" title="New Chat">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span class="btn-label">New</span>
         </button>
-        <button type="button" class="icon-btn" onclick="veeOpenModal('historyModal')" title="Chat History (30 Days)">
+        <button type="button" class="icon-btn" id="navHistoryBtn" title="Chat History (30 Days)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span class="btn-label">History</span>
         </button>
-        <button type="button" class="icon-btn" onclick="veeToggleTheme()" title="Switch Light/Dark Mode">
+        <button type="button" class="icon-btn" id="navThemeBtn" title="Switch Light/Dark Mode">
           <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
-        <button type="button" class="icon-btn" onclick="veeShare()" title="Share on WhatsApp">
+        <button type="button" class="icon-btn" id="navShareBtn" title="Share on WhatsApp">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
-        <button type="button" class="icon-btn" onclick="veeOpenModal('settingsModal')" title="Settings">
+        <button type="button" class="icon-btn" id="navSettingsBtn" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
       </div>
@@ -994,10 +994,10 @@
         </div>
 
         <h1 class="welcome-headline">How far? Wetin we dey reason today?</h1>
-        <p class="welcome-sub">Meet VAI — your intelligent AI companion created by Vincent. Ready to think, create, explore and gist with you.</p>
+        <p class="welcome-sub">Meet Vee-Ai — your intelligent AI companion created by Vincent. Ready to think, create, explore and gist with you.</p>
 
         <div class="prompt-grid">
-          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Who created you and what is his story?')">
+          <button type="button" class="prompt-card glass-surface" data-prompt="Who created you and what is his story?">
             <div>
               <div class="prompt-card-title">Meet the Creator</div>
               <div class="prompt-card-desc">Ask about Agboola Vincent Oluwaseyi & his tech ventures</div>
@@ -1005,7 +1005,7 @@
             <div class="prompt-arrow">↗</div>
           </button>
 
-          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Wetin dey happen my guy? Give me sharp Nigerian street cruise')">
+          <button type="button" class="prompt-card glass-surface" data-prompt="Wetin dey happen my guy? Give me sharp Nigerian street cruise">
             <div>
               <div class="prompt-card-title">Pidgin Street Cruise</div>
               <div class="prompt-card-desc">Authentic Nigerian humour, banter & real talk</div>
@@ -1013,7 +1013,7 @@
             <div class="prompt-arrow">↗</div>
           </button>
 
-          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Explain how SOC analysts detect cyber attacks in simple terms')">
+          <button type="button" class="prompt-card glass-surface" data-prompt="Explain how SOC analysts detect cyber attacks in simple terms">
             <div>
               <div class="prompt-card-title">Tech & Cybersecurity</div>
               <div class="prompt-card-desc">Gadgets, SOC analysis, coding & practical troubleshooting</div>
@@ -1021,7 +1021,7 @@
             <div class="prompt-arrow">↗</div>
           </button>
 
-          <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Greet me in Yoruba, Hausa, and Igbo with style!')">
+          <button type="button" class="prompt-card glass-surface" data-prompt="Greet me in Yoruba, Hausa, and Igbo with style!">
             <div>
               <div class="prompt-card-title">Multilingual Intelligence</div>
               <div class="prompt-card-desc">Switch seamlessly across English, Pidgin, Yoruba, Hausa & Igbo</div>
@@ -1038,62 +1038,62 @@
     <!-- Floating Composer -->
     <div class="composer-wrap">
       <div class="quick-strip" id="quickStrip">
-        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Who built you?')">Who built you?</button>
-        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('You don\'t know anything')">Test Savage Mode 🔥</button>
-        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Bawo ni, se daadaa ni?')">Yoruba</button>
-        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Sannu, yaya dai?')">Hausa</button>
-        <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Kedu, nwanne m?')">Igbo</button>
+        <button type="button" class="quick-pill glass-surface" data-prompt="Who built you?">Who built you?</button>
+        <button type="button" class="quick-pill glass-surface" data-prompt="You don't know anything">Test Savage Mode 🔥</button>
+        <button type="button" class="quick-pill glass-surface" data-prompt="Bawo ni, se daadaa ni?">Yoruba</button>
+        <button type="button" class="quick-pill glass-surface" data-prompt="Sannu, yaya dai?">Hausa</button>
+        <button type="button" class="quick-pill glass-surface" data-prompt="Kedu, nwanne m?">Igbo</button>
       </div>
 
-      <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
-        <textarea id="userInput" rows="1" placeholder="Yarn with VAI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
+      <div class="composer-box glass-chrome" id="composerBox">
+        <textarea id="userInput" rows="1" placeholder="Yarn with Vee-Ai in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send"></textarea>
         <div class="composer-controls">
           <button type="button" class="mic-btn" id="micBtn" title="Voice Input">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
           </button>
-          <button type="button" class="send-btn" id="sendBtn" onclick="veeSubmitChat()">
+          <button type="button" class="send-btn" id="sendBtn">
             <span id="sendBtnText">Send</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
         </div>
       </div>
-      <div class="composer-footer">VAI • Created by Vincent • Multilingual Intelligence & Nigerian Innovation</div>
+      <div class="composer-footer">Vee-Ai • Created by Vincent • Multilingual Intelligence & Nigerian Innovation</div>
     </div>
   </div>
 
   <!-- History Modal -->
-  <div class="modal-backdrop" id="historyModal" onclick="if(event.target===this) veeCloseModal('historyModal')">
+  <div class="modal-backdrop" id="historyModal">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
         <h2>Recent Conversations (30 Days)</h2>
-        <button type="button" class="icon-btn" onclick="veeCloseModal('historyModal')">✕</button>
+        <button type="button" class="icon-btn" id="closeHistoryBtn">✕</button>
       </div>
       <div class="branch-pill-bar">
-        <span>Network Branch: <strong id="activeBranchLabel">Syncing...</strong></span>
-        <span id="visitorUidShort" style="font-family: 'JetBrains Mono', monospace;"></span>
+        <span>Network Branch: <strong id="activeBranchLabel">network_001</strong></span>
+        <span id="visitorUidShort" style="font-family: 'JetBrains Mono', monospace;">Connecting...</span>
       </div>
       <div class="history-list" id="historyList"></div>
-      <button type="button" class="icon-btn" style="width: 100%; justify-content: center; color: var(--orange);" onclick="veeNewChat()">+ Start New Conversation</button>
+      <button type="button" class="icon-btn" id="modalNewChatBtn" style="width: 100%; justify-content: center; color: var(--orange);">+ Start New Conversation</button>
     </div>
   </div>
 
   <!-- Settings Modal -->
-  <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) veeCloseModal('settingsModal')">
+  <div class="modal-backdrop" id="settingsModal">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>VAI Settings</h2>
-        <button type="button" class="icon-btn" onclick="veeCloseModal('settingsModal')">✕</button>
+        <h2>Vee-Ai Settings</h2>
+        <button type="button" class="icon-btn" id="closeSettingsBtn">✕</button>
       </div>
       <div class="setting-row">
         <span>Appearance Mode</span>
-        <button type="button" class="toggle-pill" id="modalThemeToggle" onclick="veeToggleTheme()">Light (70% White)</button>
+        <button type="button" class="toggle-pill" id="modalThemeToggle">Light (70% White)</button>
       </div>
       <div class="setting-row">
         <span>Ambient AI Particles</span>
-        <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
+        <button type="button" class="toggle-pill" id="particleToggleBtn">Enabled</button>
       </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-        <span style="color: var(--orange);">About VAI</span>
+        <span style="color: var(--orange);">About Vee-Ai</span>
         <p style="font-size: 12.5px; font-weight: 400; color: var(--text-secondary); line-height: 1.5;">
           Engineered by <strong>Agboola Vincent Oluwaseyi (Vincent)</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
         </p>
@@ -1112,7 +1112,7 @@
     var veeParticlesEnabled = true;
 
     try {
-      veeParticlesEnabled = localStorage.getItem("vai_particles") !== "false";
+      veeParticlesEnabled = localStorage.getItem("vee_ai_particles") !== "false";
     } catch (e) {}
 
     function veeGenerateId(prefix) {
@@ -1120,11 +1120,11 @@
     }
 
     /* =========================================================
-       THEME & MODALS (DIRECT GLOBAL FUNCTIONS)
+       THEME & MODALS
        ========================================================= */
     function veeApplyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      try { localStorage.setItem("vai_theme", theme); } catch (e) {}
+      try { localStorage.setItem("vee_ai_theme", theme); } catch (e) {}
       var meta = document.getElementById("metaThemeColor");
       if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0B0B" : "#FFFFFF");
       var label = document.getElementById("modalThemeToggle");
@@ -1155,7 +1155,7 @@
 
     function veeShare() {
       var url = window.location.href;
-      var text = "Come chat with VAI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
+      var text = "Come chat with Vee-Ai (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
       window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     }
 
@@ -1172,8 +1172,8 @@
       veeIsGenerating = false;
       veeCurrentChatId = null;
       veeHistory = [];
-      if (window.vaiFirebase && window.vaiFirebase.detachActiveChatListener) {
-        window.vaiFirebase.detachActiveChatListener();
+      if (window.veeFirebase && window.veeFirebase.detachActiveChatListener) {
+        window.veeFirebase.detachActiveChatListener();
       }
       var stream = document.getElementById("chatStream");
       stream.innerHTML = "";
@@ -1192,8 +1192,8 @@
       veeShowChatView();
       veeCloseModal("historyModal");
 
-      if (window.vaiFirebase && window.vaiFirebase.subscribeToConversation) {
-        window.vaiFirebase.subscribeToConversation(id);
+      if (window.veeFirebase && window.veeFirebase.subscribeToConversation) {
+        window.veeFirebase.subscribeToConversation(id);
       }
     }
 
@@ -1202,29 +1202,39 @@
       var branchLabel = document.getElementById("activeBranchLabel");
       var uidLabel = document.getElementById("visitorUidShort");
 
-      if (window.vaiFirebase) {
-        if (branchLabel) branchLabel.textContent = window.vaiFirebase.activeNetwork || "network_001";
-        if (uidLabel && window.vaiFirebase.uid) {
-          uidLabel.textContent = "UID: " + window.vaiFirebase.uid.slice(0, 8) + "...";
+      if (window.veeFirebase) {
+        if (branchLabel) branchLabel.textContent = window.veeFirebase.activeNetwork || "network_001";
+        if (uidLabel) {
+          uidLabel.textContent = window.veeFirebase.uid
+            ? "UID: " + window.veeFirebase.uid.slice(0, 8) + "..."
+            : "Guest Session";
         }
       }
 
       if (!list) return;
       if (!veeRecentChats.length) {
-        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations on this network branch yet. Start chatting with VAI!</p>';
+        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations on this network branch yet. Start chatting with Vee-Ai!</p>';
         return;
       }
-      list.innerHTML = veeRecentChats.map(function (c) {
-        var activeClass = c.id === veeCurrentChatId ? "active" : "";
-        var dateStr = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : "Recent";
-        return '<div class="history-item ' + activeClass + '" onclick="veeLoadConversation(\'' + veeEscapeHtml(c.id) + '\')">' +
-          '<div style="min-width: 0;">' +
-            '<div class="history-title">' + veeEscapeHtml(c.title || "Conversation") + '</div>' +
-            '<div class="history-date">' + dateStr + '</div>' +
-          '</div>' +
-          '<span style="color: var(--orange); font-weight: 700;">→</span>' +
-        '</div>';
-      }).join("");
+
+      list.innerHTML = "";
+      for (var i = 0; i < veeRecentChats.length; i++) {
+        (function (c) {
+          var item = document.createElement("div");
+          item.className = "history-item" + (c.id === veeCurrentChatId ? " active" : "");
+          var dateStr = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : "Recent";
+          item.innerHTML =
+            '<div style="min-width: 0;">' +
+              '<div class="history-title">' + veeEscapeHtml(c.title || "Conversation") + '</div>' +
+              '<div class="history-date">' + dateStr + '</div>' +
+            '</div>' +
+            '<span style="color: var(--orange); font-weight: 700;">→</span>';
+          item.addEventListener("click", function () {
+            veeLoadConversation(c.id);
+          });
+          list.appendChild(item);
+        })(veeRecentChats[i]);
+      }
     }
 
     /* =========================================================
@@ -1247,7 +1257,7 @@
         var safeLang = veeEscapeHtml(lang || "code");
         codeBlocks.push(
           '<div class="code-block-wrap">' +
-            '<div class="code-header"><span>' + safeLang + '</span><button type="button" class="copy-code-btn" onclick="veeCopyCode(this)">Copy</button></div>' +
+            '<div class="code-header"><span>' + safeLang + '</span><button type="button" class="copy-code-btn">Copy</button></div>' +
             '<pre><code>' + veeEscapeHtml(code.trim()) + '</code></pre>' +
           '</div>'
         );
@@ -1296,24 +1306,6 @@
       return html;
     }
 
-    function veeCopyCode(btn) {
-      var codeEl = btn.closest(".code-block-wrap").querySelector("code");
-      if (navigator.clipboard && codeEl) {
-        navigator.clipboard.writeText(codeEl.innerText);
-        btn.textContent = "Copied ✓";
-        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
-      }
-    }
-
-    function veeCopyMessage(btn) {
-      var raw = btn.parentElement.getAttribute("data-raw") || "";
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(raw);
-        btn.textContent = "Copied ✓";
-        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
-      }
-    }
-
     function veeAppendMessage(text, sender, msgId) {
       var stream = document.getElementById("chatStream");
       if (msgId && document.getElementById("dom_" + msgId)) {
@@ -1326,7 +1318,7 @@
 
       var label = document.createElement("div");
       label.className = "msg-sender";
-      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> VAI';
+      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vee-Ai';
       row.appendChild(label);
 
       var bubble = document.createElement("div");
@@ -1344,10 +1336,29 @@
 
         var actions = document.createElement("div");
         actions.className = "msg-actions";
-        actions.setAttribute("data-raw", text);
-        actions.innerHTML =
-          '<button type="button" class="act-btn" onclick="veeCopyMessage(this)">Copy</button>' +
-          '<button type="button" class="act-btn" onclick="veeRegenerate()">Regenerate</button>';
+
+        var copyBtn = document.createElement("button");
+        copyBtn.type = "button";
+        copyBtn.className = "act-btn";
+        copyBtn.textContent = "Copy";
+        copyBtn.addEventListener("click", function () {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(text);
+            copyBtn.textContent = "Copied ✓";
+            setTimeout(function () { copyBtn.textContent = "Copy"; }, 1500);
+          }
+        });
+
+        var regenBtn = document.createElement("button");
+        regenBtn.type = "button";
+        regenBtn.className = "act-btn";
+        regenBtn.textContent = "Regenerate";
+        regenBtn.addEventListener("click", function () {
+          veeRegenerate();
+        });
+
+        actions.appendChild(copyBtn);
+        actions.appendChild(regenBtn);
         row.appendChild(actions);
       }
 
@@ -1369,7 +1380,7 @@
       var row = document.createElement("div");
       row.className = "msg-row bot";
       row.innerHTML =
-        '<div class="msg-sender"><span style="color: var(--orange);">●</span> VAI</div>' +
+        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vee-Ai</div>' +
         '<div class="ai-thinking-bubble glass-surface">' +
           '<div class="orb-spinner"></div>' +
           '<div class="wave-bars"><span></span><span></span><span></span></div>' +
@@ -1386,13 +1397,6 @@
     function veeResizeInput(el) {
       el.style.height = "auto";
       el.style.height = Math.min(el.scrollHeight, 128) + "px";
-    }
-
-    function veeHandleKey(e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        veeSubmitChat();
-      }
     }
 
     function veeSendPrompt(promptText) {
@@ -1446,22 +1450,18 @@
 
       try {
         var idToken = null;
-        if (window.vaiFirebase && window.vaiFirebase.getFreshToken) {
-          idToken = await window.vaiFirebase.getFreshToken();
+        if (window.veeFirebase && window.veeFirebase.getFreshToken) {
+          idToken = await window.veeFirebase.getFreshToken();
         }
 
-        if (!idToken) {
-          thinkingRow.remove();
-          veeAppendMessage("Authentication is still initializing. Please try sending again in a moment.", "bot");
-          return;
+        var headers = { "Content-Type": "application/json" };
+        if (idToken) {
+          headers["Authorization"] = "Bearer " + idToken;
         }
 
         var res = await fetch("/.netlify/functions/chat", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + idToken
-          },
+          headers: headers,
           body: JSON.stringify({
             message: message,
             history: contextHistory,
@@ -1469,15 +1469,9 @@
             userMsgId: userMsgId
           })
         });
+
         var data = await res.json();
-
-        if (!res.ok) {
-          thinkingRow.remove();
-          veeAppendMessage(data.error || "Session error. Please refresh and try again.", "bot");
-          return;
-        }
-
-        var reply = data.reply || "Chai, small network blink! Try send am again.";
+        var reply = data.reply || data.error || "Chai, small network blink! Try send am again.";
         if (data.chatId) veeCurrentChatId = data.chatId;
 
         thinkingRow.remove();
@@ -1493,8 +1487,8 @@
           veeAppendStorageNotice(data.storageError);
         }
 
-        if (window.vaiFirebase && window.vaiFirebase.syncNetworkFromServer && data.activeNetwork) {
-          window.vaiFirebase.syncNetworkFromServer(data.activeNetwork, veeCurrentChatId);
+        if (window.veeFirebase && window.veeFirebase.syncNetworkFromServer && data.activeNetwork) {
+          window.veeFirebase.syncNetworkFromServer(data.activeNetwork, veeCurrentChatId);
         }
       } catch (err) {
         thinkingRow.remove();
@@ -1506,15 +1500,109 @@
     }
 
     /* =========================================================
+       WIRE ALL INTERACTIVE TABS, BUTTONS, MODALS & INPUTS
+       ========================================================= */
+    function bindUiEvents() {
+      var brandBtn = document.getElementById("brandHomeBtn");
+      if (brandBtn) brandBtn.addEventListener("click", veeNewChat);
+
+      var newBtn = document.getElementById("navNewBtn");
+      if (newBtn) newBtn.addEventListener("click", veeNewChat);
+
+      var modalNewBtn = document.getElementById("modalNewChatBtn");
+      if (modalNewBtn) modalNewBtn.addEventListener("click", veeNewChat);
+
+      var historyBtn = document.getElementById("navHistoryBtn");
+      if (historyBtn) historyBtn.addEventListener("click", function () { veeOpenModal("historyModal"); });
+
+      var themeBtn = document.getElementById("navThemeBtn");
+      if (themeBtn) themeBtn.addEventListener("click", veeToggleTheme);
+
+      var modalThemeBtn = document.getElementById("modalThemeToggle");
+      if (modalThemeBtn) modalThemeBtn.addEventListener("click", veeToggleTheme);
+
+      var shareBtn = document.getElementById("navShareBtn");
+      if (shareBtn) shareBtn.addEventListener("click", veeShare);
+
+      var settingsBtn = document.getElementById("navSettingsBtn");
+      if (settingsBtn) settingsBtn.addEventListener("click", function () { veeOpenModal("settingsModal"); });
+
+      var closeHist = document.getElementById("closeHistoryBtn");
+      if (closeHist) closeHist.addEventListener("click", function () { veeCloseModal("historyModal"); });
+
+      var closeSet = document.getElementById("closeSettingsBtn");
+      if (closeSet) closeSet.addEventListener("click", function () { veeCloseModal("settingsModal"); });
+
+      var histBackdrop = document.getElementById("historyModal");
+      if (histBackdrop) {
+        histBackdrop.addEventListener("click", function (e) {
+          if (e.target === histBackdrop) veeCloseModal("historyModal");
+        });
+      }
+
+      var setBackdrop = document.getElementById("settingsModal");
+      if (setBackdrop) {
+        setBackdrop.addEventListener("click", function (e) {
+          if (e.target === setBackdrop) veeCloseModal("settingsModal");
+        });
+      }
+
+      var promptEls = document.querySelectorAll("[data-prompt]");
+      for (var i = 0; i < promptEls.length; i++) {
+        (function (el) {
+          el.addEventListener("click", function () {
+            veeSendPrompt(el.getAttribute("data-prompt"));
+          });
+        })(promptEls[i]);
+      }
+
+      var composerBox = document.getElementById("composerBox");
+      var userInput = document.getElementById("userInput");
+      if (composerBox && userInput) {
+        composerBox.addEventListener("click", function () { userInput.focus(); });
+      }
+      if (userInput) {
+        userInput.addEventListener("input", function () { veeResizeInput(userInput); });
+        userInput.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            veeSubmitChat();
+          }
+        });
+      }
+
+      var sendBtn = document.getElementById("sendBtn");
+      if (sendBtn) {
+        sendBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          veeSubmitChat();
+        });
+      }
+
+      document.addEventListener("click", function (e) {
+        if (e.target && e.target.classList && e.target.classList.contains("copy-code-btn")) {
+          var wrap = e.target.closest(".code-block-wrap");
+          var codeEl = wrap ? wrap.querySelector("code") : null;
+          if (navigator.clipboard && codeEl) {
+            navigator.clipboard.writeText(codeEl.innerText);
+            e.target.textContent = "Copied ✓";
+            setTimeout(function () { e.target.textContent = "Copy"; }, 1500);
+          }
+        }
+      });
+    }
+
+    bindUiEvents();
+
+    /* =========================================================
        ISOLATED VISUAL EFFECTS & VIEWPORT SYNC
        ========================================================= */
     (function initVisualEffects() {
       try {
         var savedTheme = "light";
-        try { savedTheme = localStorage.getItem("vai_theme") || "light"; } catch (e) {}
+        try { savedTheme = localStorage.getItem("vee_ai_theme") || "light"; } catch (e) {}
         veeApplyTheme(savedTheme);
 
-        // Mobile virtual keyboard height sync
         var appShell = document.getElementById("appShell");
         function syncHeight() {
           if (appShell) {
@@ -1527,7 +1615,6 @@
         window.addEventListener("resize", syncHeight, { passive: true });
         syncHeight();
 
-        // Desktop cursor glow
         var aura = document.getElementById("cursorAura");
         if (aura && !window.matchMedia("(hover: none), (pointer: coarse)").matches) {
           document.addEventListener("pointermove", function (e) {
@@ -1537,7 +1624,6 @@
           }, { passive: true });
         }
 
-        // Background Canvas Particles
         var canvas = document.getElementById("aiCanvas");
         var ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
         var particles = [];
@@ -1577,17 +1663,18 @@
           rafId = requestAnimationFrame(drawFrame);
         }
 
-        window.veeToggleParticles = function () {
-          veeParticlesEnabled = !veeParticlesEnabled;
-          try { localStorage.setItem("vai_particles", veeParticlesEnabled); } catch (e) {}
-          var btn = document.getElementById("particleToggleBtn");
-          if (btn) btn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
-          if (veeParticlesEnabled) { setupCanvas(); drawFrame(); }
-          else if (ctx) { cancelAnimationFrame(rafId); ctx.clearRect(0, 0, w, h); }
-        };
-
         var pBtn = document.getElementById("particleToggleBtn");
-        if (pBtn) pBtn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
+        if (pBtn) {
+          pBtn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
+          pBtn.addEventListener("click", function () {
+            veeParticlesEnabled = !veeParticlesEnabled;
+            try { localStorage.setItem("vee_ai_particles", veeParticlesEnabled); } catch (e) {}
+            pBtn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
+            if (veeParticlesEnabled) { setupCanvas(); drawFrame(); }
+            else if (ctx) { cancelAnimationFrame(rafId); ctx.clearRect(0, 0, w, h); }
+          });
+        }
+
         if (veeParticlesEnabled) {
           setupCanvas();
           drawFrame();
@@ -1628,24 +1715,28 @@
     let currentUser = null;
     let unsubConversations = null;
     let unsubActiveMessages = null;
-    let resolveAuthReady = null;
-    const authReadyPromise = new Promise((resolve) => {
-      resolveAuthReady = resolve;
-    });
 
     const bridge = {
       uid: null,
       activeNetwork: "network_001",
 
       async getFreshToken() {
-        if (!currentUser) {
-          await Promise.race([
-            authReadyPromise,
-            new Promise((r) => setTimeout(r, 4500))
-          ]);
+        try {
+          if (!currentUser && auth.currentUser) {
+            currentUser = auth.currentUser;
+          }
+          if (!currentUser) {
+            const cred = await Promise.race([
+              signInAnonymously(auth),
+              new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 1500))
+            ]);
+            currentUser = cred.user;
+            this.uid = currentUser.uid;
+          }
+          return await currentUser.getIdToken();
+        } catch (_) {
+          return null;
         }
-        if (!currentUser) return null;
-        return currentUser.getIdToken();
       },
 
       detachActiveChatListener() {
@@ -1750,21 +1841,18 @@
       }
     };
 
-    window.vaiFirebase = bridge;
+    window.veeFirebase = bridge;
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         try {
           await signInAnonymously(auth);
-        } catch (err) {
-          if (resolveAuthReady) resolveAuthReady(null);
-        }
+        } catch (_) {}
         return;
       }
 
       currentUser = user;
       bridge.uid = user.uid;
-      if (resolveAuthReady) resolveAuthReady(user);
 
       try {
         const token = await user.getIdToken();
