@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vee AI 🇳🇬 — Built by Vincent Agboola</title>
+  <title>Vincent AI 🇳🇬 — Built by Agboola Vincent Oluwaseyi</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: #141414; color: #f5f5f5; display: flex; justify-content: center; height: 100dvh; }
@@ -44,28 +44,28 @@
       <div class="header-left">
         <div class="avatar">V</div>
         <div class="header-info">
-          <h1>Vee AI 🇳🇬</h1>
-          <p><span class="dot-online"></span> Built by Vincent Agboola</p>
+          <h1>Vincent AI 🇳🇬</h1>
+          <p><span class="dot-online"></span> Built by Agboola Vincent Oluwaseyi</p>
         </div>
       </div>
       <button class="share-btn" onclick="shareBot()">Share 🔗</button>
     </div>
 
     <div class="chat-box" id="chatBox">
-      <div class="msg bot">How far! Welcome to <b>Vee AI</b>—built by <b>Vincent Agboola</b>. Talk to me in English, Pidgin, Yoruba, Hausa, or Igbo—whether na tech gist, serious advice, or pure cruise. Wetin dey your mind?</div>
+      <div class="msg bot">How far! Welcome to <b>Vincent AI</b>—created by <b>Agboola Vincent Oluwaseyi</b>. Talk to me in English, Pidgin, Yoruba, Hausa, Igbo, or any language you prefer. Ask me about tech, cybersecurity, business, or bring pure cruise!</div>
     </div>
 
     <div class="chips">
-      <button class="chip" onclick="quickSend('Who built you?')">Who built you? 👨‍💻</button>
+      <button class="chip" onclick="quickSend('Who created you?')">Who created you? 👨‍💻</button>
       <button class="chip" onclick="quickSend('Wetin dey happen my guy?')">Pidgin Cruise 🇳🇬</button>
       <button class="chip" onclick="quickSend('Bawo ni, se daadaa ni?')">Yoruba 💬</button>
       <button class="chip" onclick="quickSend('Sannu, yaya dai?')">Hausa 💬</button>
       <button class="chip" onclick="quickSend('Kedu, nwanne m?')">Igbo 💬</button>
-      <button class="chip" onclick="quickSend('You no sabi anything')">Test Savage Mode 🔥</button>
+      <button class="chip" onclick="quickSend('You don\'t know anything')">Test Savage Mode 🔥</button>
     </div>
 
     <form class="input-area" id="chatForm">
-      <input type="text" id="userInput" placeholder="Type in English, Pidgin, Yoruba, Hausa, or Igbo..." autocomplete="off" required />
+      <input type="text" id="userInput" placeholder="Chat with Vincent AI in any language..." autocomplete="off" required />
       <button type="submit" class="send" id="sendBtn">Send</button>
     </form>
   </div>
@@ -79,7 +79,7 @@
 
     function shareBot() {
       const url = window.location.href;
-      const text = `Come chat with Vee AI (built by Vincent Agboola) — speaks English, Pidgin, Yoruba, Hausa & Igbo with smart tech vibes and cruise! 🇳🇬🔥 ${url}`;
+      const text = `Come chat with Vincent AI (built by Agboola Vincent Oluwaseyi) — smart tech vibes, Nigerian humour, and multilingual cruise! 🇳🇬🔥 ${url}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
     }
 
@@ -124,14 +124,14 @@
           body: JSON.stringify({ message, history })
         });
         const data = await res.json();
-        const reply = data.reply || "Chai, network small hook me! Try send am again.";
+        const reply = data.reply || "Chai, small network blink! Try send am again.";
         typingBubble.textContent = reply;
 
         history.push({ role: "user", content: message });
         history.push({ role: "assistant", content: reply });
         if (history.length > 14) history = history.slice(-14);
       } catch (err) {
-        typingBubble.textContent = "Omo, small network wahala happen! Check your data and try again.";
+        typingBubble.textContent = "Omo, small network wahala happen! Check your connection and try again.";
       } finally {
         sendBtn.disabled = false;
         userInput.focus();
