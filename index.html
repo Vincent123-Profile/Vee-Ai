@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#FFFFFF" id="metaThemeColor" />
-  <title>Vincent AI — Intelligent Nigerian AI Companion</title>
+  <title>V - AI — Intelligent Nigerian AI Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -212,7 +212,7 @@
     }
 
     .brand-title {
-      font-size: 15px;
+      font-size: 15.5px;
       font-weight: 800;
       letter-spacing: -0.02em;
       white-space: nowrap;
@@ -734,26 +734,6 @@
       flex-shrink: 0;
     }
 
-    .mic-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-surface);
-      color: var(--text-secondary);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-
-    .mic-btn.active {
-      background: var(--orange);
-      color: #FFFFFF;
-      border-color: var(--orange);
-    }
-
     .send-btn {
       height: 40px;
       padding: 0 17px;
@@ -919,7 +899,7 @@
         </div>
         <div class="brand-meta">
           <div class="brand-title-row">
-            <span class="brand-title">Vincent AI</span>
+            <span class="brand-title">V - AI</span>
             <span class="brand-badge">Liquid Glass</span>
           </div>
           <div class="brand-sub">
@@ -964,7 +944,7 @@
         </div>
 
         <h1 class="welcome-headline">How far? Wetin we dey reason today?</h1>
-        <p class="welcome-sub">Your intelligent AI companion. Ready to think, create, explore and gist with you.</p>
+        <p class="welcome-sub">Meet V - AI — your intelligent Nigerian AI companion. Ready to think, create, explore and gist with you.</p>
 
         <div class="prompt-grid">
           <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Who created you and what is his story?')">
@@ -1016,18 +996,15 @@
       </div>
 
       <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
-        <textarea id="userInput" rows="1" placeholder="Yarn with Vincent AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
+        <textarea id="userInput" rows="1" placeholder="Yarn with V - AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
         <div class="composer-controls">
-          <button type="button" class="mic-btn" id="micBtn" title="Voice Input">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-          </button>
           <button type="button" class="send-btn" id="sendBtn" onclick="veeSubmitChat()">
             <span id="sendBtnText">Send</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
         </div>
       </div>
-      <div class="composer-footer">Vincent AI • Multilingual Intelligence & Nigerian Innovation</div>
+      <div class="composer-footer">V - AI • Multilingual Intelligence & Nigerian Innovation</div>
     </div>
   </div>
 
@@ -1047,7 +1024,7 @@
   <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) veeCloseModal('settingsModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>Vincent AI Settings</h2>
+        <h2>V - AI Settings</h2>
         <button type="button" class="icon-btn" onclick="veeCloseModal('settingsModal')">✕</button>
       </div>
       <div class="setting-row">
@@ -1058,10 +1035,14 @@
         <span>Ambient AI Particles</span>
         <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
       </div>
+      <div class="setting-row">
+        <span>Share V - AI Link</span>
+        <button type="button" class="toggle-pill" id="copyLinkBtn" onclick="veeCopyLink()">Copy URL</button>
+      </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-        <span style="color: var(--orange);">About Vincent AI</span>
+        <span style="color: var(--orange);">About V - AI</span>
         <p style="font-size: 12.5px; font-weight: 400; color: var(--text-secondary); line-height: 1.5;">
-          Engineered by <strong>Agboola Vincent Oluwaseyi</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
+          Engineered and trained by <strong>Agboola Vincent Oluwaseyi</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
         </p>
       </div>
     </div>
@@ -1078,22 +1059,22 @@
     var veeParticlesEnabled = true;
 
     try {
-      veeSessions = JSON.parse(localStorage.getItem("vincent_ai_sessions") || "[]");
-      veeParticlesEnabled = localStorage.getItem("vincent_ai_particles") !== "false";
+      veeSessions = JSON.parse(localStorage.getItem("v_ai_sessions") || "[]");
+      veeParticlesEnabled = localStorage.getItem("v_ai_particles") !== "false";
     } catch (e) {}
 
     function veeSaveSessions() {
       try {
-        localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
+        localStorage.setItem("v_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
       } catch (e) {}
     }
 
     /* =========================================================
-       THEME & MODALS (DIRECT GLOBAL FUNCTIONS)
+       THEME, MODALS & SHARING
        ========================================================= */
     function veeApplyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      try { localStorage.setItem("vincent_ai_theme", theme); } catch (e) {}
+      try { localStorage.setItem("v_ai_theme", theme); } catch (e) {}
       var meta = document.getElementById("metaThemeColor");
       if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0B0B" : "#FFFFFF");
       var label = document.getElementById("modalThemeToggle");
@@ -1124,8 +1105,19 @@
 
     function veeShare() {
       var url = window.location.href;
-      var text = "Come chat with Vincent AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
+      var text = "Come chat with V - AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
       window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+    }
+
+    function veeCopyLink() {
+      var btn = document.getElementById("copyLinkBtn");
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href);
+        if (btn) {
+          btn.textContent = "Copied ✓";
+          setTimeout(function () { btn.textContent = "Copy URL"; }, 1600);
+        }
+      }
     }
 
     /* =========================================================
@@ -1200,7 +1192,7 @@
       var list = document.getElementById("historyList");
       if (!list) return;
       if (!veeSessions.length) {
-        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vincent AI!</p>';
+        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with V - AI!</p>';
         return;
       }
       list.innerHTML = veeSessions.map(function (s) {
@@ -1220,10 +1212,10 @@
        ========================================================= */
     function veeEscapeHtml(str) {
       return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+        .replace(/&/g, "&")
+        .replace(/</g, "<")
+        .replace(/>/g, ">")
+        .replace(/"/g, """);
     }
 
     function veeRenderMarkdown(rawText) {
@@ -1308,7 +1300,7 @@
 
       var label = document.createElement("div");
       label.className = "msg-sender";
-      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vincent AI';
+      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> V - AI';
       row.appendChild(label);
 
       var bubble = document.createElement("div");
@@ -1342,7 +1334,7 @@
       var row = document.createElement("div");
       row.className = "msg-row bot";
       row.innerHTML =
-        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vincent AI</div>' +
+        '<div class="msg-sender"><span style="color: var(--orange);">●</span> V - AI</div>' +
         '<div class="ai-thinking-bubble glass-surface">' +
           '<div class="orb-spinner"></div>' +
           '<div class="wave-bars"><span></span><span></span><span></span></div>' +
@@ -1354,7 +1346,7 @@
     }
 
     /* =========================================================
-       INPUT & BACKEND API SUBMISSION
+       INPUT & SERVER SUBMISSION
        ========================================================= */
     function veeResizeInput(el) {
       el.style.height = "auto";
@@ -1419,7 +1411,7 @@
           body: JSON.stringify({ message: message, history: contextHistory })
         });
         var data = await res.json();
-        var reply = data.reply || "Chai, small network blink! Try send am again.";
+        var reply = data.reply || "Chai, small server blink! Try send am again.";
 
         thinkingRow.remove();
         veeAppendMessage(reply, "bot");
@@ -1445,10 +1437,9 @@
     (function initVisualEffects() {
       try {
         var savedTheme = "light";
-        try { savedTheme = localStorage.getItem("vincent_ai_theme") || "light"; } catch (e) {}
+        try { savedTheme = localStorage.getItem("v_ai_theme") || "light"; } catch (e) {}
         veeApplyTheme(savedTheme);
 
-        // Mobile virtual keyboard height sync
         var appShell = document.getElementById("appShell");
         function syncHeight() {
           if (appShell) {
@@ -1461,7 +1452,6 @@
         window.addEventListener("resize", syncHeight, { passive: true });
         syncHeight();
 
-        // Desktop cursor glow
         var aura = document.getElementById("cursorAura");
         if (aura && !window.matchMedia("(hover: none), (pointer: coarse)").matches) {
           document.addEventListener("pointermove", function (e) {
@@ -1471,7 +1461,6 @@
           }, { passive: true });
         }
 
-        // Background Canvas Particles
         var canvas = document.getElementById("aiCanvas");
         var ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
         var particles = [];
@@ -1513,7 +1502,7 @@
 
         window.veeToggleParticles = function () {
           veeParticlesEnabled = !veeParticlesEnabled;
-          try { localStorage.setItem("vincent_ai_particles", veeParticlesEnabled); } catch (e) {}
+          try { localStorage.setItem("v_ai_particles", veeParticlesEnabled); } catch (e) {}
           var btn = document.getElementById("particleToggleBtn");
           if (btn) btn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
           if (veeParticlesEnabled) { setupCanvas(); drawFrame(); }
