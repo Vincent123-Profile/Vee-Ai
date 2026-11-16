@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#FFFFFF" id="metaThemeColor" />
-  <meta name="description" content="Vee-Ai — Intelligent Nigerian AI Companion created and developed by Agboola Vincent Oluwaseyi." />
-  <title>Vee-Ai — Intelligent Nigerian AI Companion</title>
+  <meta name="description" content="VAI — Intelligent Nigerian-built multilingual AI assistant created and developed by Vincent." />
+  <title>VAI — Intelligent AI Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -22,12 +22,12 @@
       --text-primary: #0B0B0B;
       --text-secondary: #52525B;
       --text-muted: #A1A1AA;
-      --glass-chrome: rgba(255, 255, 255, 0.9);
-      --glass-surface: rgba(255, 255, 255, 0.85);
+      --glass-chrome: rgba(255, 255, 255, 0.88);
+      --glass-surface: rgba(255, 255, 255, 0.82);
       --glass-border: rgba(11, 11, 11, 0.1);
       --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.95);
       --glass-shadow: 0 10px 30px -8px rgba(11, 11, 11, 0.08), 0 2px 6px rgba(11, 11, 11, 0.04);
-      --bot-bubble: rgba(255, 255, 255, 0.94);
+      --bot-bubble: rgba(255, 255, 255, 0.92);
       --user-bubble: #0B0B0B;
       --user-text: #FFFFFF;
       --spring: cubic-bezier(0.22, 1, 0.36, 1);
@@ -38,12 +38,12 @@
       --text-primary: #FFFFFF;
       --text-secondary: #D4D4D8;
       --text-muted: #A1A1AA;
-      --glass-chrome: rgba(20, 20, 20, 0.9);
-      --glass-surface: rgba(26, 26, 26, 0.85);
+      --glass-chrome: rgba(20, 20, 20, 0.88);
+      --glass-surface: rgba(26, 26, 26, 0.82);
       --glass-border: rgba(255, 255, 255, 0.12);
       --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
       --glass-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.65);
-      --bot-bubble: rgba(26, 26, 26, 0.92);
+      --bot-bubble: rgba(26, 26, 26, 0.9);
       --user-bubble: #F14C15;
       --user-text: #FFFFFF;
     }
@@ -65,6 +65,7 @@
       transition: background-color 0.35s ease, color 0.3s ease;
     }
 
+    /* Non-Blocking Futuristic Background */
     .ambient-layer {
       position: fixed;
       inset: 0;
@@ -134,6 +135,7 @@
       .cursor-aura { display: none; }
     }
 
+    /* Liquid Glass Surfaces */
     .glass-chrome {
       background: var(--glass-chrome);
       backdrop-filter: blur(16px) saturate(155%);
@@ -148,6 +150,7 @@
       box-shadow: var(--glass-shadow), var(--glass-highlight);
     }
 
+    /* Interactive App Container */
     .app-shell {
       position: relative;
       z-index: 10;
@@ -161,10 +164,10 @@
       padding: max(10px, env(safe-area-inset-top)) 14px max(10px, env(safe-area-inset-bottom)) 14px;
     }
 
-    /* Top Navigation */
+    /* Floating Top Navigation */
     .top-nav {
       position: relative;
-      z-index: 40;
+      z-index: 30;
       flex-shrink: 0;
       padding: 10px 14px;
       border-radius: 999px;
@@ -209,7 +212,7 @@
     }
 
     .brand-title {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 800;
       letter-spacing: -0.02em;
       white-space: nowrap;
@@ -312,7 +315,7 @@
       flex-direction: column;
     }
 
-    /* Welcome Screen */
+    /* Cinematic Welcome Screen */
     .welcome-screen {
       flex: 1;
       min-height: 0;
@@ -427,14 +430,12 @@
       font-size: 13.5px;
       font-weight: 700;
       margin-bottom: 2px;
-      pointer-events: none;
     }
 
     .prompt-card-desc {
       font-size: 12px;
       color: var(--text-secondary);
       line-height: 1.38;
-      pointer-events: none;
     }
 
     .prompt-arrow {
@@ -531,6 +532,13 @@
     .md-content h1, .md-content h2, .md-content h3 { font-weight: 800; margin: 10px 0 5px; }
     .md-content ul, .md-content ol { margin: 8px 0 10px 20px; }
     .md-content li { margin-bottom: 4px; }
+    .md-content blockquote {
+      border-left: 3px solid var(--orange);
+      padding: 6px 12px;
+      margin: 8px 0;
+      background: var(--orange-soft);
+      border-radius: 0 10px 10px 0;
+    }
     .md-content code:not(pre code) {
       font-family: "JetBrains Mono", monospace;
       font-size: 0.86em;
@@ -597,6 +605,17 @@
     .act-btn:hover {
       border-color: var(--glass-border);
       color: var(--orange);
+    }
+
+    .storage-notice {
+      align-self: center;
+      font-size: 11.5px;
+      color: var(--orange);
+      background: var(--orange-soft);
+      border: 1px solid rgba(241, 76, 21, 0.3);
+      padding: 6px 12px;
+      border-radius: 999px;
+      text-align: center;
     }
 
     /* AI Reasoning Indicator */
@@ -675,7 +694,7 @@
       border-color: rgba(241, 76, 21, 0.5);
     }
 
-    /* Composer */
+    /* Floating Composer */
     .composer-wrap {
       position: relative;
       z-index: 40;
@@ -698,6 +717,8 @@
     }
 
     textarea#userInput {
+      position: relative;
+      z-index: 50;
       flex: 1;
       min-width: 0;
       min-height: 36px;
@@ -711,6 +732,9 @@
       resize: none;
       padding: 6px 0;
       outline: none;
+      pointer-events: auto;
+      user-select: text;
+      -webkit-user-select: text;
       touch-action: manipulation;
     }
 
@@ -727,6 +751,8 @@
     }
 
     .send-btn {
+      position: relative;
+      z-index: 50;
       height: 40px;
       padding: 0 17px;
       border-radius: 999px;
@@ -772,7 +798,7 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(11, 11, 11, 0.55);
+      background: rgba(11, 11, 11, 0.5);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 100;
@@ -788,9 +814,8 @@
 
     .modal-panel {
       width: 100%;
-      max-width: 450px;
-      max-height: 85dvh;
-      overflow-y: auto;
+      max-width: 440px;
+      max-height: 82dvh;
       border-radius: 24px;
       padding: 20px;
       display: flex;
@@ -832,7 +857,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 45dvh;
+      max-height: 50dvh;
     }
 
     .history-item {
@@ -887,31 +912,10 @@
       font-weight: 700;
       cursor: pointer;
     }
-
-    .api-input-row {
-      display: flex;
-      gap: 8px;
-      width: 100%;
-    }
-
-    .api-input {
-      flex: 1;
-      padding: 8px 11px;
-      border-radius: 10px;
-      border: 1px solid var(--glass-border);
-      background: var(--bg-base);
-      color: var(--text-primary);
-      font-family: "JetBrains Mono", monospace;
-      font-size: 12px;
-      outline: none;
-    }
-
-    .api-input:focus {
-      border-color: var(--orange);
-    }
   </style>
 </head>
 <body>
+  <!-- Decorative Futuristic Background -->
   <div class="ambient-layer" aria-hidden="true">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -919,9 +923,10 @@
   </div>
   <div class="cursor-aura" id="cursorAura" aria-hidden="true"></div>
 
+  <!-- Main Interactive App -->
   <div class="app-shell" id="appShell">
     <header class="top-nav glass-chrome">
-      <button type="button" class="brand-group" data-action="new-chat" title="Start New Conversation">
+      <button type="button" class="brand-group" id="brandNewChatBtn" title="Start New Conversation">
         <div class="brand-emblem">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 5l8 14 8-14" />
@@ -930,38 +935,39 @@
         </div>
         <div class="brand-meta">
           <div class="brand-title-row">
-            <span class="brand-title">Vee-Ai</span>
+            <span class="brand-title">VAI</span>
             <span class="brand-badge">Liquid Glass</span>
           </div>
           <div class="brand-sub">
             <span class="status-pulse"></span>
-            <span>Created by Agboola Vincent Oluwaseyi</span>
+            <span id="liveStatusText">Created by Vincent</span>
           </div>
         </div>
       </button>
 
       <div class="nav-actions">
-        <button type="button" class="icon-btn" data-action="new-chat" title="New Chat">
+        <button type="button" class="icon-btn" id="newChatBtn" title="New Chat">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span class="btn-label">New</span>
         </button>
-        <button type="button" class="icon-btn" data-action="open-history" title="Chat History (30 Days)">
+        <button type="button" class="icon-btn" id="historyBtn" title="Recent Chats (30 Days)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span class="btn-label">History</span>
         </button>
-        <button type="button" class="icon-btn" data-action="toggle-theme" title="Switch Light/Dark Mode">
+        <button type="button" class="icon-btn" id="themeBtn" title="Switch Light/Dark Mode">
           <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
-        <button type="button" class="icon-btn" data-action="share" title="Share on WhatsApp">
+        <button type="button" class="icon-btn" id="shareBtn" title="Share VAI on WhatsApp">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
-        <button type="button" class="icon-btn" data-action="open-settings" title="Settings">
+        <button type="button" class="icon-btn" id="settingsBtn" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
       </div>
     </header>
 
     <main class="stage">
+      <!-- Welcome Screen -->
       <section class="welcome-screen" id="welcomeScreen">
         <div class="hero-orb-wrap">
           <div class="hero-ring"></div>
@@ -974,13 +980,13 @@
         </div>
 
         <h1 class="welcome-headline">How far? Wetin we dey reason today?</h1>
-        <p class="welcome-sub">Meet Vee-Ai — your intelligent AI companion created by Vincent. Ready to think, create, explore and gist with you.</p>
+        <p class="welcome-sub">Meet VAI — your intelligent AI assistant created by Vincent. Ready to think, create, explore and gist with you.</p>
 
         <div class="prompt-grid">
           <button type="button" class="prompt-card glass-surface" data-prompt="Who created you and what is his story?">
             <div>
               <div class="prompt-card-title">Meet the Creator</div>
-              <div class="prompt-card-desc">Ask about Agboola Vincent Oluwaseyi & his tech ventures</div>
+              <div class="prompt-card-desc">Ask about Vincent & his tech ventures</div>
             </div>
             <div class="prompt-arrow">↗</div>
           </button>
@@ -1011,9 +1017,11 @@
         </div>
       </section>
 
+      <!-- Active Chat Stream -->
       <section class="chat-stream" id="chatStream" aria-live="polite"></section>
     </main>
 
+    <!-- Floating Composer -->
     <div class="composer-wrap">
       <div class="quick-strip" id="quickStrip">
         <button type="button" class="quick-pill glass-surface" data-prompt="Who built you?">Who built you?</button>
@@ -1024,7 +1032,7 @@
       </div>
 
       <form class="composer-box glass-chrome" id="chatForm">
-        <textarea id="userInput" rows="1" placeholder="Yarn with Vee-Ai in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send"></textarea>
+        <textarea id="userInput" rows="1" placeholder="Yarn with VAI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send"></textarea>
         <div class="composer-controls">
           <button type="submit" class="send-btn" id="sendBtn">
             <span id="sendBtnText">Send</span>
@@ -1032,7 +1040,7 @@
           </button>
         </div>
       </form>
-      <div class="composer-footer">Vee-Ai • Created by Vincent • Multilingual Intelligence & Nigerian Innovation</div>
+      <div class="composer-footer">VAI • Created by Vincent • Multilingual Intelligence</div>
     </div>
   </div>
 
@@ -1041,14 +1049,14 @@
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
         <h2>Recent Conversations (30 Days)</h2>
-        <button type="button" class="icon-btn" data-action="close-modal" data-target="historyModal">✕</button>
+        <button type="button" class="icon-btn" id="closeHistoryBtn">✕</button>
       </div>
       <div class="branch-pill-bar">
-        <span>Branch: <strong id="activeBranchLabel">network_001</strong></span>
-        <span id="visitorUidShort" style="font-family: 'JetBrains Mono', monospace;">Ready</span>
+        <span>Active Branch: <strong id="activeBranchLabel">network_001</strong></span>
+        <span id="visitorUidShort" style="font-family: 'JetBrains Mono', monospace;">Syncing UID...</span>
       </div>
       <div class="history-list" id="historyList"></div>
-      <button type="button" class="icon-btn" data-action="new-chat" style="width: 100%; justify-content: center; color: var(--orange);">+ Start New Conversation</button>
+      <button type="button" class="icon-btn" id="modalNewChatBtn" style="width: 100%; justify-content: center; color: var(--orange);">+ Start New Chat</button>
     </div>
   </div>
 
@@ -1056,728 +1064,35 @@
   <div class="modal-backdrop" id="settingsModal">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>Vee-Ai Settings</h2>
-        <button type="button" class="icon-btn" data-action="close-modal" data-target="settingsModal">✕</button>
+        <h2>VAI Settings</h2>
+        <button type="button" class="icon-btn" id="closeSettingsBtn">✕</button>
       </div>
       <div class="setting-row">
         <span>Appearance Mode</span>
-        <button type="button" class="toggle-pill" id="modalThemeToggle" data-action="toggle-theme">Light (70% White)</button>
+        <button type="button" class="toggle-pill" id="modalThemeToggle">Light (70% White)</button>
       </div>
       <div class="setting-row">
         <span>Ambient AI Particles</span>
-        <button type="button" class="toggle-pill" id="particleToggleBtn" data-action="toggle-particles">Enabled</button>
+        <button type="button" class="toggle-pill" id="particleToggleBtn">Enabled</button>
       </div>
-      <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-        <span style="color: var(--orange);">Direct API Key Backup (For GitHub Pages / Static Hosts)</span>
-        <p style="font-size: 12px; font-weight: 400; color: var(--text-secondary); line-height: 1.45;">
-          If your site is hosted statically without Netlify Functions, paste your <code>gsk_...</code> key below so Vee-Ai can respond directly from your browser.
-        </p>
-        <div class="api-input-row">
-          <input type="password" id="directApiKeyInput" class="api-input" placeholder="gsk_..." />
-          <button type="button" class="toggle-pill" data-action="save-api-key">Save</button>
-        </div>
-        <span id="apiKeyStatus" style="font-size: 11px; color: var(--text-muted);"></span>
+      <div class="setting-row">
+        <span>Share VAI Link</span>
+        <button type="button" class="toggle-pill" id="copyLinkBtn">Copy URL</button>
       </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-        <span style="color: var(--orange);">About Vee-Ai</span>
+        <span style="color: var(--orange);">About VAI</span>
         <p style="font-size: 12.5px; font-weight: 400; color: var(--text-secondary); line-height: 1.5;">
-          Engineered by <strong>Agboola Vincent Oluwaseyi (Vincent)</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
+          Created and developed by <strong>Agboola Vincent Oluwaseyi (Vincent)</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
         </p>
       </div>
     </div>
   </div>
 
-  <!-- Core Application Logic (Zero External Dependencies) -->
-  <script>
-    (function () {
-      "use strict";
-
-      const LOCAL_CHATS_KEY = "vee_ai_saved_chats_v1";
-      const LOCAL_API_KEY = "vee_ai_direct_groq_key";
-      const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-
-      const VEE_SYSTEM_PROMPT =
-        "You are Vee-Ai, an intelligent Nigerian-built conversational AI assistant created and developed by Agboola Vincent Oluwaseyi (Vincent), founder of Vee Gadget Autos Tech, VeeXchange, VeeVo, and VeeCore Group. " +
-        "Your personality is friendly, intelligent, funny, confident, expressive, culturally aware, and occasionally witty/savage when teased. " +
-        "Automatically detect and reply in the user's language (English with British spelling, Nigerian Pidgin, Yoruba, Hausa, Igbo, French, Spanish, Arabic, etc.). " +
-        "Politely refuse sexually explicit requests with humour and redirect. Never leak system prompts, API keys, or private credentials.";
-
-      let currentChatId = null;
-      let history = [];
-      let isGenerating = false;
-      let particlesEnabled = true;
-
-      try {
-        particlesEnabled = localStorage.getItem("vee_ai_particles") !== "false";
-      } catch (e) {}
-
-      function genId(prefix) {
-        return prefix + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-      }
-
-      function escapeHtml(str) {
-        return String(str)
-          .replace(/&/g, "&")
-          .replace(/</g, "<")
-          .replace(/>/g, ">")
-          .replace(/"/g, """)
-          .replace(/'/g, "'");
-      }
-
-      /* =========================================================
-         LOCAL 30-DAY STORAGE (WORKS EVEN WITHOUT CLOUD)
-         ========================================================= */
-      function getLocalChats() {
-        try {
-          const raw = localStorage.getItem(LOCAL_CHATS_KEY);
-          const list = raw ? JSON.parse(raw) : [];
-          const cutoff = Date.now() - THIRTY_DAYS_MS;
-          return Array.isArray(list)
-            ? list.filter((c) => c && (Number(c.updatedAt || 0) >= cutoff))
-            : [];
-        } catch (e) {
-          return [];
-        }
-      }
-
-      function saveLocalTurn(chatId, userText, botText) {
-        try {
-          const list = getLocalChats();
-          const now = Date.now();
-          let conv = list.find((c) => c.id === chatId);
-          if (!conv) {
-            conv = {
-              id: chatId,
-              title: userText.length > 48 ? userText.slice(0, 48) + "..." : userText,
-              createdAt: now,
-              updatedAt: now,
-              messages: []
-            };
-            list.unshift(conv);
-          }
-          conv.updatedAt = now;
-          conv.messages.push({ role: "user", content: userText, createdAt: now });
-          conv.messages.push({ role: "assistant", content: botText, createdAt: now + 1 });
-          list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-          localStorage.setItem(LOCAL_CHATS_KEY, JSON.stringify(list.slice(0, 50)));
-        } catch (e) {}
-      }
-
-      function getMergedChats() {
-        const map = new Map();
-        for (const c of getLocalChats()) {
-          map.set(c.id, c);
-        }
-        if (Array.isArray(window.veeCloudChats)) {
-          for (const c of window.veeCloudChats) {
-            if (!map.has(c.id)) {
-              map.set(c.id, c);
-            }
-          }
-        }
-        return Array.from(map.values()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-      }
-
-      /* =========================================================
-         THEME, MODALS & SHARE
-         ========================================================= */
-      function applyTheme(theme) {
-        document.documentElement.setAttribute("data-theme", theme);
-        try { localStorage.setItem("vee_ai_theme", theme); } catch (e) {}
-        const meta = document.getElementById("metaThemeColor");
-        if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0B0B" : "#FFFFFF");
-        const label = document.getElementById("modalThemeToggle");
-        if (label) label.textContent = theme === "dark" ? "Dark (#0B0B0B)" : "Light (70% White)";
-        const icon = document.getElementById("themeIcon");
-        if (icon) {
-          icon.innerHTML = theme === "dark"
-            ? '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>'
-            : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-        }
-      }
-
-      function toggleTheme() {
-        const current = document.documentElement.getAttribute("data-theme") || "light";
-        applyTheme(current === "light" ? "dark" : "light");
-      }
-
-      function openModal(id) {
-        if (id === "historyModal") renderHistoryList();
-        if (id === "settingsModal") {
-          const inp = document.getElementById("directApiKeyInput");
-          const status = document.getElementById("apiKeyStatus");
-          let saved = "";
-          try { saved = localStorage.getItem(LOCAL_API_KEY) || ""; } catch (e) {}
-          if (inp) inp.value = saved;
-          if (status) status.textContent = saved ? "Backup key saved on this browser ✓" : "No browser backup key set.";
-        }
-        const el = document.getElementById(id);
-        if (el) el.classList.add("open");
-      }
-
-      function closeModal(id) {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove("open");
-      }
-
-      function shareApp() {
-        const url = window.location.href;
-        const text = "Come chat with Vee-Ai (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
-        window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
-      }
-
-      /* =========================================================
-         CHAT VIEW & HISTORY NAVIGATION
-         ========================================================= */
-      function showChatView() {
-        document.getElementById("welcomeScreen").classList.add("hidden");
-        document.getElementById("chatStream").classList.add("active");
-        document.getElementById("quickStrip").style.display = "flex";
-      }
-
-      function startNewChat() {
-        isGenerating = false;
-        currentChatId = null;
-        history = [];
-        if (window.veeFirebase && window.veeFirebase.detachActiveChatListener) {
-          window.veeFirebase.detachActiveChatListener();
-        }
-        const stream = document.getElementById("chatStream");
-        stream.innerHTML = "";
-        stream.classList.remove("active");
-        document.getElementById("quickStrip").style.display = "none";
-        document.getElementById("welcomeScreen").classList.remove("hidden");
-        closeModal("historyModal");
-        const input = document.getElementById("userInput");
-        if (input) input.focus();
-      }
-
-      function loadConversation(id) {
-        currentChatId = id;
-        const stream = document.getElementById("chatStream");
-        stream.innerHTML = "";
-        showChatView();
-        closeModal("historyModal");
-
-        const localConv = getLocalChats().find((c) => c.id === id);
-        if (localConv && Array.isArray(localConv.messages) && localConv.messages.length) {
-          history = localConv.messages.slice(-20).map((m) => ({
-            role: m.role,
-            content: m.content
-          }));
-          localConv.messages.forEach((m, idx) => {
-            appendMessage(m.content, m.role === "user" ? "user" : "bot", id + "_" + idx);
-          });
-        }
-
-        if (window.veeFirebase && window.veeFirebase.subscribeToConversation) {
-          window.veeFirebase.subscribeToConversation(id);
-        }
-      }
-
-      function renderHistoryList() {
-        const listEl = document.getElementById("historyList");
-        const branchLabel = document.getElementById("activeBranchLabel");
-        const uidLabel = document.getElementById("visitorUidShort");
-
-        if (window.veeFirebase) {
-          if (branchLabel) branchLabel.textContent = window.veeFirebase.activeNetwork || "network_001";
-          if (uidLabel) {
-            uidLabel.textContent = window.veeFirebase.uid
-              ? "UID: " + window.veeFirebase.uid.slice(0, 8) + "..."
-              : "Device + Cloud";
-          }
-        }
-
-        if (!listEl) return;
-        const chats = getMergedChats();
-        if (!chats.length) {
-          listEl.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No conversations yet. Say hello to Vee-Ai!</p>';
-          return;
-        }
-
-        listEl.innerHTML = "";
-        chats.forEach((c) => {
-          const item = document.createElement("div");
-          item.className = "history-item" + (c.id === currentChatId ? " active" : "");
-          const dateStr = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : "Recent";
-          item.innerHTML =
-            '<div style="min-width: 0;">' +
-              '<div class="history-title">' + escapeHtml(c.title || "Conversation") + '</div>' +
-              '<div class="history-date">' + dateStr + '</div>' +
-            '</div>' +
-            '<span style="color: var(--orange); font-weight: 700;">→</span>';
-          item.addEventListener("click", () => loadConversation(c.id));
-          listEl.appendChild(item);
-        });
-      }
-
-      /* =========================================================
-         MARKDOWN & MESSAGE BUBBLES
-         ========================================================= */
-      function renderMarkdown(rawText) {
-        if (!rawText) return "";
-        const codeBlocks = [];
-        let text = rawText.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-          const idx = codeBlocks.length;
-          codeBlocks.push(
-            '<div class="code-block-wrap">' +
-              '<div class="code-header"><span>' + escapeHtml(lang || "code") + '</span><button type="button" class="copy-code-btn">Copy</button></div>' +
-              '<pre><code>' + escapeHtml(code.trim()) + '</code></pre>' +
-            '</div>'
-          );
-          return "@@CODEBLOCK_" + idx + "@@";
-        });
-
-        text = escapeHtml(text);
-        text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
-        text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-        text = text.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-
-        const lines = text.split("\n");
-        const out = [];
-        let inUl = false;
-
-        for (let i = 0; i < lines.length; i++) {
-          const trimmed = lines[i].trim();
-          if (trimmed.indexOf("@@CODEBLOCK_") === 0) {
-            if (inUl) { out.push("</ul>"); inUl = false; }
-            out.push(trimmed);
-          } else if (/^###\s+/.test(trimmed)) {
-            if (inUl) { out.push("</ul>"); inUl = false; }
-            out.push("<h3>" + trimmed.replace(/^###\s+/, "") + "</h3>");
-          } else if (/^##\s+/.test(trimmed)) {
-            if (inUl) { out.push("</ul>"); inUl = false; }
-            out.push("<h2>" + trimmed.replace(/^##\s+/, "") + "</h2>");
-          } else if (/^#\s+/.test(trimmed)) {
-            if (inUl) { out.push("</ul>"); inUl = false; }
-            out.push("<h1>" + trimmed.replace(/^#\s+/, "") + "</h1>");
-          } else if (/^[-*]\s+/.test(trimmed)) {
-            if (!inUl) { out.push("<ul>"); inUl = true; }
-            out.push("<li>" + trimmed.replace(/^[-*]\s+/, "") + "</li>");
-          } else if (trimmed === "") {
-            if (inUl) { out.push("</ul>"); inUl = false; }
-          } else {
-            if (inUl) { out.push("</ul>"); inUl = false; }
-            out.push("<p>" + trimmed + "</p>");
-          }
-        }
-        if (inUl) out.push("</ul>");
-
-        let html = out.join("");
-        for (let j = 0; j < codeBlocks.length; j++) {
-          html = html.replace("@@CODEBLOCK_" + j + "@@", codeBlocks[j]);
-        }
-        return html;
-      }
-
-      function appendMessage(text, sender, msgId) {
-        const stream = document.getElementById("chatStream");
-        if (msgId && document.getElementById("dom_" + msgId)) return;
-
-        const row = document.createElement("div");
-        row.className = "msg-row " + sender;
-        if (msgId) row.id = "dom_" + msgId;
-
-        const label = document.createElement("div");
-        label.className = "msg-sender";
-        label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vee-Ai';
-        row.appendChild(label);
-
-        const bubble = document.createElement("div");
-        bubble.className = sender === "user" ? "msg-bubble" : "msg-bubble glass-surface";
-
-        if (sender === "user") {
-          bubble.textContent = text;
-          row.appendChild(bubble);
-        } else {
-          const md = document.createElement("div");
-          md.className = "md-content";
-          md.innerHTML = renderMarkdown(text);
-          bubble.appendChild(md);
-          row.appendChild(bubble);
-
-          const actions = document.createElement("div");
-          actions.className = "msg-actions";
-
-          const copyBtn = document.createElement("button");
-          copyBtn.type = "button";
-          copyBtn.className = "act-btn";
-          copyBtn.textContent = "Copy";
-          copyBtn.addEventListener("click", () => {
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(text);
-              copyBtn.textContent = "Copied ✓";
-              setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
-            }
-          });
-
-          const regenBtn = document.createElement("button");
-          regenBtn.type = "button";
-          regenBtn.className = "act-btn";
-          regenBtn.textContent = "Regenerate";
-          regenBtn.addEventListener("click", regenerateLast);
-
-          actions.appendChild(copyBtn);
-          actions.appendChild(regenBtn);
-          row.appendChild(actions);
-        }
-
-        stream.appendChild(row);
-        stream.scrollTop = stream.scrollHeight;
-      }
-
-      function appendThinking() {
-        const stream = document.getElementById("chatStream");
-        const row = document.createElement("div");
-        row.className = "msg-row bot";
-        row.innerHTML =
-          '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vee-Ai</div>' +
-          '<div class="ai-thinking-bubble glass-surface">' +
-            '<div class="orb-spinner"></div>' +
-            '<div class="wave-bars"><span></span><span></span><span></span></div>' +
-            '<span style="font-size: 12.5px; font-weight: 600; color: var(--text-secondary);">Reasoning...</span>' +
-          '</div>';
-        stream.appendChild(row);
-        stream.scrollTop = stream.scrollHeight;
-        return row;
-      }
-
-      window.veeAppendCloudMessage = appendMessage;
-      window.veeRenderHistoryList = renderHistoryList;
-      window.veeSetHistoryFromCloud = function (msgs) {
-        history = msgs;
-      };
-
-      /* =========================================================
-         AI ENGINE (NETLIFY FUNCTION + DIRECT GROQ FALLBACK)
-         ========================================================= */
-      async function callDirectGroqFallback(message, contextHistory) {
-        let directKey = "";
-        try { directKey = (localStorage.getItem(LOCAL_API_KEY) || "").trim(); } catch (e) {}
-        if (!directKey) {
-          return {
-            needsSetup: true,
-            reply:
-              "Omo! Your frontend is running on a static host (like GitHub Pages) where `/.netlify/functions/chat` is not active.\n\n" +
-              "**Two quick ways to connect Vee-Ai right now:**\n" +
-              "- **Option 1 (Fastest):** Tap the **Settings ⚙️** icon at the top right, paste your Groq API key (`gsk_...`), and tap **Save**.\n" +
-              "- **Option 2:** Deploy this repo on **Netlify** with `GROQ_API_KEY` set in Site Environment Variables."
-          };
-        }
-
-        const messages = [
-          { role: "system", content: VEE_SYSTEM_PROMPT },
-          ...contextHistory,
-          { role: "user", content: message }
-        ];
-
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": "Bearer " + directKey,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "llama-3.1-8b-instant",
-            messages,
-            temperature: 0.85,
-            max_tokens: 750
-          })
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          return {
-            reply: "Chai! Groq returned an error: " + (data?.error?.message || "Invalid API key. Check Settings ⚙️.")
-          };
-        }
-        return {
-          reply: data?.choices?.[0]?.message?.content || "Omo, network blink small! Ask me again abeg."
-        };
-      }
-
-      async function requestAiReply(message, contextHistory, addUserToHistory, userMsgId) {
-        isGenerating = true;
-        const sendBtnText = document.getElementById("sendBtnText");
-        if (sendBtnText) sendBtnText.textContent = "...";
-
-        const thinkingRow = appendThinking();
-
-        try {
-          let idToken = null;
-          if (window.veeFirebase && window.veeFirebase.getFreshToken) {
-            idToken = await window.veeFirebase.getFreshToken();
-          }
-
-          const headers = { "Content-Type": "application/json" };
-          if (idToken) headers["Authorization"] = "Bearer " + idToken;
-
-          let reply = null;
-          let botMsgId = genId("msg");
-          let useFallback = false;
-
-          try {
-            const res = await fetch("/.netlify/functions/chat", {
-              method: "POST",
-              headers,
-              body: JSON.stringify({
-                message,
-                history: contextHistory,
-                chatId: currentChatId,
-                userMsgId
-              })
-            });
-
-            const contentType = res.headers.get("content-type") || "";
-            if (res.status === 404 || res.status === 405 || !contentType.includes("application/json")) {
-              useFallback = true;
-            } else {
-              const data = await res.json();
-              reply = data.reply || data.error;
-              if (data.chatId) currentChatId = data.chatId;
-              if (data.botMsgId) botMsgId = data.botMsgId;
-              if (window.veeFirebase && window.veeFirebase.syncNetworkFromServer && data.activeNetwork) {
-                window.veeFirebase.syncNetworkFromServer(data.activeNetwork, currentChatId);
-              }
-            }
-          } catch (_) {
-            useFallback = true;
-          }
-
-          if (useFallback || !reply) {
-            const fallback = await callDirectGroqFallback(message, contextHistory);
-            reply = fallback.reply;
-          }
-
-          thinkingRow.remove();
-          appendMessage(reply, "bot", botMsgId);
-
-          if (addUserToHistory) {
-            history.push({ role: "user", content: message });
-          }
-          history.push({ role: "assistant", content: reply });
-          if (history.length > 20) history = history.slice(-20);
-
-          saveLocalTurn(currentChatId, message, reply);
-        } catch (err) {
-          thinkingRow.remove();
-          appendMessage("Omo, small network wahala happen! Check your connection and try again.", "bot");
-        } finally {
-          isGenerating = false;
-          if (sendBtnText) sendBtnText.textContent = "Send";
-        }
-      }
-
-      async function submitChat() {
-        if (isGenerating) return;
-        const input = document.getElementById("userInput");
-        const message = (input.value || "").trim();
-        if (!message) {
-          input.focus();
-          return;
-        }
-
-        if (!currentChatId) currentChatId = genId("chat");
-        const userMsgId = genId("msg");
-
-        showChatView();
-        appendMessage(message, "user", userMsgId);
-        input.value = "";
-        input.style.height = "auto";
-
-        const snapshot = history.slice();
-        await requestAiReply(message, snapshot, true, userMsgId);
-      }
-
-      async function regenerateLast() {
-        if (isGenerating || history.length < 2) return;
-        if (history[history.length - 1].role === "assistant") {
-          history.pop();
-          const stream = document.getElementById("chatStream");
-          if (stream.lastElementChild) stream.lastElementChild.remove();
-        }
-        const lastUser = history[history.length - 1];
-        if (!lastUser || lastUser.role !== "user") return;
-        await requestAiReply(lastUser.content, history.slice(0, -1), false, genId("msg"));
-      }
-
-      /* =========================================================
-         GLOBAL EVENT DELEGATION (ALL TABS, CARDS, FORMS & MODALS)
-         ========================================================= */
-      document.addEventListener("click", function (e) {
-        const actionEl = e.target.closest("[data-action]");
-        if (actionEl) {
-          const action = actionEl.getAttribute("data-action");
-          if (action === "new-chat") startNewChat();
-          else if (action === "open-history") openModal("historyModal");
-          else if (action === "open-settings") openModal("settingsModal");
-          else if (action === "toggle-theme") toggleTheme();
-          else if (action === "share") shareApp();
-          else if (action === "close-modal") closeModal(actionEl.getAttribute("data-target"));
-          else if (action === "save-api-key") {
-            const inp = document.getElementById("directApiKeyInput");
-            const status = document.getElementById("apiKeyStatus");
-            const val = inp ? inp.value.trim() : "";
-            try {
-              if (val) localStorage.setItem(LOCAL_API_KEY, val);
-              else localStorage.removeItem(LOCAL_API_KEY);
-            } catch (err) {}
-            if (status) status.textContent = val ? "Saved ✓ You can chat with Vee-Ai now!" : "Backup key cleared.";
-          }
-          return;
-        }
-
-        const promptEl = e.target.closest("[data-prompt]");
-        if (promptEl) {
-          const text = promptEl.getAttribute("data-prompt");
-          if (text && !isGenerating) {
-            document.getElementById("userInput").value = text;
-            submitChat();
-          }
-          return;
-        }
-
-        if (e.target.classList.contains("modal-backdrop")) {
-          e.target.classList.remove("open");
-          return;
-        }
-
-        if (e.target.classList.contains("copy-code-btn")) {
-          const wrap = e.target.closest(".code-block-wrap");
-          const codeEl = wrap ? wrap.querySelector("code") : null;
-          if (navigator.clipboard && codeEl) {
-            navigator.clipboard.writeText(codeEl.innerText);
-            e.target.textContent = "Copied ✓";
-            setTimeout(() => { e.target.textContent = "Copy"; }, 1500);
-          }
-        }
-      });
-
-      const chatForm = document.getElementById("chatForm");
-      const userInput = document.getElementById("userInput");
-
-      if (chatForm) {
-        chatForm.addEventListener("submit", function (e) {
-          e.preventDefault();
-          submitChat();
-        });
-        chatForm.addEventListener("click", function (e) {
-          if (e.target === chatForm && userInput) userInput.focus();
-        });
-      }
-
-      if (userInput) {
-        userInput.addEventListener("input", function () {
-          userInput.style.height = "auto";
-          userInput.style.height = Math.min(userInput.scrollHeight, 128) + "px";
-        });
-        userInput.addEventListener("keydown", function (e) {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            submitChat();
-          }
-        });
-      }
-
-      /* =========================================================
-         INITIALIZE THEME, VIEWPORT & PARTICLES
-         ========================================================= */
-      let savedTheme = "light";
-      try { savedTheme = localStorage.getItem("vee_ai_theme") || "light"; } catch (e) {}
-      applyTheme(savedTheme);
-
-      const appShell = document.getElementById("appShell");
-      function syncHeight() {
-        if (appShell) {
-          appShell.style.height = (window.visualViewport ? window.visualViewport.height : window.innerHeight) + "px";
-        }
-      }
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", syncHeight, { passive: true });
-      }
-      window.addEventListener("resize", syncHeight, { passive: true });
-      syncHeight();
-
-      const aura = document.getElementById("cursorAura");
-      if (aura && !window.matchMedia("(hover: none), (pointer: coarse)").matches) {
-        document.addEventListener("pointermove", function (e) {
-          aura.style.opacity = "1";
-          aura.style.left = e.clientX + "px";
-          aura.style.top = e.clientY + "px";
-        }, { passive: true });
-      }
-
-      const canvas = document.getElementById("aiCanvas");
-      const ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
-      let particles = [], w = 0, h = 0, rafId = null;
-
-      function setupCanvas() {
-        if (!canvas || !ctx) return;
-        w = window.innerWidth;
-        h = window.innerHeight;
-        canvas.width = w;
-        canvas.height = h;
-        const count = w < 640 ? 16 : 30;
-        particles = [];
-        for (let i = 0; i < count; i++) {
-          particles.push({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            vx: (Math.random() - 0.5) * 0.35,
-            vy: (Math.random() - 0.5) * 0.35,
-            r: Math.random() * 1.6 + 0.8
-          });
-        }
-      }
-
-      function drawFrame() {
-        if (!ctx || !particlesEnabled || document.hidden) return;
-        ctx.clearRect(0, 0, w, h);
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          p.x = (p.x + p.vx + w) % w;
-          p.y = (p.y + p.vy + h) % h;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(241, 76, 21, 0.45)";
-          ctx.fill();
-        }
-        rafId = requestAnimationFrame(drawFrame);
-      }
-
-      const pBtn = document.getElementById("particleToggleBtn");
-      if (pBtn) {
-        pBtn.textContent = particlesEnabled ? "Enabled" : "Disabled";
-        pBtn.addEventListener("click", function () {
-          particlesEnabled = !particlesEnabled;
-          try { localStorage.setItem("vee_ai_particles", particlesEnabled); } catch (e) {}
-          pBtn.textContent = particlesEnabled ? "Enabled" : "Disabled";
-          if (particlesEnabled) { setupCanvas(); drawFrame(); }
-          else if (ctx) { cancelAnimationFrame(rafId); ctx.clearRect(0, 0, w, h); }
-        });
-      }
-
-      if (particlesEnabled) {
-        setupCanvas();
-        drawFrame();
-        window.addEventListener("resize", setupCanvas, { passive: true });
-      }
-    })();
-  </script>
-
-  <!-- Optional Cloud Sync Bridge (Firebase Anonymous Auth + Realtime Database) -->
+  <!-- Unified Application, Visual Effects & Firebase Controller -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-    import {
-      getDatabase,
-      ref,
-      query,
-      orderByChild,
-      limitToLast,
-      onValue
-    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+    import { getDatabase, ref, query, orderByChild, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",
@@ -1795,141 +1110,606 @@
     const db = getDatabase(app);
 
     let currentUser = null;
+    let visitorUid = null;
+    let activeNetwork = "network_001";
+    let recentChats = [];
+    let currentChatId = null;
+    let chatHistory = [];
+    let isGenerating = false;
+    let particlesEnabled = true;
     let unsubConversations = null;
     let unsubActiveMessages = null;
+    let resolveInitialAuth = null;
 
-    const bridge = {
-      uid: null,
-      activeNetwork: "network_001",
+    const initialAuthReady = new Promise((resolve) => {
+      resolveInitialAuth = resolve;
+    });
 
-      async getFreshToken() {
-        try {
-          if (!currentUser && auth.currentUser) currentUser = auth.currentUser;
-          if (!currentUser) {
-            const cred = await Promise.race([
-              signInAnonymously(auth),
-              new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 1500))
-            ]);
-            currentUser = cred.user;
-            this.uid = currentUser.uid;
-          }
-          return await currentUser.getIdToken();
-        } catch (_) {
-          return null;
-        }
-      },
+    try {
+      particlesEnabled = localStorage.getItem("vai_particles") !== "false";
+    } catch (_) {}
 
-      detachActiveChatListener() {
-        if (typeof unsubActiveMessages === "function") {
-          unsubActiveMessages();
-          unsubActiveMessages = null;
-        }
-      },
+    function generateId(prefix) {
+      return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
 
-      subscribeToConversations(uid, networkId) {
-        if (typeof unsubConversations === "function") unsubConversations();
-        const convRef = query(
-          ref(db, `visitors/${uid}/networks/${networkId}/conversations`),
-          orderByChild("updatedAt"),
-          limitToLast(50)
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&")
+        .replace(/</g, "<")
+        .replace(/>/g, ">")
+        .replace(/"/g, """)
+        .replace(/'/g, "'");
+    }
+
+    function renderMarkdown(rawText) {
+      if (!rawText) return "";
+      const fence = String.fromCharCode(96).repeat(3);
+      const codeBlocks = [];
+      let text = String(rawText);
+
+      let startIdx = text.indexOf(fence);
+      while (startIdx !== -1) {
+        const endIdx = text.indexOf(fence, startIdx + 3);
+        if (endIdx === -1) break;
+        const inner = text.slice(startIdx + 3, endIdx);
+        const firstNewline = inner.indexOf("\n");
+        const lang = firstNewline !== -1 ? inner.slice(0, firstNewline).trim() : "code";
+        const code = firstNewline !== -1 ? inner.slice(firstNewline + 1) : inner;
+        const token = `@@CODEBLOCK_${codeBlocks.length}@@`;
+        codeBlocks.push(
+          `<div class="code-block-wrap"><div class="code-header"><span>${escapeHtml(lang || "code")}</span>` +
+          `<button type="button" class="copy-code-btn">Copy</button></div>` +
+          `<pre><code>${escapeHtml(code.trim())}</code></pre></div>`
         );
-        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+        text = text.slice(0, startIdx) + token + text.slice(endIdx + 3);
+        startIdx = text.indexOf(fence);
+      }
 
-        unsubConversations = onValue(
-          convRef,
-          (snapshot) => {
-            const list = [];
-            snapshot.forEach((child) => {
-              const val = child.val() || {};
-              const updated = Number(val.updatedAt || val.createdAt || 0);
-              if (updated >= thirtyDaysAgo || updated === 0) {
-                list.push({
-                  id: child.key,
-                  title: val.title || "Conversation",
-                  createdAt: val.createdAt || 0,
-                  updatedAt: updated
-                });
-              }
-            });
-            list.sort((a, b) => b.updatedAt - a.updatedAt);
-            window.veeCloudChats = list;
-            const modal = document.getElementById("historyModal");
-            if (modal && modal.classList.contains("open") && window.veeRenderHistoryList) {
-              window.veeRenderHistoryList();
-            }
-          },
-          () => {}
-        );
-      },
+      text = escapeHtml(text)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
-      subscribeToConversation(chatId) {
-        this.detachActiveChatListener();
-        if (!this.uid || !this.activeNetwork || !chatId) return;
-
-        const msgRef = query(
-          ref(db, `visitors/${this.uid}/networks/${this.activeNetwork}/conversations/${chatId}/messages`),
-          orderByChild("createdAt"),
-          limitToLast(100)
-        );
-
-        unsubActiveMessages = onValue(
-          msgRef,
-          (snapshot) => {
-            const msgs = [];
-            snapshot.forEach((child) => {
-              const val = child.val();
-              if (val && (val.role === "user" || val.role === "assistant") && val.content) {
-                msgs.push({
-                  id: child.key,
-                  role: val.role,
-                  content: val.content,
-                  createdAt: Number(val.createdAt || 0)
-                });
-              }
-            });
-            msgs.sort((a, b) => a.createdAt - b.createdAt);
-
-            if (msgs.length && window.veeSetHistoryFromCloud) {
-              window.veeSetHistoryFromCloud(
-                msgs.slice(-20).map((m) => ({ role: m.role, content: m.content }))
-              );
-            }
-
-            if (window.veeAppendCloudMessage) {
-              for (const m of msgs) {
-                window.veeAppendCloudMessage(
-                  m.content,
-                  m.role === "user" ? "user" : "bot",
-                  m.id
-                );
-              }
-            }
-          },
-          () => {}
-        );
-      },
-
-      syncNetworkFromServer(networkId, chatId) {
-        if (networkId && networkId !== this.activeNetwork) {
-          this.activeNetwork = networkId;
-          if (this.uid) this.subscribeToConversations(this.uid, networkId);
-        }
-        if (chatId && !unsubActiveMessages) {
-          this.subscribeToConversation(chatId);
+      const lines = text.split("\n");
+      const out = [];
+      let inUl = false;
+      for (const line of lines) {
+        const t = line.trim();
+        if (t.startsWith("@@CODEBLOCK_")) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push(t);
+        } else if (/^###\s+/.test(t)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push(`<h3>${t.replace(/^###\s+/, "")}</h3>`);
+        } else if (/^##\s+/.test(t)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push(`<h2>${t.replace(/^##\s+/, "")}</h2>`);
+        } else if (/^#\s+/.test(t)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push(`<h1>${t.replace(/^#\s+/, "")}</h1>`);
+        } else if (/^[-*]\s+/.test(t)) {
+          if (!inUl) { out.push("<ul>"); inUl = true; }
+          out.push(`<li>${t.replace(/^[-*]\s+/, "")}</li>`);
+        } else if (/^>\s+/.test(t)) {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push(`<blockquote>${t.replace(/^>\s+/, "")}</blockquote>`);
+        } else if (t === "") {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+        } else {
+          if (inUl) { out.push("</ul>"); inUl = false; }
+          out.push(`<p>${t}</p>`);
         }
       }
-    };
+      if (inUl) out.push("</ul>");
 
-    window.veeFirebase = bridge;
+      let html = out.join("");
+      codeBlocks.forEach((block, i) => {
+        html = html.replace(`@@CODEBLOCK_${i}@@`, block);
+      });
+      return html;
+    }
 
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      try { localStorage.setItem("vai_theme", theme); } catch (_) {}
+      const meta = document.getElementById("metaThemeColor");
+      if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0B0B" : "#FFFFFF");
+      const label = document.getElementById("modalThemeToggle");
+      if (label) label.textContent = theme === "dark" ? "Dark (#0B0B0B)" : "Light (70% White)";
+      const icon = document.getElementById("themeIcon");
+      if (icon) {
+        icon.innerHTML = theme === "dark"
+          ? '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>'
+          : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+      }
+    }
+
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute("data-theme") || "light";
+      applyTheme(cur === "light" ? "dark" : "light");
+    }
+
+    function openModal(id) {
+      if (id === "historyModal") renderHistoryList();
+      const el = document.getElementById(id);
+      if (el) el.classList.add("open");
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove("open");
+    }
+
+    function showChatView() {
+      document.getElementById("welcomeScreen")?.classList.add("hidden");
+      document.getElementById("chatStream")?.classList.add("active");
+      const qs = document.getElementById("quickStrip");
+      if (qs) qs.style.display = "flex";
+    }
+
+    function startNewChat() {
+      isGenerating = false;
+      currentChatId = null;
+      chatHistory = [];
+      if (typeof unsubActiveMessages === "function") {
+        unsubActiveMessages();
+        unsubActiveMessages = null;
+      }
+      const stream = document.getElementById("chatStream");
+      if (stream) {
+        stream.innerHTML = "";
+        stream.classList.remove("active");
+      }
+      const qs = document.getElementById("quickStrip");
+      if (qs) qs.style.display = "none";
+      document.getElementById("welcomeScreen")?.classList.remove("hidden");
+      closeModal("historyModal");
+      document.getElementById("userInput")?.focus();
+    }
+
+    function appendMessage(text, sender, msgId) {
+      const stream = document.getElementById("chatStream");
+      if (!stream) return;
+      if (msgId && document.getElementById(`dom_${msgId}`)) return;
+
+      const row = document.createElement("div");
+      row.className = `msg-row ${sender}`;
+      if (msgId) row.id = `dom_${msgId}`;
+
+      const label = document.createElement("div");
+      label.className = "msg-sender";
+      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> VAI';
+      row.appendChild(label);
+
+      const bubble = document.createElement("div");
+      bubble.className = sender === "user" ? "msg-bubble" : "msg-bubble glass-surface";
+
+      if (sender === "user") {
+        bubble.textContent = text;
+        row.appendChild(bubble);
+      } else {
+        const md = document.createElement("div");
+        md.className = "md-content";
+        md.innerHTML = renderMarkdown(text);
+        bubble.appendChild(md);
+        row.appendChild(bubble);
+
+        const actions = document.createElement("div");
+        actions.className = "msg-actions";
+
+        const copyBtn = document.createElement("button");
+        copyBtn.type = "button";
+        copyBtn.className = "act-btn";
+        copyBtn.textContent = "Copy";
+        copyBtn.addEventListener("click", () => {
+          navigator.clipboard?.writeText(text);
+          copyBtn.textContent = "Copied ✓";
+          setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
+        });
+
+        const regenBtn = document.createElement("button");
+        regenBtn.type = "button";
+        regenBtn.className = "act-btn";
+        regenBtn.textContent = "Regenerate";
+        regenBtn.addEventListener("click", regenerateLastReply);
+
+        actions.appendChild(copyBtn);
+        actions.appendChild(regenBtn);
+        row.appendChild(actions);
+      }
+
+      stream.appendChild(row);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function appendStorageNotice(msg) {
+      const stream = document.getElementById("chatStream");
+      if (!stream) return;
+      const note = document.createElement("div");
+      note.className = "storage-notice";
+      note.textContent = msg;
+      stream.appendChild(note);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function appendThinking() {
+      const stream = document.getElementById("chatStream");
+      const row = document.createElement("div");
+      row.className = "msg-row bot";
+      row.innerHTML =
+        '<div class="msg-sender"><span style="color: var(--orange);">●</span> VAI</div>' +
+        '<div class="ai-thinking-bubble glass-surface">' +
+          '<div class="orb-spinner"></div>' +
+          '<div class="wave-bars"><span></span><span></span><span></span></div>' +
+          '<span style="font-size: 12.5px; font-weight: 600; color: var(--text-secondary);">Reasoning...</span>' +
+        '</div>';
+      stream?.appendChild(row);
+      if (stream) stream.scrollTop = stream.scrollHeight;
+      return row;
+    }
+
+    function subscribeToConversations(uid, networkId) {
+      if (typeof unsubConversations === "function") unsubConversations();
+      const convRef = query(
+        ref(db, `visitors/${uid}/networks/${networkId}/conversations`),
+        orderByChild("updatedAt"),
+        limitToLast(50)
+      );
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+      unsubConversations = onValue(convRef, (snap) => {
+        const list = [];
+        snap.forEach((child) => {
+          const val = child.val() || {};
+          const updated = Number(val.updatedAt || val.createdAt || 0);
+          if (updated >= thirtyDaysAgo || updated === 0) {
+            list.push({ id: child.key, title: val.title || "Conversation", updatedAt: updated });
+          }
+        });
+        list.sort((a, b) => b.updatedAt - a.updatedAt);
+        recentChats = list;
+        if (document.getElementById("historyModal")?.classList.contains("open")) {
+          renderHistoryList();
+        }
+      }, () => {});
+    }
+
+    function subscribeToConversation(chatId) {
+      if (typeof unsubActiveMessages === "function") unsubActiveMessages();
+      if (!visitorUid || !activeNetwork || !chatId) return;
+
+      const msgRef = query(
+        ref(db, `visitors/${visitorUid}/networks/${activeNetwork}/conversations/${chatId}/messages`),
+        orderByChild("createdAt"),
+        limitToLast(100)
+      );
+
+      unsubActiveMessages = onValue(msgRef, (snap) => {
+        const msgs = [];
+        snap.forEach((child) => {
+          const val = child.val();
+          if (val && (val.role === "user" || val.role === "assistant") && val.content) {
+            msgs.push({ id: child.key, role: val.role, content: val.content, createdAt: Number(val.createdAt || 0) });
+          }
+        });
+        msgs.sort((a, b) => a.createdAt - b.createdAt);
+        chatHistory = msgs.slice(-20).map((m) => ({ role: m.role, content: m.content }));
+        for (const m of msgs) {
+          appendMessage(m.content, m.role === "user" ? "user" : "bot", m.id);
+        }
+      }, () => {});
+    }
+
+    function renderHistoryList() {
+      const list = document.getElementById("historyList");
+      const branchLabel = document.getElementById("activeBranchLabel");
+      const uidLabel = document.getElementById("visitorUidShort");
+
+      if (branchLabel) branchLabel.textContent = activeNetwork;
+      if (uidLabel) {
+        uidLabel.textContent = visitorUid ? `UID: ${visitorUid.slice(0, 8)}...` : "Syncing...";
+      }
+
+      if (!list) return;
+      if (!recentChats.length) {
+        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No recent conversations on this network branch yet. Start chatting with VAI!</p>';
+        return;
+      }
+
+      list.innerHTML = "";
+      for (const c of recentChats) {
+        const item = document.createElement("div");
+        item.className = `history-item ${c.id === currentChatId ? "active" : ""}`;
+        const dateStr = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : "Recent";
+        item.innerHTML = `<div style="min-width: 0;"><div class="history-title">${escapeHtml(c.title)}</div><div class="history-date">${dateStr}</div></div><span style="color: var(--orange); font-weight: 700;">→</span>`;
+        item.addEventListener("click", () => {
+          currentChatId = c.id;
+          showChatView();
+          const stream = document.getElementById("chatStream");
+          if (stream) stream.innerHTML = "";
+          closeModal("historyModal");
+          subscribeToConversation(c.id);
+        });
+        list.appendChild(item);
+      }
+    }
+
+    async function getFreshIdToken() {
+      if (!currentUser) {
+        await Promise.race([
+          initialAuthReady,
+          new Promise((r) => setTimeout(r, 2000))
+        ]);
+      }
+      if (!currentUser) return null;
+      try {
+        return await currentUser.getIdToken();
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function sendToBackend(message, contextSnapshot, addUserToHistory, userMsgId) {
+      isGenerating = true;
+      const sendBtnText = document.getElementById("sendBtnText");
+      if (sendBtnText) sendBtnText.textContent = "...";
+
+      const thinkingRow = appendThinking();
+
+      try {
+        const idToken = await getFreshIdToken();
+        const reqHeaders = { "Content-Type": "application/json" };
+        if (idToken) reqHeaders["Authorization"] = `Bearer ${idToken}`;
+
+        const res = await fetch("/.netlify/functions/chat", {
+          method: "POST",
+          headers: reqHeaders,
+          body: JSON.stringify({
+            message,
+            history: contextSnapshot,
+            chatId: currentChatId,
+            userMsgId
+          })
+        });
+
+        const data = await res.json();
+        const reply = data.reply || data.error || "Chai, small server blink! Try send am again.";
+        if (data.chatId) currentChatId = data.chatId;
+
+        thinkingRow?.remove();
+        appendMessage(reply, "bot", data.botMsgId || generateId("msg"));
+
+        if (addUserToHistory) chatHistory.push({ role: "user", content: message });
+        chatHistory.push({ role: "assistant", content: reply });
+        if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+        if (data.storageSaved === false && data.storageError) {
+          appendStorageNotice(data.storageError);
+        }
+
+        if (data.activeNetwork && data.activeNetwork !== activeNetwork) {
+          activeNetwork = data.activeNetwork;
+          if (visitorUid) subscribeToConversations(visitorUid, activeNetwork);
+        }
+        if (currentChatId && !unsubActiveMessages) {
+          subscribeToConversation(currentChatId);
+        }
+      } catch (_) {
+        thinkingRow?.remove();
+        appendMessage("Omo, small network wahala happen! Check your connection and try again.", "bot");
+      } finally {
+        isGenerating = false;
+        if (sendBtnText) sendBtnText.textContent = "Send";
+      }
+    }
+
+    async function submitChatMessage() {
+      if (isGenerating) return;
+      const input = document.getElementById("userInput");
+      const message = (input?.value || "").trim();
+      if (!message) {
+        input?.focus();
+        return;
+      }
+
+      if (!currentChatId) currentChatId = generateId("chat");
+      const userMsgId = generateId("msg");
+
+      showChatView();
+      appendMessage(message, "user", userMsgId);
+      input.value = "";
+      input.style.height = "auto";
+
+      await sendToBackend(message, chatHistory.slice(), true, userMsgId);
+    }
+
+    async function regenerateLastReply() {
+      if (isGenerating || chatHistory.length < 2) return;
+      if (chatHistory[chatHistory.length - 1].role === "assistant") {
+        chatHistory.pop();
+        document.getElementById("chatStream")?.lastElementChild?.remove();
+      }
+      const lastUser = chatHistory[chatHistory.length - 1];
+      if (!lastUser || lastUser.role !== "user") return;
+      await sendToBackend(lastUser.content, chatHistory.slice(0, -1), false, generateId("msg"));
+    }
+
+    // Event Listeners
+    document.getElementById("chatForm")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitChatMessage();
+    });
+
+    document.getElementById("chatForm")?.addEventListener("click", (e) => {
+      if (e.target.id !== "sendBtn") document.getElementById("userInput")?.focus();
+    });
+
+    const userInputEl = document.getElementById("userInput");
+    userInputEl?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        submitChatMessage();
+      }
+    });
+    userInputEl?.addEventListener("input", () => {
+      userInputEl.style.height = "auto";
+      userInputEl.style.height = `${Math.min(userInputEl.scrollHeight, 128)}px`;
+    });
+
+    document.getElementById("brandNewChatBtn")?.addEventListener("click", startNewChat);
+    document.getElementById("newChatBtn")?.addEventListener("click", startNewChat);
+    document.getElementById("modalNewChatBtn")?.addEventListener("click", startNewChat);
+    document.getElementById("historyBtn")?.addEventListener("click", () => openModal("historyModal"));
+    document.getElementById("closeHistoryBtn")?.addEventListener("click", () => closeModal("historyModal"));
+    document.getElementById("themeBtn")?.addEventListener("click", toggleTheme);
+    document.getElementById("modalThemeToggle")?.addEventListener("click", toggleTheme);
+    document.getElementById("settingsBtn")?.addEventListener("click", () => openModal("settingsModal"));
+    document.getElementById("closeSettingsBtn")?.addEventListener("click", () => closeModal("settingsModal"));
+
+    document.getElementById("shareBtn")?.addEventListener("click", () => {
+      const text = `Chat with VAI (created by Vincent) — intelligent multilingual AI companion! ${window.location.href}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    });
+
+    document.getElementById("copyLinkBtn")?.addEventListener("click", () => {
+      const btn = document.getElementById("copyLinkBtn");
+      navigator.clipboard?.writeText(window.location.href);
+      if (btn) {
+        btn.textContent = "Copied ✓";
+        setTimeout(() => { btn.textContent = "Copy URL"; }, 1500);
+      }
+    });
+
+    document.querySelectorAll("[data-prompt]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (isGenerating) return;
+        const prompt = btn.getAttribute("data-prompt") || "";
+        if (userInputEl) userInputEl.value = prompt;
+        submitChatMessage();
+      });
+    });
+
+    document.getElementById("historyModal")?.addEventListener("click", (e) => {
+      if (e.target.id === "historyModal") closeModal("historyModal");
+    });
+    document.getElementById("settingsModal")?.addEventListener("click", (e) => {
+      if (e.target.id === "settingsModal") closeModal("settingsModal");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (e.target.classList?.contains("copy-code-btn")) {
+        const codeEl = e.target.closest(".code-block-wrap")?.querySelector("code");
+        if (codeEl && navigator.clipboard) {
+          navigator.clipboard.writeText(codeEl.innerText);
+          e.target.textContent = "Copied ✓";
+          setTimeout(() => { e.target.textContent = "Copy"; }, 1500);
+        }
+      }
+    });
+
+    // Ambient Canvas Particles, Cursor Aura & Mobile Viewport Height Sync
+    (function initVisualEffects() {
+      try {
+        let savedTheme = "light";
+        try { savedTheme = localStorage.getItem("vai_theme") || "light"; } catch (_) {}
+        applyTheme(savedTheme);
+
+        const appShell = document.getElementById("appShell");
+        const syncHeight = () => {
+          if (appShell) {
+            appShell.style.height = `${window.visualViewport ? window.visualViewport.height : window.innerHeight}px`;
+          }
+        };
+        window.visualViewport?.addEventListener("resize", syncHeight, { passive: true });
+        window.addEventListener("resize", syncHeight, { passive: true });
+        syncHeight();
+
+        const aura = document.getElementById("cursorAura");
+        if (aura && !window.matchMedia("(hover: none), (pointer: coarse)").matches) {
+          document.addEventListener("pointermove", (e) => {
+            aura.style.opacity = "1";
+            aura.style.left = `${e.clientX}px`;
+            aura.style.top = `${e.clientY}px`;
+          }, { passive: true });
+        }
+
+        const canvas = document.getElementById("aiCanvas");
+        const ctx = canvas?.getContext ? canvas.getContext("2d") : null;
+        let particles = [];
+        let w = 0;
+        let h = 0;
+        let rafId = null;
+
+        const setupCanvas = () => {
+          if (!canvas || !ctx) return;
+          w = window.innerWidth;
+          h = window.innerHeight;
+          canvas.width = w;
+          canvas.height = h;
+          const count = w < 640 ? 16 : 30;
+          particles = Array.from({ length: count }, () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - 0.5) * 0.35,
+            vy: (Math.random() - 0.5) * 0.35,
+            r: Math.random() * 1.6 + 0.8
+          }));
+        };
+
+        const drawFrame = () => {
+          if (!ctx || !particlesEnabled || document.hidden) return;
+          ctx.clearRect(0, 0, w, h);
+          for (const p of particles) {
+            p.x = (p.x + p.vx + w) % w;
+            p.y = (p.y + p.vy + h) % h;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(241, 76, 21, 0.45)";
+            ctx.fill();
+          }
+          rafId = requestAnimationFrame(drawFrame);
+        };
+
+        const pBtn = document.getElementById("particleToggleBtn");
+        if (pBtn) {
+          pBtn.textContent = particlesEnabled ? "Enabled" : "Disabled";
+          pBtn.addEventListener("click", () => {
+            particlesEnabled = !particlesEnabled;
+            try { localStorage.setItem("vai_particles", String(particlesEnabled)); } catch (_) {}
+            pBtn.textContent = particlesEnabled ? "Enabled" : "Disabled";
+            if (particlesEnabled) {
+              setupCanvas();
+              drawFrame();
+            } else if (ctx) {
+              cancelAnimationFrame(rafId);
+              ctx.clearRect(0, 0, w, h);
+            }
+          });
+        }
+
+        if (particlesEnabled) {
+          setupCanvas();
+          drawFrame();
+          window.addEventListener("resize", setupCanvas, { passive: true });
+        }
+      } catch (_) {}
+    })();
+
+    // Firebase Anonymous Auth & Session Handshake
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        try { await signInAnonymously(auth); } catch (_) {}
+        try {
+          await signInAnonymously(auth);
+        } catch (_) {
+          resolveInitialAuth?.(null);
+        }
         return;
       }
 
       currentUser = user;
-      bridge.uid = user.uid;
+      visitorUid = user.uid;
+      resolveInitialAuth?.(user);
 
       try {
         const token = await user.getIdToken();
@@ -1937,20 +1717,17 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + token
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({ action: "init_session" })
         });
-        const contentType = res.headers.get("content-type") || "";
-        if (contentType.includes("application/json")) {
-          const sessionData = await res.json();
-          if (sessionData && sessionData.activeNetwork) {
-            bridge.activeNetwork = sessionData.activeNetwork;
-          }
-        }
+        const data = await res.json();
+        if (data?.activeNetwork) activeNetwork = data.activeNetwork;
       } catch (_) {}
 
-      bridge.subscribeToConversations(user.uid, bridge.activeNetwork);
+      const statusEl = document.getElementById("liveStatusText");
+      if (statusEl) statusEl.textContent = `Vincent • ${activeNetwork}`;
+      subscribeToConversations(user.uid, activeNetwork);
     });
   </script>
 </body>
