@@ -1177,10 +1177,13 @@
         try {
           var profileSnapshot = await veeVisitorProfileRef.once("value");
           veeVisitorProfileData = profileSnapshot.val() || {};
-          if (!veeVisitorProfileData.createdAtMs) {
-            await veeVisitorProfileRef.update({ createdAtMs: Date.now() });
-            veeVisitorProfileData.createdAtMs = Date.now();
-          }
+          var profileNow = Date.now();
+          var profileCreatedAt = Number(veeVisitorProfileData.createdAtMs || profileNow);
+          await veeVisitorProfileRef.update({ createdAtMs: profileCreatedAt, lastSeenAtMs: profileNow });
+          veeVisitorProfileData = Object.assign({}, veeVisitorProfileData, {
+            createdAtMs: profileCreatedAt,
+            lastSeenAtMs: profileNow
+          });
         } catch (profileError) {
           console.warn("Vee - Ai visitor profile could not be loaded:", profileError);
         }
