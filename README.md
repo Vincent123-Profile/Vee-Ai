@@ -165,6 +165,10 @@ Use long, unique secret values. Do not put their values in frontend files or Git
 ## Testing checklist
 
 - [ ] A new visitor receives an anonymous Firebase UID.
+- [ ] A first-time visitor sees the optional name prompt.
+- [ ] Saving a name adds it to the visitor profile and admin dashboard.
+- [ ] Skipping is remembered and the prompt does not return on refresh.
+- [ ] The admin dashboard searches visitors by their saved name.
 - [ ] A visitor's conversation remains available after a page refresh.
 - [ ] A visitor cannot read another visitor's records.
 - [ ] A signed-out user cannot read visitor records.
