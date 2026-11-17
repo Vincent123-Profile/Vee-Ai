@@ -825,6 +825,21 @@
       gap: 14px;
     }
 
+    .visitor-name-input {
+      width: 100%;
+      padding: 14px 15px;
+      border: 1px solid var(--glass-border);
+      border-radius: 13px;
+      background: var(--glass-surface);
+      color: var(--text-primary);
+      font: inherit;
+      outline: none;
+    }
+    .visitor-name-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-soft); }
+    .visitor-name-actions { display: flex; gap: 10px; }
+    .visitor-name-actions button { flex: 1; min-height: 44px; }
+    .visitor-name-skip { background: transparent; color: var(--text-secondary); border: 1px solid var(--glass-border); box-shadow: none; }
+
     .modal-head {
       display: flex;
       align-items: center;
@@ -1043,6 +1058,20 @@
     </div>
   </div>
 
+  <!-- Optional first-visit name prompt -->
+  <div class="modal-backdrop" id="visitorNameModal">
+    <form class="modal-panel glass-chrome" onsubmit="veeSaveVisitorName(event)">
+      <div class="modal-head"><h2>Welcome to Vee - Ai</h2></div>
+      <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;">Before we begin, what should I call you? Your name helps personalise your experience. You are free to skip.</p>
+      <input class="visitor-name-input" id="visitorNameInput" type="text" maxlength="60" autocomplete="given-name" placeholder="Enter your name" aria-label="Your name">
+      <div class="visitor-name-actions">
+        <button type="submit">Save name</button>
+        <button type="button" class="visitor-name-skip" onclick="veeSkipVisitorName()">Skip</button>
+      </div>
+      <p id="visitorNameStatus" style="font-size:12px;color:var(--text-secondary);" role="status"></p>
+    </form>
+  </div>
+
   <!-- Settings Modal -->
   <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) veeCloseModal('settingsModal')">
     <div class="modal-panel glass-chrome">
@@ -1090,6 +1119,9 @@
     var veeCloudUid = null;
     var veeNetworkFingerprint = null;
     var veeCloudSessionsRef = null;
+    var veeVisitorProfileRef = null;
+    var veeVisitorProfileData = null;
+    var veeNamePromptShown = false;
     var veeCloudReady = false;
 
     var veeFirebaseConfig = {
@@ -1141,6 +1173,17 @@
         veeFirebaseDb = firebase.database();
         var credential = await veeFirebaseAuth.signInAnonymously();
         veeCloudUid = credential.user.uid;
+        veeVisitorProfileRef = veeFirebaseDb.ref("visitors/" + veeCloudUid + "/profile");
+        try {
+          var profileSnapshot = await veeVisitorProfileRef.once("value");
+          veeVisitorProfileData = profileSnapshot.val() || {};
+          if (!veeVisitorProfileData.createdAtMs) {
+            await veeVisitorProfileRef.update({ createdAtMs: Date.now() });
+            veeVisitorProfileData.createdAtMs = Date.now();
+          }
+        } catch (profileError) {
+          console.warn("Vee - Ai visitor profile could not be loaded:", profileError);
+        }
 
         var networkResponse = await fetch("/.netlify/functions/chat", {
           method: "POST",
@@ -1180,12 +1223,62 @@
 
         veeCloudReady = true;
         veeSaveSessions();
+        veeMaybeAskVisitorName();
         if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
           veeRenderHistoryList();
         }
         console.info("Vee - Ai Firebase connected.");
       } catch (error) {
         console.error("Vee - Ai Firebase initialisation failed:", error);
+      }
+    }
+
+    function veeMaybeAskVisitorName() {
+      if (!veeCloudReady || !veeVisitorProfileRef || veeNamePromptShown) return;
+      var profile = veeVisitorProfileData || {};
+      if (profile.name || profile.namePromptHandledAtMs) return;
+      veeNamePromptShown = true;
+      veeOpenModal("visitorNameModal");
+      setTimeout(function () {
+        var field = document.getElementById("visitorNameInput");
+        if (field) field.focus();
+      }, 120);
+    }
+
+    async function veeSaveVisitorName(event) {
+      if (event) event.preventDefault();
+      if (!veeVisitorProfileRef) return;
+      var field = document.getElementById("visitorNameInput");
+      var name = (field && field.value || "").trim().replace(/\\s+/g, " ").slice(0, 60);
+      var status = document.getElementById("visitorNameStatus");
+      if (!name) {
+        if (status) status.textContent = "Enter your name or choose Skip.";
+        return;
+      }
+      var now = Date.now();
+      if (status) status.textContent = "Saving...";
+      try {
+        await veeVisitorProfileRef.update({ name: name, nameProvidedAtMs: now, namePromptHandledAtMs: now });
+        veeVisitorProfileData = Object.assign({}, veeVisitorProfileData || {}, { name: name, nameProvidedAtMs: now, namePromptHandledAtMs: now });
+        veeCloseModal("visitorNameModal");
+      } catch (error) {
+        console.error("Vee - Ai visitor name save failed:", error);
+        if (status) status.textContent = "Your name was not saved. Please try again or skip.";
+      }
+    }
+
+    async function veeSkipVisitorName() {
+      if (!veeVisitorProfileRef) { veeCloseModal("visitorNameModal"); return; }
+      var now = Date.now();
+      var status = document.getElementById("visitorNameStatus");
+      if (status) status.textContent = "Saving your choice...";
+      try {
+        await veeVisitorProfileRef.update({ namePromptHandledAtMs: now });
+        veeVisitorProfileData = Object.assign({}, veeVisitorProfileData || {}, { namePromptHandledAtMs: now });
+        veeCloseModal("visitorNameModal");
+      } catch (error) {
+        console.error("Vee - Ai name prompt preference save failed:", error);
+        if (status) status.textContent = "Your choice was not saved. Please try again.";
       }
     }
 
