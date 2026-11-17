@@ -1172,10 +1172,6 @@
         var googleIdToken = signedInUser ? await signedInUser.getIdToken() : null;
         var visitorId = localStorage.getItem("vee_ai_visitor_id") || "";
         var visitorToken = localStorage.getItem("vee_ai_visitor_token") || "";
-        if ((!visitorId || !visitorToken) && !googleIdToken) {
-          console.info("Vee-AI is waiting for a guest visit or Google recovery.");
-          return;
-        }
         var result = await veeVisitorRequest({
           action: "identify",
           visitorId: visitorId,
@@ -1260,23 +1256,28 @@
         var provider = new firebase.auth.GoogleAuthProvider();
         var result = await veeFirebaseAuth.signInWithPopup(provider);
         var idToken = await result.user.getIdToken(true);
-        var response;
-        if (veeCloudUid && veeVisitorToken) {
-          response = await veeVisitorRequest({
-            action: "link-google",
-            visitorId: veeCloudUid,
-            visitorToken: veeVisitorToken,
-            googleIdToken: idToken
-          });
-        } else {
-          response = await veeVisitorRequest({ action: "recover-google", googleIdToken: idToken });
-          veeCloudUid = response.visitorId;
-          veeVisitorToken = response.visitorToken;
+        try {
+          var recovered = await veeVisitorRequest({ action: "recover-google", googleIdToken: idToken });
+          veeCloudUid = recovered.visitorId;
+          veeVisitorToken = recovered.visitorToken;
           localStorage.setItem("vee_ai_visitor_id", veeCloudUid);
           localStorage.setItem("vee_ai_visitor_token", veeVisitorToken);
+          veeCloudReady = false;
+          veeSessions = [];
           await veeInitFirebase();
+          alert("Your existing Vee-AI visitor identity and conversations have been recovered.");
+          return;
+        } catch (recoveryError) {
+          if (!/No Vee-AI visitor record is linked/.test(recoveryError.message || "")) throw recoveryError;
         }
-        alert("Google account linked to your Vee-AI visitor identity.");
+        await veeEnsureVisitorIdentity();
+        await veeVisitorRequest({
+          action: "link-google",
+          visitorId: veeCloudUid,
+          visitorToken: veeVisitorToken,
+          googleIdToken: idToken
+        });
+        alert("Google account linked to your current Vee-AI visitor identity.");
       } catch (error) {
         alert(error.message || "Google sign-in was not completed.");
       }
