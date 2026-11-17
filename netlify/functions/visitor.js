@@ -15,6 +15,7 @@ function firebaseAdmin() {
   return app;
 }
 const db = () => firebaseAdmin().database();
+const auth = () => firebaseAdmin().auth();
 const json = (statusCode, body) => ({
   statusCode,
   headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
