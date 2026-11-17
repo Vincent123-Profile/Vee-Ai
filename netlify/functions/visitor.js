@@ -15,7 +15,6 @@ function firebaseAdmin() {
   return app;
 }
 const db = () => firebaseAdmin().database();
-const auth = () => firebaseAdmin().auth();
 const json = (statusCode, body) => ({
   statusCode,
   headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
@@ -42,14 +41,6 @@ function verifyVisitor(token) {
   if (!data.visitorId || !data.exp || data.exp < Date.now()) throw new Error("Visitor token expired.");
   return data.visitorId;
 }
-async function googleUidFromToken(idToken) {
-  if (!idToken) throw new Error("Google sign-in token is required.");
-  const decoded = await auth().verifyIdToken(idToken);
-  if (!decoded.firebase || !decoded.firebase.sign_in_provider || decoded.firebase.sign_in_provider !== "google.com") {
-    throw new Error("A verified Google sign-in is required.");
-  }
-  return decoded.uid;
-}
 function networkFingerprint(event) {
   const ip = event.headers && (event.headers["x-nf-client-connection-ip"] || event.headers["X-Nf-Client-Connection-Ip"]);
   const key = (process.env.IP_HASH_SECRET || "").trim();
@@ -71,12 +62,7 @@ exports.handler = async event => {
 
     if (body.action === "identify") {
       let visitorId = null;
-      if (body.googleIdToken) {
-        const googleUid = await googleUidFromToken(body.googleIdToken);
-        const index = await database.ref("googleIndex/" + googleUid).once("value");
-        visitorId = index.val() || null;
-      }
-      if (!visitorId && body.visitorId && body.visitorToken) {
+      if (body.visitorId && body.visitorToken) {
         try { if (verifyVisitor(body.visitorToken) === body.visitorId) visitorId = body.visitorId; } catch (_) {}
       }
       if (!visitorId) visitorId = "v_" + crypto.randomUUID();
@@ -88,32 +74,19 @@ exports.handler = async event => {
         "profile/createdAtMs": current.profile && current.profile.createdAtMs || now,
         "profile/lastSeenAtMs": now,
         "profile/visitCount": admin.database.ServerValue.increment(1),
-        "profile/googleLinked": !!(current.identity && current.identity.googleUid),
         ["networks/" + fp + "/lastSeenAtMs"]: now
       };
       await ref.update(updates);
-      if (body.googleIdToken) {
-        const googleUid = await googleUidFromToken(body.googleIdToken);
-        const existing = await database.ref("googleIndex/" + googleUid).once("value");
-        if (existing.val() && existing.val() !== visitorId) throw new Error("This Google account is already linked to another visitor.");
-        await ref.child("identity/googleUid").set(googleUid);
-        await ref.child("profile/googleLinked").set(true);
-        await database.ref("googleIndex/" + googleUid).set(visitorId);
-      }
-      return json(200, { visitorId, visitorToken: signVisitor(visitorId), networkFingerprint: fp, googleLinked: !!body.googleIdToken || !!(current.identity && current.identity.googleUid) });
+      return json(200, { visitorId, visitorToken: signVisitor(visitorId), networkFingerprint: fp, displayName: current.profile && current.profile.displayName || "" });
     }
 
-    if (body.action === "link-google") {
+    if (body.action === "update-profile") {
       const visitorId = verifyVisitor(body.visitorToken);
       if (visitorId !== body.visitorId) throw new Error("Visitor identity mismatch.");
-      const googleUid = await googleUidFromToken(body.googleIdToken);
-      const indexRef = database.ref("googleIndex/" + googleUid);
-      const existing = await indexRef.once("value");
-      if (existing.val() && existing.val() !== visitorId) throw new Error("This Google account is already linked to another visitor.");
-      await database.ref("visitors/" + visitorId + "/identity/googleUid").set(googleUid);
-      await database.ref("visitors/" + visitorId + "/profile/googleLinked").set(true);
-      await indexRef.set(visitorId);
-      return json(200, { success: true });
+      const displayName = String(body.displayName || "").trim().slice(0, 60);
+      await database.ref("visitors/" + visitorId + "/profile/displayName").set(displayName || null);
+      await database.ref("visitors/" + visitorId + "/profile/lastSeenAtMs").set(now);
+      return json(200, { success: true, displayName });
     }
 
     if (body.action === "save-session") {
@@ -141,43 +114,6 @@ exports.handler = async event => {
       await ref.child("networks/" + fp + "/lastSeenAtMs").set(now);
       await ref.child("networks/" + fp + "/sessions/" + s.id).set(record);
       return json(200, { success: true });
-    }
-
-    if (body.action === "recover-google") {
-      const googleUid = await googleUidFromToken(body.googleIdToken);
-      const snap = await database.ref("googleIndex/" + googleUid).once("value");
-      const visitorId = snap.val();
-      if (!visitorId) return json(404, { error: "No Vee-AI visitor record is linked to this Google account." });
-
-      if (body.currentVisitorId && body.currentVisitorToken) {
-        let currentId = null;
-        try { currentId = verifyVisitor(body.currentVisitorToken); } catch (_) {}
-        if (currentId && currentId === body.currentVisitorId && currentId !== visitorId) {
-          const currentRef = database.ref("visitors/" + currentId);
-          const targetRef = database.ref("visitors/" + visitorId);
-          const currentSnap = await currentRef.once("value");
-          const currentData = currentSnap.val() || {};
-          const targetSnap = await targetRef.once("value");
-          const targetData = targetSnap.val() || {};
-          const mergedNetworks = Object.assign({}, targetData.networks || {});
-          Object.entries(currentData.networks || {}).forEach(([fingerprint, network]) => {
-            const oldNetwork = mergedNetworks[fingerprint] || {};
-            mergedNetworks[fingerprint] = Object.assign({}, oldNetwork, network || {}, {
-              sessions: Object.assign({}, oldNetwork.sessions || {}, network && network.sessions || {})
-            });
-          });
-          const currentCreated = Number(currentData.profile && currentData.profile.createdAtMs || now);
-          const targetCreated = Number(targetData.profile && targetData.profile.createdAtMs || now);
-          await targetRef.update({
-            networks: mergedNetworks,
-            "profile/createdAtMs": Math.min(currentCreated, targetCreated),
-            "profile/lastSeenAtMs": now,
-            "profile/googleLinked": true
-          });
-          await currentRef.remove();
-        }
-      }
-      return json(200, { visitorId, visitorToken: signVisitor(visitorId) });
     }
 
     if (body.action === "load-sessions") {
@@ -219,7 +155,7 @@ exports.handler = async event => {
     return json(400, { error: "Unknown visitor action." });
   } catch (error) {
     const message = error && error.message || "Visitor service error.";
-    const status = /Administrator access denied|Invalid visitor token|expired|identity mismatch|verified Google|already linked/i.test(message) ? 403 : 500;
+    const status = /Invalid visitor token|expired|identity mismatch/i.test(message) ? 403 : 500;
     return json(status, { error: message });
   }
 };
