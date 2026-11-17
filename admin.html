@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0B0B0B">
-<title>Vee - Ai | Private Admin</title>
+<title>Vee-AI | Private Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -37,7 +37,7 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px;ma
 <div class="panel stat"><small>Network fingerprints</small><strong id="networkCount">0</strong></div>
 <div class="panel stat"><small>Conversations</small><strong id="sessionCount">0</strong></div>
 </div>
-<div class="panel" style="margin-bottom:16px"><strong>Visitor identity</strong><p class="muted" style="margin:7px 0 0">Visitors are anonymous by default. Firebase assigns each visitor a unique ID. A real name appears only after the visitor submits the name prompt. Older visits cannot be identified by name retroactively.</p></div><div class="toolbar"><input id="search" type="search" placeholder="Search visitor ID, name, network fingerprint or conversation title"><button id="refresh" class="secondary">Refresh</button></div>
+<div class="toolbar"><input id="search" type="search" placeholder="Search visitor ID, network fingerprint or conversation title"><button id="refresh" class="secondary">Refresh</button></div>
 <div class="layout">
 <section class="panel list" id="visitorList"><div class="empty">Loading visitors...</div></section>
 <section class="panel detail" id="visitorDetail"><div class="empty">Select a visitor to view profile and conversation history.</div></section>
@@ -96,33 +96,33 @@ function flatten(data){
 }
 function renderList(){
  const q=$("search").value.trim().toLowerCase();
- const rows=flatten(visitorData).filter(v=>(v.uid+" "+(v.profile.name||"")+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q));
- $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+esc(v.profile.name||"Anonymous visitor · name not shared")+'</strong><small>'+esc(v.uid)+'</small><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
+ const rows=flatten(visitorData).filter(v=>(v.uid+" "+""+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q));
+ $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+"Visitor"+'</strong><small>'+esc(v.uid)+'</small><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
  $("visitorList").querySelectorAll("[data-uid]").forEach(btn=>btn.addEventListener("click",()=>{selectedUid=btn.dataset.uid;renderList();renderDetail();}));
 }
 function renderDetail(){
  const v=flatten(visitorData).find(x=>x.uid===selectedUid);
  if(!v){$("visitorDetail").innerHTML='<div class="empty">Select a visitor to view details.</div>';return;}
- let html='<h2>Visitor profile</h2><div class="muted">Visitor-provided name · self-reported</div><p><strong>'+esc(v.profile.name||"Anonymous visitor · name not shared") + '</strong></p><div class="muted" style="margin-top:10px">Unique visitor ID</div><p style="overflow-wrap:anywhere"><strong>'+esc(v.uid)+'</strong></p><div class="chips"><span class="chip">Name status: '+(v.profile.name? "Provided":"Anonymous")+'</span><span class="chip">First visit: '+esc(date(v.first))+'</span><span class="chip">Last activity: '+esc(date(v.last))+'</span><span class="chip">'+v.sessions.length+' conversations</span></div><h2>Network activity</h2><p class="muted">Fingerprints are privacy-preserving hashes. They are not raw IP addresses.</p>';
+ let html='<h2>Visitor ID</h2><div class="muted" style="margin-top:10px">Unique visitor ID</div><p style="overflow-wrap:anywhere"><strong>'+esc(v.uid)+'</strong></p><div class="chips"><span class="chip">First visit: '+esc(date(v.first))+'</span><span class="chip">Last activity: '+esc(date(v.last))+'</span><span class="chip">'+v.sessions.length+' conversations</span></div><h2>Network activity</h2><p class="muted">Fingerprints are privacy-preserving hashes. They are not raw IP addresses.</p>';
  Object.entries(v.networks).forEach(([fp,n])=>{
   const sessions=Object.values(n.sessions||{});
   const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
   html+='<div class="network"><strong>Fingerprint</strong><p style="overflow-wrap:anywhere">'+esc(fp)+'</p><small>'+sessions.length+' conversations · First seen '+esc(date(times.length?Math.min(...times):0))+' · Last seen '+esc(date(times.length?Math.max(...times):0))+'</small></div>';
  });
- html+='<div style="margin:18px 0;padding:14px;border:1px solid #f0c7bd;border-radius:12px"><button type="button" id="deleteVisitorHistory" style="background:#b42318">Delete visitor conversation history</button><p class="muted">Permanently removes saved conversations and network fingerprints from Firebase. The visitor ID and saved name are retained.</p></div><h2 style="margin-top:20px">Conversation history</h2>';
+ html+='<div style="margin:18px 0;padding:14px;border:1px solid #f0c7bd;border-radius:12px"><button type="button" id="deleteVisitorHistory" style="background:#b42318">Delete visitor conversation history</button><p class="muted">Permanently removes saved conversations and network fingerprints from Firebase. The visitor ID is retained.</p></div><h2 style="margin-top:20px">Conversation history</h2>';
  v.sessions.sort((a,b)=>Number(b.updatedAtMs||0)-Number(a.updatedAtMs||0)).forEach(s=>{
   html+='<article class="session"><strong>'+esc(s.title||"Untitled conversation")+'</strong><p class="muted">Started '+esc(date(s.createdAtMs))+' · Updated '+esc(date(s.updatedAtMs))+' · Network '+esc(s.fingerprint)+'</p>';
-  (Array.isArray(s.messages)?s.messages:[]).forEach(m=>{html+='<div class="message '+(m.role==="user"?"user":"assistant")+'"><strong>'+esc(m.role==="user"?"Visitor":"Vee - Ai")+'</strong><br>'+esc(m.content||"")+'</div>';});
+  (Array.isArray(s.messages)?s.messages:[]).forEach(m=>{html+='<div class="message '+(m.role==="user"?"user":"assistant")+'"><strong>'+esc(m.role==="user"?"Visitor":"Vee-AI")+'</strong><br>'+esc(m.content||"")+'</div>';});
   html+='</article>';
  });
- if(!v.sessions.length) html+='<div class="empty">No conversation transcripts are stored in Firebase for this visitor yet. New chats will appear after the visitor uses the updated Vee - Ai preview.</div>';
+ if(!v.sessions.length) html+='<div class="empty">No conversation transcripts are stored in Firebase for this visitor yet. New chats will appear after the visitor uses the updated Vee-AI preview.</div>';
  $("visitorDetail").innerHTML=html;
  const deleteButton=$("deleteVisitorHistory");
- if(deleteButton)deleteButton.addEventListener("click",()=>deleteVisitorHistory(v.uid,v.profile.name||v.uid));
+ if(deleteButton)deleteButton.addEventListener("click",()=>deleteVisitorHistory(v.uid,v.uid));
 }
 async function deleteVisitorHistory(uid,label){
  if(!uid||!auth.currentUser||(auth.currentUser.email||"").toLowerCase()!==ADMIN_EMAIL)return;
- if(!window.confirm("Delete all saved conversations and network fingerprints for "+label+"? The visitor ID and saved name will remain. This cannot be undone."))return;
+ if(!window.confirm("Delete all saved conversations and network fingerprints for "+label+"? The visitor ID will remain. This cannot be undone."))return;
  const button=$("deleteVisitorHistory");if(button)button.disabled=true;
  try{
   const clearedAtMs=Date.now();
