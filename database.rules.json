@@ -3,8 +3,8 @@
     "visitors": {
       ".read": "auth != null && auth.token.email === 'agboolavincent67@icloud.com'",
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'agboolavincent67@icloud.com')",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'agboolavincent67@icloud.com')"
       }
     }
   }
