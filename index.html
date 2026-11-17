@@ -1068,6 +1068,10 @@
         <button type="button" class="toggle-pill" id="modalThemeToggle" onclick="veeToggleTheme()">Light (70% White)</button>
       </div>
       <div class="setting-row">
+        <span>Google account recovery</span>
+        <button type="button" class="toggle-pill" onclick="veeGoogleLinkOrRecover()">Link / Recover</button>
+      </div>
+      <div class="setting-row">
         <span>Ambient AI Particles</span>
         <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
       </div>
@@ -1102,106 +1106,82 @@
     var veeFirebaseDb = null;
     var veeCloudUid = null;
     var veeNetworkFingerprint = null;
-    var veeCloudSessionsRef = null;
-    var veeVisitorProfileRef = null;
-    var veeVisitorProfileData = null;
-
+    var veeVisitorToken = null;
     var veeCloudReady = false;
     var veeHistoryClearedAtMs = 0;
 
     var veeFirebaseConfig = {
       apiKey: "AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",
       authDomain: "vee-ai-e745e.firebaseapp.com",
-      databaseURL: "https://vee-ai-e745e-default-rtdb.firebaseio.com",
       projectId: "vee-ai-e745e",
-      storageBucket: "vee-ai-e745e.firebasestorage.app",
-      messagingSenderId: "351206567728",
-      appId: "1:351206567728:web:10a197b7c9752daf12e2f5",
-      measurementId: "G-CC61N9WKSJ"
+      appId: "1:351206567728:web:10a197b7c9752daf12e2f5"
     };
+
+    async function veeVisitorRequest(payload) {
+      var response = await fetch("/.netlify/functions/visitor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      var data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Visitor service request failed.");
+      return data;
+    }
 
     function veeSaveSessions() {
       try {
         localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
       } catch (e) {}
-      if (veeCloudReady && veeCloudSessionsRef) {
-        veeSessions.forEach(function (session) {
-          veePersistSessionToCloud(session);
-        });
+      if (veeCloudReady) {
+        veeSessions.forEach(function (session) { veePersistSessionToCloud(session); });
       }
     }
 
-    function veePersistSessionToCloud(session) {
-      if (!veeCloudReady || !veeCloudSessionsRef || !session || !session.id) return;
-      var now = Date.now();
-      var createdAtMs = Number(session.createdAtMs || session.updatedAtMs || now);
-      var updatedAtMs = Number(session.updatedAtMs || now);
-      var safeSession = {
-        id: session.id,
-        title: String(session.title || "New conversation").slice(0, 100),
-        createdAtMs: createdAtMs,
-        updatedAtMs: updatedAtMs,
-        messages: (Array.isArray(session.messages) ? session.messages : []).slice(-100)
-      };
-      veeCloudSessionsRef.child(session.id).set(safeSession).catch(function (error) {
-        console.error("Vee-AI cloud history save failed:", error);
-      });
+    async function veePersistSessionToCloud(session) {
+      if (!veeCloudReady || !veeCloudUid || !veeVisitorToken || !session || !session.id) return;
+      try {
+        await veeVisitorRequest({
+          action: "save-session",
+          visitorId: veeCloudUid,
+          visitorToken: veeVisitorToken,
+          session: {
+            id: session.id,
+            title: session.title,
+            createdAtMs: session.createdAtMs,
+            updatedAtMs: session.updatedAtMs,
+            messages: session.messages
+          }
+        });
+      } catch (error) {
+        console.error("Vee-AI conversation sync failed:", error);
+      }
     }
 
     async function veeInitFirebase() {
       try {
-        if (!window.firebase || !firebase.apps.length) {
-          if (!window.firebase) throw new Error("Firebase SDK did not load.");
-          firebase.initializeApp(veeFirebaseConfig);
-        }
+        if (!window.firebase) throw new Error("Firebase Authentication SDK did not load.");
+        if (!firebase.apps.length) firebase.initializeApp(veeFirebaseConfig);
         veeFirebaseAuth = firebase.auth();
-        veeFirebaseDb = firebase.database();
-        var credential = await veeFirebaseAuth.signInAnonymously();
-        veeCloudUid = credential.user.uid;
-        veeVisitorProfileRef = veeFirebaseDb.ref("visitors/" + veeCloudUid + "/profile");
-        try {
-          var profileSnapshot = await veeVisitorProfileRef.once("value");
-          veeVisitorProfileData = profileSnapshot.val() || {};
-          veeHistoryClearedAtMs = Number(veeVisitorProfileData.historyClearedAtMs || 0);
-          if (veeHistoryClearedAtMs) {
-            veeSessions = veeSessions.filter(function (session) {
-              var savedAt = Number(session.updatedAtMs || session.createdAtMs || 0);
-              return savedAt > veeHistoryClearedAtMs;
-            });
-            try {
-              localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
-            } catch (storageError) {}
-          }
-          var profileNow = Date.now();
-          var profileCreatedAt = Number(veeVisitorProfileData.createdAtMs || profileNow);
-          await veeVisitorProfileRef.update({ createdAtMs: profileCreatedAt, lastSeenAtMs: profileNow });
-          veeVisitorProfileData = Object.assign({}, veeVisitorProfileData, {
-            createdAtMs: profileCreatedAt,
-            lastSeenAtMs: profileNow
-          });
-        } catch (profileError) {
-          console.warn("Vee-AI visitor profile could not be loaded:", profileError);
-        }
-
-        var networkResponse = await fetch("/.netlify/functions/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "visitor-network" })
+        var visitorId = localStorage.getItem("vee_ai_visitor_id") || "";
+        var visitorToken = localStorage.getItem("vee_ai_visitor_token") || "";
+        var result = await veeVisitorRequest({
+          action: "identify",
+          visitorId: visitorId,
+          visitorToken: visitorToken
         });
-        if (!networkResponse.ok) throw new Error("Unable to identify the current network.");
-        var networkData = await networkResponse.json();
-        veeNetworkFingerprint = networkData.fingerprint || "network_unknown";
-
-        veeCloudSessionsRef = veeFirebaseDb.ref(
-          "visitors/" + veeCloudUid + "/networks/" + veeNetworkFingerprint + "/sessions"
-        );
-
-        var snapshot = await veeCloudSessionsRef.once("value");
-        var cloudData = snapshot.val() || {};
-        var cloudSessions = Object.keys(cloudData).map(function (key) {
-          var item = cloudData[key] || {};
+        veeCloudUid = result.visitorId;
+        veeVisitorToken = result.visitorToken;
+        veeNetworkFingerprint = result.networkFingerprint || "network_unknown";
+        localStorage.setItem("vee_ai_visitor_id", veeCloudUid);
+        localStorage.setItem("vee_ai_visitor_token", veeVisitorToken);
+        var history = await veeVisitorRequest({
+          action: "load-sessions",
+          visitorId: veeCloudUid,
+          visitorToken: veeVisitorToken
+        });
+        var cloudSessions = (history.sessions || []).map(function (item) {
           return {
-            id: item.id || key,
+            id: item.id,
             title: item.title || "New conversation",
             updatedAt: new Date(Number(item.updatedAtMs || Date.now())).toLocaleDateString(),
             createdAtMs: Number(item.createdAtMs || item.updatedAtMs || Date.now()),
@@ -1209,32 +1189,62 @@
             messages: Array.isArray(item.messages) ? item.messages : []
           };
         }).filter(function (item) {
-          return item.updatedAtMs >= Date.now() - (30 * 24 * 60 * 60 * 1000) &&
-            item.updatedAtMs > veeHistoryClearedAtMs;
+          return item.updatedAtMs >= Date.now() - (30 * 24 * 60 * 60 * 1000);
         });
-
         var merged = {};
         veeSessions.forEach(function (item) { merged[item.id] = item; });
         cloudSessions.forEach(function (item) { merged[item.id] = item; });
         veeSessions = Object.keys(merged).map(function (key) { return merged[key]; })
           .sort(function (a, b) { return Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0); })
           .slice(0, 50);
-
         veeCloudReady = true;
         veeSaveSessions();
-
         if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
           veeRenderHistoryList();
         }
-        console.info("Vee-AI Firebase connected.");
+        console.info("Vee-AI visitor identity connected.");
       } catch (error) {
-        console.error("Vee-AI Firebase initialisation failed:", error);
+        console.error("Vee-AI visitor identity initialisation failed:", error);
       }
     }
 
+    async function veeGoogleLinkOrRecover() {
+      try {
+        if (!veeFirebaseAuth) throw new Error("Visitor service is still starting. Try again shortly.");
+        var provider = new firebase.auth.GoogleAuthProvider();
+        var result = await veeFirebaseAuth.signInWithPopup(provider);
+        var idToken = await result.user.getIdToken(true);
+        var response;
+        if (veeCloudUid && veeVisitorToken) {
+          response = await veeVisitorRequest({
+            action: "link-google",
+            visitorId: veeCloudUid,
+            visitorToken: veeVisitorToken,
+            googleIdToken: idToken
+          });
+        } else {
+          response = await veeVisitorRequest({ action: "recover-google", googleIdToken: idToken });
+          veeCloudUid = response.visitorId;
+          veeVisitorToken = response.visitorToken;
+          localStorage.setItem("vee_ai_visitor_id", veeCloudUid);
+          localStorage.setItem("vee_ai_visitor_token", veeVisitorToken);
+          await veeInitFirebase();
+        }
+        alert("Google account linked to your Vee-AI visitor identity.");
+      } catch (error) {
+        alert(error.message || "Google sign-in was not completed.");
+      }
+    }
+
+    veeInitFirebase();
+
     function veeDeleteCloudHistory() {
-      if (veeCloudReady && veeCloudSessionsRef) {
-        veeCloudSessionsRef.remove().catch(function (error) {
+      if (veeCloudReady && veeCloudUid && veeVisitorToken) {
+        veeVisitorRequest({
+          action: "clear-history",
+          visitorId: veeCloudUid,
+          visitorToken: veeVisitorToken
+        }).catch(function (error) {
           console.error("Vee-AI cloud history deletion failed:", error);
         });
       }
