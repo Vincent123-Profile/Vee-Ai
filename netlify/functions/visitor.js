@@ -147,6 +147,28 @@ exports.handler = async event => {
       return json(200, { visitorId, visitorToken: signVisitor(visitorId) });
     }
 
+    if (body.action === "load-sessions") {
+      const visitorId = verifyVisitor(body.visitorToken);
+      if (visitorId !== body.visitorId) throw new Error("Visitor identity mismatch.");
+      const snap = await database.ref("visitors/" + visitorId + "/networks").once("value");
+      const networks = snap.val() || {};
+      const sessions = [];
+      Object.entries(networks).forEach(([fingerprint, network]) => {
+        Object.entries(network && network.sessions || {}).forEach(([id, session]) => {
+          sessions.push({ ...session, id: session.id || id, fingerprint });
+        });
+      });
+      sessions.sort((a, b) => Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0));
+      return json(200, { sessions: sessions.slice(0, 50) });
+    }
+
+    if (body.action === "clear-history") {
+      const visitorId = verifyVisitor(body.visitorToken);
+      if (visitorId !== body.visitorId) throw new Error("Visitor identity mismatch.");
+      await database.ref("visitors/" + visitorId).update({ networks: null, "profile/historyClearedAtMs": now });
+      return json(200, { success: true });
+    }
+
     if (body.action === "admin-list") {
       await requireAdmin(body.idToken);
       const snap = await database.ref("visitors").once("value");
