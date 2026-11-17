@@ -1067,9 +1067,13 @@
         <span>Appearance Mode</span>
         <button type="button" class="toggle-pill" id="modalThemeToggle" onclick="veeToggleTheme()">Light (70% White)</button>
       </div>
-      <div class="setting-row">
-        <span>Google account recovery</span>
-        <button type="button" class="toggle-pill" onclick="veeGoogleLinkOrRecover()">Link / Recover</button>
+      <div class="setting-row" style="flex-direction: column; align-items: stretch; gap: 8px;">
+        <label for="veeVisitorName" style="font-size: 13px; color: var(--text-secondary);">Your display name (optional)</label>
+        <div style="display:flex; gap:8px;">
+          <input id="veeVisitorName" maxlength="60" placeholder="Enter your name" style="min-width:0; flex:1; padding:10px 12px; border:1px solid var(--glass-border); border-radius:10px; background:var(--glass-surface); color:var(--text-primary);">
+          <button type="button" class="toggle-pill" onclick="veeSaveVisitorName()">Save</button>
+        </div>
+        <small id="veeVisitorNameStatus" style="color:var(--text-muted);"></small>
       </div>
       <div class="setting-row">
         <span>Ambient AI Particles</span>
@@ -1085,7 +1089,6 @@
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
   <script>
     /* =========================================================
@@ -1102,7 +1105,6 @@
       veeParticlesEnabled = localStorage.getItem("vincent_ai_particles") !== "false";
     } catch (e) {}
 
-    var veeFirebaseAuth = null;
     var veeFirebaseDb = null;
     var veeCloudUid = null;
     var veeNetworkFingerprint = null;
@@ -1160,60 +1162,29 @@
 
     async function veeInitFirebase() {
       try {
-        if (!window.firebase) throw new Error("Firebase Authentication SDK did not load.");
-        if (!firebase.apps.length) firebase.initializeApp(veeFirebaseConfig);
-        veeFirebaseAuth = firebase.auth();
-        var signedInUser = await new Promise(function (resolve) {
-          var unsubscribe = veeFirebaseAuth.onAuthStateChanged(function (user) {
-            unsubscribe();
-            resolve(user);
-          });
-        });
-        var googleIdToken = signedInUser ? await signedInUser.getIdToken() : null;
-        var visitorId = localStorage.getItem("vee_ai_visitor_id") || "";
-        var visitorToken = localStorage.getItem("vee_ai_visitor_token") || "";
         var result = await veeVisitorRequest({
           action: "identify",
-          visitorId: visitorId,
-          visitorToken: visitorToken,
-          googleIdToken: googleIdToken
+          visitorId: localStorage.getItem("vee_ai_visitor_id") || "",
+          visitorToken: localStorage.getItem("vee_ai_visitor_token") || ""
         });
         veeCloudUid = result.visitorId;
         veeVisitorToken = result.visitorToken;
         veeNetworkFingerprint = result.networkFingerprint || "network_unknown";
         localStorage.setItem("vee_ai_visitor_id", veeCloudUid);
         localStorage.setItem("vee_ai_visitor_token", veeVisitorToken);
-        var history = await veeVisitorRequest({
-          action: "load-sessions",
-          visitorId: veeCloudUid,
-          visitorToken: veeVisitorToken
-        });
+        var history = await veeVisitorRequest({ action: "load-sessions", visitorId: veeCloudUid, visitorToken: veeVisitorToken });
         var cloudSessions = (history.sessions || []).map(function (item) {
-          return {
-            id: item.id,
-            title: item.title || "New conversation",
-            updatedAt: new Date(Number(item.updatedAtMs || Date.now())).toLocaleDateString(),
-            createdAtMs: Number(item.createdAtMs || item.updatedAtMs || Date.now()),
-            updatedAtMs: Number(item.updatedAtMs || Date.now()),
-            messages: Array.isArray(item.messages) ? item.messages : []
-          };
-        }).filter(function (item) {
-          return item.updatedAtMs >= Date.now() - (30 * 24 * 60 * 60 * 1000);
-        });
+          return { id:item.id, title:item.title||"New conversation", updatedAt:new Date(Number(item.updatedAtMs||Date.now())).toLocaleDateString(), createdAtMs:Number(item.createdAtMs||item.updatedAtMs||Date.now()), updatedAtMs:Number(item.updatedAtMs||Date.now()), messages:Array.isArray(item.messages)?item.messages:[] };
+        }).filter(function (item) { return item.updatedAtMs >= Date.now() - (30*24*60*60*1000); });
         var merged = {};
         veeSessions.forEach(function (item) { merged[item.id] = item; });
         cloudSessions.forEach(function (item) { merged[item.id] = item; });
-        veeSessions = Object.keys(merged).map(function (key) { return merged[key]; })
-          .sort(function (a, b) { return Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0); })
-          .slice(0, 50);
+        veeSessions = Object.keys(merged).map(function (key) { return merged[key]; }).sort(function(a,b){return Number(b.updatedAtMs||0)-Number(a.updatedAtMs||0);}).slice(0,50);
         veeCloudReady = true;
-        if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
-          veeRenderHistoryList();
-        }
-        console.info("Vee-AI visitor identity connected.");
-      } catch (error) {
-        console.error("Vee-AI visitor identity initialisation failed:", error);
-      }
+        var nameInput=document.getElementById("veeVisitorName");
+        if(nameInput) nameInput.value=result.displayName||"";
+        if(document.getElementById("historyModal")&&document.getElementById("historyModal").classList.contains("open")) veeRenderHistoryList();
+      } catch(error) { console.error("Vee-AI visitor identity initialisation failed:",error); }
     }
 
     async function veeEnsureVisitorIdentity() {
@@ -1250,42 +1221,15 @@
       veeCloudReady = true;
     }
 
-    async function veeGoogleLinkOrRecover() {
+    async function veeSaveVisitorName() {
+      var input=document.getElementById("veeVisitorName");
+      var status=document.getElementById("veeVisitorNameStatus");
+      var displayName=(input&&input.value||"").trim().slice(0,60);
       try {
-        if (!veeFirebaseAuth) throw new Error("Visitor service is still starting. Try again shortly.");
-        var provider = new firebase.auth.GoogleAuthProvider();
-        var result = await veeFirebaseAuth.signInWithPopup(provider);
-        var idToken = await result.user.getIdToken(true);
-        try {
-          var recovered = await veeVisitorRequest({
-            action: "recover-google",
-            googleIdToken: idToken,
-            currentVisitorId: veeCloudUid || localStorage.getItem("vee_ai_visitor_id") || "",
-            currentVisitorToken: veeVisitorToken || localStorage.getItem("vee_ai_visitor_token") || ""
-          });
-          veeCloudUid = recovered.visitorId;
-          veeVisitorToken = recovered.visitorToken;
-          localStorage.setItem("vee_ai_visitor_id", veeCloudUid);
-          localStorage.setItem("vee_ai_visitor_token", veeVisitorToken);
-          veeCloudReady = false;
-          veeSessions = [];
-          await veeInitFirebase();
-          alert("Your existing Vee-AI visitor identity and conversations have been recovered.");
-          return;
-        } catch (recoveryError) {
-          if (!/No Vee-AI visitor record is linked/.test(recoveryError.message || "")) throw recoveryError;
-        }
         await veeEnsureVisitorIdentity();
-        await veeVisitorRequest({
-          action: "link-google",
-          visitorId: veeCloudUid,
-          visitorToken: veeVisitorToken,
-          googleIdToken: idToken
-        });
-        alert("Google account linked to your current Vee-AI visitor identity.");
-      } catch (error) {
-        alert(error.message || "Google sign-in was not completed.");
-      }
+        await veeVisitorRequest({action:"update-profile",visitorId:veeCloudUid,visitorToken:veeVisitorToken,displayName:displayName});
+        if(status) status.textContent=displayName?"Name saved.":"Name cleared.";
+      } catch(error) { if(status) status.textContent=error.message||"Unable to save name."; }
     }
 
     veeInitFirebase();
@@ -1301,8 +1245,6 @@
         });
       }
     }
-
-    veeInitFirebase();
 
     /* =========================================================
        THEME & MODALS (DIRECT GLOBAL FUNCTIONS)
