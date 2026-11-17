@@ -1,41 +1,59 @@
 # Vee - Ai
 
-Vee - Ai is a multilingual conversational AI assistant created by Agboola Vincent Oluwaseyi. The project contains a browser-based chat interface, a Netlify serverless chat function, Firebase Authentication, Firebase Realtime Database conversation storage, and a private visitor administration page.
+**A multilingual AI assistant with persistent conversations and a private visitor management dashboard.**
 
-## Main features
+Vee - Ai is a personal AI project developed by **Agboola Vincent Oluwaseyi**. The project combines a responsive chat experience with cloud-backed conversation history, anonymous visitor identity, network-change grouping, and an administrator dashboard.
 
-- Conversational interface with English, Nigerian Pidgin, Yoruba, Hausa, Igbo and other supported languages.
-- Chat requests handled by a Netlify Function.
-- Groq chat completion integration. The API key stays on the server as a Netlify environment variable.
-- Anonymous Firebase Authentication for visitor identity.
-- Conversation history stored in Firebase Realtime Database and locally cached in the visitor's browser.
-- Network-change grouping through a one-way HMAC fingerprint. Raw visitor IP addresses are not written to the database.
-- Private administrator dashboard at `/admin.html`.
-- Visitor search, visitor IDs, network fingerprint history, first and last activity, conversation titles and message transcripts.
-- Responsive public chat interface with light and dark themes.
+## Project highlights
 
-## Project structure
+- **Conversational AI:** Chat interface designed for natural conversations in English, Nigerian Pidgin, Yoruba, Hausa, Igbo, and other languages supported by the model.
+- **Persistent conversations:** Recent chat sessions are cached in the visitor's browser and synchronised with Firebase Realtime Database.
+- **Anonymous visitor identity:** Firebase Authentication assigns each browser an anonymous UID.
+- **Network-change grouping:** A server-side keyed HMAC-SHA256 fingerprint groups activity by network without writing the raw IP address into the app's database.
+- **Private admin dashboard:** An authenticated administrator reviews visitor records, activity dates, network fingerprints, conversation titles, and saved transcripts.
+- **Responsive interface:** Mobile-friendly layout with light and dark themes.
+- **Server-side AI requests:** The model API key is stored in Netlify environment variables rather than in frontend JavaScript.
+
+## Technology
+
+| Area | Technology |
+| --- | --- |
+| Frontend | HTML, CSS, JavaScript |
+| Serverless backend | Netlify Functions |
+| AI inference | Groq API |
+| Authentication | Firebase Authentication |
+| Conversation storage | Firebase Realtime Database |
+| Source control | GitHub |
+| Hosting | Netlify |
+
+## Application structure
 
 ```text
 /
-├── index.html                  Public Vee - Ai chat interface
-├── admin.html                  Private administrator dashboard
-├── database.rules.json         Realtime Database security rules
+├── index.html
+├── admin.html
+├── database.rules.json
+├── README.md
 └── netlify/
     └── functions/
-        └── chat.js             Chat completion and network fingerprint endpoint
+        └── chat.js
 ```
 
-## How visitor identity and storage work
+- `index.html` contains the public chat interface and Firebase conversation synchronisation.
+- `admin.html` contains the administrator sign-in and visitor dashboard.
+- `database.rules.json` contains the Realtime Database access rules.
+- `netlify/functions/chat.js` handles AI requests and generates the network fingerprint.
 
-1. A visitor opens the public chat page.
-2. Firebase Anonymous Authentication assigns a stable Firebase UID to the browser's authenticated session.
-3. The Netlify Function reads the client connection IP supplied by Netlify and creates an HMAC-SHA256 fingerprint using the server-side `IP_HASH_SECRET`.
-4. The browser stores conversations under the visitor UID and network fingerprint.
-5. A later network change creates another network group under the same UID when the Firebase anonymous identity is retained.
-6. Conversation records contain a session ID, title, creation time, update time and recent messages.
+## Visitor data flow
 
-The database structure is:
+1. A visitor opens the chat interface.
+2. Firebase Anonymous Authentication assigns a UID to the browser session.
+3. The browser requests a network fingerprint from the Netlify Function.
+4. The function calculates a keyed HMAC-SHA256 fingerprint using the connection IP supplied by Netlify and the server-side `IP_HASH_SECRET`.
+5. The browser stores conversation sessions under its own UID and network fingerprint.
+6. The administrator signs in through Firebase Email/Password Authentication to review records permitted by the database rules.
+
+The database structure follows this pattern:
 
 ```text
 visitors/
@@ -51,52 +69,61 @@ visitors/
             messages/
 ```
 
-The fingerprint is a keyed hash, not a raw IP address. It is intended for grouping network changes, not identifying a person or recovering an IP address. A browser reset, cleared site data or a different browser profile might create a new anonymous UID.
+The fingerprint is a keyed hash. It is not a raw IP address and is not designed to identify a person or recover an IP address. A cleared browser profile, deleted site data, or a different browser might receive a new anonymous UID.
 
 ## Administrator dashboard
 
-Open:
+The dashboard is available at:
 
 ```text
 https://YOUR-SITE-DOMAIN/admin.html
 ```
 
-The dashboard uses Firebase Email/Password Authentication. The authorised administrator email is configured in the dashboard and Realtime Database rules as:
+The dashboard provides:
 
-```text
-agboolavincent67@icloud.com
-```
+- Visitor count, network fingerprint count, and conversation count.
+- Search by visitor UID, fingerprint, or conversation title.
+- Visitor activity dates.
+- Network fingerprint history.
+- Saved conversation transcripts.
 
-The dashboard is read-only. It displays visitor IDs, network fingerprints, activity dates, conversation totals and transcripts. It does not provide controls to edit or delete visitor records.
+The dashboard is read-only. The dashboard page itself is not a security boundary. Firebase Authentication and Realtime Database rules control access to visitor records. The authorised administrator email must match the value configured in both `admin.html` and `database.rules.json`.
 
-A hidden URL is not an access-control mechanism. Database access is restricted by Firebase Realtime Database rules. Only the administrator email is allowed to read the top-level visitor collection. Anonymous visitors retain read/write access only to their own UID branch.
+## Privacy and security
 
-## Firebase setup
+Vee - Ai uses access controls and data minimisation measures, but no online service should be described as completely private.
 
-Firebase project used by this application:
+- Visitors authenticate anonymously. Their records are scoped to their Firebase UID.
+- The administrator account has permission to read the visitor collection.
+- The app stores conversation content in Firebase Realtime Database for history and dashboard access.
+- Conversation prompts and context are sent to the configured AI inference provider to generate responses.
+- Requests pass through Netlify Functions. Netlify supplies the connection IP used to calculate the keyed network fingerprint.
+- The app does not write raw IP addresses into its Firebase visitor records.
+- The Firebase web configuration is visible in the browser. Firebase security depends on Authentication and database rules, not on hiding the web configuration.
+- The AI API key and HMAC secret must stay in Netlify environment variables.
+- Never commit API keys, passwords, service-account private keys, or secret environment-variable values to GitHub.
 
-- Project ID: `vee-ai-e745e`
-- Authentication providers: Anonymous and Email/Password
-- Database: Firebase Realtime Database
+Visitors should avoid entering passwords, financial credentials, government identifiers, or other highly sensitive information into conversations.
 
-The Firebase web configuration is included in the client-side application. Firebase web configuration identifies the project and is not a substitute for database security rules. Never put service-account private keys or administrator passwords in browser files or GitHub.
+## Setup
 
-### Authentication
+### 1. Firebase
 
-1. Enable Anonymous Authentication for public visitors.
-2. Enable Email/Password Authentication for the administrator.
-3. Create the administrator account using the authorised email above.
-4. Keep the administrator password private.
+1. Create a Firebase project.
+2. Enable Anonymous Authentication.
+3. Enable Email/Password Authentication.
+4. Create the administrator account.
+5. Create a Realtime Database.
+6. Add the Firebase web configuration to the frontend and admin page.
+7. Configure the Realtime Database rules.
 
-### Realtime Database rules
-
-The current rules are stored in `database.rules.json`. Publish the same rules in Firebase Console under Realtime Database > Rules:
+Use a rules structure like the following. Replace the administrator email with the address used for your own Firebase admin account.
 
 ```json
 {
   "rules": {
     "visitors": {
-      ".read": "auth != null && auth.token.email === 'agboolavincent67@icloud.com'",
+      ".read": "auth != null && auth.token.email === 'ADMIN_EMAIL'",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid"
@@ -106,50 +133,44 @@ The current rules are stored in `database.rules.json`. Publish the same rules in
 }
 ```
 
-The top-level read rule permits the administrator to list visitor records. Each visitor can read and write only their own UID branch. No administrator write permission is granted by these rules.
+The administrator receives read access to the visitor collection. Each authenticated visitor receives read and write access only to their own UID branch. These rules do not grant the administrator write access.
 
-## Netlify deployment
+### 2. Netlify
 
-The project uses Netlify Functions. Connect the GitHub repository to Netlify and configure the site's functions directory according to the repository's Netlify build settings.
-
-Required Netlify environment variables:
+Set these environment variables in the Netlify site settings:
 
 | Variable | Purpose |
 | --- | --- |
-| `GROQ_API_KEY` | Secret key used by the server-side chat function |
-| `IP_HASH_SECRET` | Long random secret used to create keyed network fingerprints |
+| `GROQ_API_KEY` | Server-side AI API authentication |
+| `IP_HASH_SECRET` | Secret used to create keyed network fingerprints |
 
-Set both variables in Netlify's environment variable settings. Do not commit their values to GitHub. Redeploy the site after changing environment variables.
+Use long, unique secret values. Do not put their values in frontend files or GitHub. Redeploy after changing environment variables.
 
-The Firebase database URL and public Firebase web configuration are client-side project settings. They are not server credentials.
+### 3. Deploy
 
-## Deploy Preview workflow
+1. Connect the GitHub repository to Netlify.
+2. Confirm the Netlify Functions directory is configured.
+3. Add the required environment variables.
+4. Deploy a feature branch preview.
+5. Test visitor sign-in, chat responses, conversation persistence, and administrator access before promoting changes to production.
 
-Use a feature branch for changes and test the Netlify Deploy Preview before production. The production branch should remain `main`. Do not merge a pull request or publish a production deploy until the owner has reviewed and approved the preview.
+## Testing checklist
 
-## Privacy and security design
+- [ ] A new visitor receives an anonymous Firebase UID.
+- [ ] A visitor's conversation remains available after a page refresh.
+- [ ] A visitor cannot read another visitor's records.
+- [ ] A signed-out user cannot read visitor records.
+- [ ] A non-admin account cannot list the visitor collection.
+- [ ] The authorised administrator can sign in and view saved records.
+- [ ] The administrator dashboard does not grant write access.
+- [ ] Netlify environment variables are configured and absent from Git history.
 
-- Do not store raw visitor IP addresses in Realtime Database.
-- Do not place Groq API keys, HMAC secrets, service-account keys or administrator passwords in frontend code or repository files.
-- Keep visitor reads and writes scoped to the authenticated visitor UID.
-- Keep top-level visitor listing restricted to the authorised administrator email.
-- The administrator dashboard checks the signed-in email before loading visitor data. Firebase rules enforce the actual database access boundary.
-- Do not disclose API provider names, credentials or private implementation details in assistant responses. Do not falsely claim the application does not use an API.
-- Treat conversation transcripts and visitor records as private data. Share access only with authorised people.
+## Project status
 
-## Maintenance checklist
+The visitor dashboard and Firebase access rules have been implemented and tested in a Netlify Deploy Preview. Production release should follow a separate review and approval.
 
-- Test chat responses after changes to the Netlify Function.
-- Test conversation persistence after a page refresh.
-- Test anonymous visitor access to the visitor's own records.
-- Test administrator sign-in and dashboard loading.
-- Confirm a logged-out user cannot read visitor records.
-- Confirm a non-administrator account cannot read the visitor collection.
-- Review Firebase Authentication users and Netlify environment variables periodically.
-- Keep production changes behind owner approval.
+## Developer
 
-## Important implementation notes
+**Agboola Vincent Oluwaseyi**
 
-The public chat currently keeps a local session cache in browser storage and synchronises cloud history after Firebase initialisation. The browser cache is not the authoritative administrator record. The dashboard reads records stored in Firebase Realtime Database.
-
-Visitor history is currently limited to the records saved by the chat application. The dashboard does not recover deleted browser history or records removed from Firebase.
+Vee - Ai is an independent project focused on conversational AI, web development, cloud data storage, authentication, and practical visitor management.
