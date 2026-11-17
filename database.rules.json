@@ -1,15 +1,13 @@
 {
   "rules": {
+    ".read": false,
+    ".write": false,
     "visitors": {
       ".read": "auth != null && auth.token.email === 'agboolavincent67@icloud.com'",
       "$visitorId": {
         ".read": "auth != null && auth.token.email === 'agboolavincent67@icloud.com'",
         ".write": "auth != null && auth.token.email === 'agboolavincent67@icloud.com'"
       }
-    },
-    "googleIndex": {
-      ".read": "auth != null && auth.token.email === 'agboolavincent67@icloud.com'",
-      ".write": "auth != null && auth.token.email === 'agboolavincent67@icloud.com'"
     }
   }
 }
