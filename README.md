@@ -2,66 +2,54 @@
 
 A multilingual conversational assistant with persistent conversations and a private visitor management dashboard.
 
-Vee-AI is a personal project developed by Agboola Vincent Oluwaseyi. The project combines a responsive chat experience with cloud-backed conversation history, anonymous visitor identity, network-change grouping, and an administrator dashboard.
-
-## Project highlights
-
-- Conversational experience in English, Nigerian Pidgin, Yoruba, Hausa, Igbo, and other supported languages.
-- Persistent conversations cached in the visitor's browser and synchronised with Firebase Realtime Database.
-- Anonymous visitor identity through Firebase Authentication.
-- Network-change grouping through keyed HMAC-SHA256 fingerprints. Raw IP addresses are not written into the app database.
-- Private administrator dashboard for visitor IDs, activity dates, network fingerprints, conversation titles, and saved transcripts.
-- Responsive mobile interface with light and dark themes.
-
-## Technology
-
-| Area | Technology |
-| --- | --- |
-| Frontend | HTML, CSS, JavaScript |
-| Serverless backend | Netlify Functions |
-| Authentication | Firebase Authentication |
-| Conversation storage | Firebase Realtime Database |
-| Source control | GitHub |
-| Hosting | Netlify |
-
-## Application structure
+## Project structure
 
 ```text
 /
 ├── index.html
 ├── admin.html
 ├── database.rules.json
-├── README.md
+├── package.json
 └── netlify/
     └── functions/
-        └── chat.js
+        ├── chat.js
+        └── visitor.js
 ```
 
-- `index.html` contains the public chat interface and conversation synchronisation.
-- `admin.html` contains administrator sign-in and the visitor dashboard.
-- `database.rules.json` contains Realtime Database access rules.
-- `netlify/functions/chat.js` handles chat requests and generates the network fingerprint.
+- `index.html` contains the public chat interface, persistent browser identity, and optional Google account linking.
+- `admin.html` contains administrator sign-in and visitor analytics.
+- `database.rules.json` restricts direct database access to the authorised administrator.
+- `netlify/functions/chat.js` handles chat requests and network fingerprint generation.
+- `netlify/functions/visitor.js` verifies visitor tokens, stores conversations, links Google identities, and serves administrator operations.
+- `package.json` installs the Firebase Admin SDK for secure server-side database access.
 
-## Visitor data flow
+## Visitor identity
 
-1. A visitor opens the chat interface.
-2. Firebase Anonymous Authentication assigns a unique UID.
-3. The browser requests a network fingerprint from the Netlify Function.
-4. The function calculates a keyed HMAC-SHA256 fingerprint using the connection IP supplied by Netlify and the server-side `IP_HASH_SECRET`.
-5. The browser stores conversation sessions under its own UID and network fingerprint.
-6. The administrator signs in through Firebase Email/Password Authentication to review records permitted by the database rules.
+1. A visitor starts with a persistent browser identity stored in local storage.
+2. The server issues a signed visitor token. Refreshing the page reuses the same visitor record.
+3. No Firebase anonymous account is created for guest visits.
+4. Visitors optionally sign in with Google to link their Google UID to the existing visitor record.
+5. After browser data is cleared, a visitor signs in with the same Google account to recover the linked record.
+6. Network changes create additional hashed network entries under the same visitor.
+7. Conversation records are written through the Netlify function, not directly from the public browser.
 
-The database structure follows this pattern:
+A visitor who clears browser data before linking Google starts a new identity. A Google account already linked to another visitor cannot be linked to a second visitor.
+
+## Realtime Database structure
 
 ```text
 visitors/
-  {visitorUid}/
+  {visitorId}/
     profile/
       createdAtMs
       lastSeenAtMs
+      googleLinked
       historyClearedAtMs
+    identity/
+      googleUid
     networks/
       {networkFingerprint}/
+        lastSeenAtMs
         sessions/
           {sessionId}/
             id
@@ -69,104 +57,63 @@ visitors/
             createdAtMs
             updatedAtMs
             messages/
+
+googleIndex/
+  {googleUid}: {visitorId}
 ```
 
-The fingerprint is a keyed hash. It is not a raw IP address and does not identify a person or recover an IP address. A cleared browser profile, deleted site data, or a different browser might receive a new anonymous UID.
+Network fingerprints use keyed HMAC-SHA256 values. Raw IP addresses are not stored in the database.
 
-## Administrator dashboard
+## Required Netlify environment variables
 
-The dashboard is available at:
+Configure these under Netlify site environment variables. Never commit their values to GitHub.
 
-```text
-https://YOUR-SITE-DOMAIN/admin.html
-```
+| Variable | Purpose |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Full Firebase service-account JSON for the server-side Admin SDK |
+| `FIREBASE_DATABASE_URL` | `https://vee-ai-e745e-default-rtdb.firebaseio.com` |
+| `VISITOR_TOKEN_SECRET` | Random secret of at least 32 characters for signing visitor tokens |
+| `IP_HASH_SECRET` | Existing secret used to create network fingerprints |
+| `GROQ_API_KEY` | Existing chat service credential |
 
-The dashboard provides:
+The service-account JSON belongs only in Netlify environment variables. Never place the private key in frontend code, README files, or GitHub.
 
-- Visitor count, network fingerprint count, and conversation count.
-- Unique visitor IDs.
-- Visitor activity dates.
-- Network fingerprint history.
-- Saved conversation transcripts.
-- Search by visitor ID, fingerprint, or conversation title.
-- Permanent deletion of a selected visitor's saved conversation history and network fingerprints. The visitor UID is retained.
+## Firebase configuration
 
-The dashboard page itself is not a security boundary. Firebase Authentication and Realtime Database rules control access to visitor records. The authorised administrator email must match the value configured in both `admin.html` and `database.rules.json`.
+Enable these Firebase Authentication providers:
 
-## Privacy and security
+- Google, for optional visitor linking and recovery.
+- Email/Password, for administrator access.
 
-- Visitors authenticate anonymously. Their records are scoped to their Firebase UID.
-- The administrator account has permission to read the visitor collection and manage visitor records.
-- The app stores conversation content in Firebase Realtime Database for history and dashboard access.
-- Chat requests are processed by the application's server-side function.
-- Netlify supplies the connection IP used to calculate the keyed network fingerprint.
-- Raw IP addresses are not written into Firebase visitor records.
-- The Firebase web configuration is visible in the browser. Database access depends on Authentication and security rules.
-- The HMAC secret must stay in Netlify environment variables.
-- Never commit passwords, service-account private keys, or secret environment-variable values to GitHub.
+Guest visitors do not use Firebase Anonymous Authentication.
 
-Visitors should avoid entering passwords, financial credentials, government identifiers, or other highly sensitive information into conversations.
+Publish the rules from `database.rules.json`. Direct Realtime Database reads and writes are restricted to the authorised administrator email. The Netlify function uses the Firebase Admin SDK for visitor operations.
 
-## Setup
+The administrator email configured in the rules and `admin.html` is `agboolavincent67@icloud.com`.
 
-### 1. Firebase
+## Admin dashboard
 
-1. Create a Firebase project.
-2. Enable Anonymous Authentication.
-3. Enable Email/Password Authentication.
-4. Create the administrator account.
-5. Create a Realtime Database.
-6. Add the Firebase web configuration to the frontend and admin page.
-7. Configure the Realtime Database rules.
+Open `/admin.html` on the deployed site and sign in with the authorised administrator account.
 
-Use a rules structure like the following. Replace the administrator email with the address used for your own Firebase admin account.
+The dashboard displays:
 
-```json
-{
-  "rules": {
-    "visitors": {
-      ".read": "auth != null && auth.token.email === 'ADMIN_EMAIL'",
-      "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'ADMIN_EMAIL')",
-        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'ADMIN_EMAIL')"
-      }
-    }
-  }
-}
-```
+- Total visitors.
+- Network fingerprints.
+- Conversation count.
+- Google-linked visitor count.
+- Visitor IDs, activity and conversation transcripts.
+- Search and visitor history deletion.
 
-The administrator receives read and write access within visitor records for history management. Each authenticated visitor receives read and write access only to their own UID branch.
+## Deployment and testing
 
-### 2. Netlify
+1. Configure the required Netlify environment variables.
+2. Confirm Google and Email/Password providers are enabled in Firebase Authentication.
+3. Publish the database rules.
+4. Deploy the feature branch preview.
+5. Test a guest visit and refresh. The visitor count must stay unchanged.
+6. Link a Google account, clear browser site data, then sign in again to test recovery.
+7. Test a network change and confirm the visitor ID stays the same.
+8. Test the admin dashboard and history deletion.
+9. Review the feature branch before approving any production deployment.
 
-Set the `IP_HASH_SECRET` environment variable in the Netlify site settings. Use a long, unique secret value. Do not put the value in frontend files or GitHub. Redeploy after changing environment variables.
-
-### 3. Deploy
-
-1. Connect the GitHub repository to Netlify.
-2. Confirm the Netlify Functions directory is configured.
-3. Add the required environment variable.
-4. Deploy a feature branch preview.
-5. Test visitor sign-in, chat responses, conversation persistence, and administrator access before promoting changes to production.
-
-## Testing checklist
-
-- [ ] A new visitor receives an anonymous Firebase UID.
-- [ ] A visitor's conversation remains available after a page refresh.
-- [ ] A visitor cannot read another visitor's records.
-- [ ] A signed-out user cannot read visitor records.
-- [ ] A non-admin account cannot list the visitor collection.
-- [ ] The authorised administrator can sign in and view saved records.
-- [ ] The administrator can delete a visitor's conversations and network fingerprints while retaining the visitor ID.
-- [ ] Deleted conversations do not return from the visitor browser cache.
-- [ ] Secret environment-variable values are absent from GitHub.
-
-## Project status
-
-The visitor dashboard and Firebase access rules are implemented in the feature branch. Production release should follow a separate review and approval.
-
-## Developer
-
-**Agboola Vincent Oluwaseyi**
-
-Vee-AI is an independent project focused on web development, cloud data storage, authentication, and visitor management.
+Production branch `main` is not changed by feature-branch commits.
