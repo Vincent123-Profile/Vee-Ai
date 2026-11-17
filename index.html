@@ -1162,16 +1162,24 @@
         if (!window.firebase) throw new Error("Firebase Authentication SDK did not load.");
         if (!firebase.apps.length) firebase.initializeApp(veeFirebaseConfig);
         veeFirebaseAuth = firebase.auth();
+        var signedInUser = await new Promise(function (resolve) {
+          var unsubscribe = veeFirebaseAuth.onAuthStateChanged(function (user) {
+            unsubscribe();
+            resolve(user);
+          });
+        });
+        var googleIdToken = signedInUser ? await signedInUser.getIdToken() : null;
         var visitorId = localStorage.getItem("vee_ai_visitor_id") || "";
         var visitorToken = localStorage.getItem("vee_ai_visitor_token") || "";
-        if (!visitorId || !visitorToken) {
+        if ((!visitorId || !visitorToken) && !googleIdToken) {
           console.info("Vee-AI is waiting for a guest visit or Google recovery.");
           return;
         }
         var result = await veeVisitorRequest({
           action: "identify",
           visitorId: visitorId,
-          visitorToken: visitorToken
+          visitorToken: visitorToken,
+          googleIdToken: googleIdToken
         });
         veeCloudUid = result.visitorId;
         veeVisitorToken = result.visitorToken;
