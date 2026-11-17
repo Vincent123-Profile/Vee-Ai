@@ -1249,7 +1249,7 @@
       if (event) event.preventDefault();
       if (!veeVisitorProfileRef) return;
       var field = document.getElementById("visitorNameInput");
-      var name = (field && field.value || "").trim().replace(/\\s+/g, " ").slice(0, 60);
+      var name = (field && field.value || "").trim().replace(/\s+/g, " ").slice(0, 60);
       var status = document.getElementById("visitorNameStatus");
       if (!name) {
         if (status) status.textContent = "Enter your name or choose Skip.";
