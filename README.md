@@ -95,7 +95,7 @@ The dashboard provides:
 - Network fingerprint history.
 - Saved conversation transcripts.
 
-Visitor names are self-reported and are not verified legal identities. Visitors may skip the name prompt. The dashboard is read-only. The dashboard page itself is not a security boundary. Firebase Authentication and Realtime Database rules control access to visitor records. The authorised administrator email must match the value configured in both `admin.html` and `database.rules.json`.
+Visitor names are self-reported and are not verified legal identities. Visitors may skip the name prompt. The administrator dashboard supports permanent deletion of a selected visitor’s saved conversation history and network fingerprints. The visitor UID and saved name are retained. A deletion timestamp prevents older browser-cached conversations from being uploaded again after the visitor returns. The dashboard page itself is not a security boundary. Firebase Authentication and Realtime Database rules control access to visitor records. The authorised administrator email must match the value configured in both `admin.html` and `database.rules.json`.
 
 ## Privacy and security
 
@@ -141,7 +141,7 @@ Use a rules structure like the following. Replace the administrator email with t
 }
 ```
 
-The administrator receives read access to the visitor collection. Each authenticated visitor receives read and write access only to their own UID branch. These rules do not grant the administrator write access.
+The administrator receives read access to the visitor collection and read/write access within visitor records for history management. Each authenticated visitor receives read and write access only to their own UID branch.
 
 ### 2. Netlify
 
@@ -174,7 +174,8 @@ Use long, unique secret values. Do not put their values in frontend files or Git
 - [ ] A signed-out user cannot read visitor records.
 - [ ] A non-admin account cannot list the visitor collection.
 - [ ] The authorised administrator can sign in and view saved records.
-- [ ] The administrator dashboard does not grant write access.
+- [ ] The administrator can delete a visitor’s conversations and network fingerprints while retaining the visitor profile.
+- [ ] Deleted conversations do not return from the visitor browser cache.
 - [ ] Netlify environment variables are configured and absent from Git history.
 
 ## Project status
