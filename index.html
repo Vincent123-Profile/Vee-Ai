@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#FFFFFF" id="metaThemeColor" />
-  <title>Vee - Ai — Intelligent Nigerian AI Companion</title>
+  <title>Vee-AI — Intelligent Nigerian AI Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -934,7 +934,7 @@
         </div>
         <div class="brand-meta">
           <div class="brand-title-row">
-            <span class="brand-title">Vee - Ai</span>
+            <span class="brand-title">Vee-AI</span>
             <span class="brand-badge">Liquid Glass</span>
           </div>
           <div class="brand-sub">
@@ -1031,7 +1031,7 @@
       </div>
 
       <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
-        <textarea id="userInput" rows="1" placeholder="Yarn with Vee - Ai in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
+        <textarea id="userInput" rows="1" placeholder="Yarn with Vee-AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
         <div class="composer-controls">
           <button type="button" class="mic-btn" id="micBtn" title="Voice Input">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
@@ -1042,7 +1042,7 @@
           </button>
         </div>
       </div>
-      <div class="composer-footer">Vee - Ai • Multilingual Intelligence & Nigerian Innovation</div>
+      <div class="composer-footer">Vee-AI • Multilingual Intelligence & Nigerian Innovation</div>
     </div>
   </div>
 
@@ -1056,27 +1056,11 @@
       <div class="history-list" id="historyList"></div>
       <button type="button" class="icon-btn" style="width: 100%; justify-content: center; color: var(--orange);" onclick="veeClearHistory()">Clear All Conversations</button>
     </div>
-  </div>
-
-  <!-- Optional first-visit name prompt -->
-  <div class="modal-backdrop" id="visitorNameModal">
-    <form class="modal-panel glass-chrome" onsubmit="veeSaveVisitorName(event)">
-      <div class="modal-head"><h2>Welcome to Vee - Ai</h2></div>
-      <p style="color:var(--text-secondary);font-size:14px;line-height:1.6;">Before we begin, what should I call you? Your name helps personalise your experience. You are free to skip.</p>
-      <input class="visitor-name-input" id="visitorNameInput" type="text" maxlength="60" autocomplete="given-name" placeholder="Enter your name" aria-label="Your name">
-      <div class="visitor-name-actions">
-        <button type="submit">Save name</button>
-        <button type="button" class="visitor-name-skip" onclick="veeSkipVisitorName()">Skip</button>
-      </div>
-      <p id="visitorNameStatus" style="font-size:12px;color:var(--text-secondary);" role="status"></p>
-    </form>
-  </div>
-
-  <!-- Settings Modal -->
+  </div><!-- Settings Modal -->
   <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) veeCloseModal('settingsModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>Vee - Ai Settings</h2>
+        <h2>Vee-AI Settings</h2>
         <button type="button" class="icon-btn" onclick="veeCloseModal('settingsModal')">✕</button>
       </div>
       <div class="setting-row">
@@ -1088,7 +1072,7 @@
         <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
       </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-        <span style="color: var(--orange);">About Vee - Ai</span>
+        <span style="color: var(--orange);">About Vee-AI</span>
         <p style="font-size: 12.5px; font-weight: 400; color: var(--text-secondary); line-height: 1.5;">
           Engineered by <strong>Agboola Vincent Oluwaseyi</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
         </p>
@@ -1121,7 +1105,7 @@
     var veeCloudSessionsRef = null;
     var veeVisitorProfileRef = null;
     var veeVisitorProfileData = null;
-    var veeNamePromptShown = false;
+
     var veeCloudReady = false;
     var veeHistoryClearedAtMs = 0;
 
@@ -1160,7 +1144,7 @@
         messages: (Array.isArray(session.messages) ? session.messages : []).slice(-100)
       };
       veeCloudSessionsRef.child(session.id).set(safeSession).catch(function (error) {
-        console.error("Vee - Ai cloud history save failed:", error);
+        console.error("Vee-AI cloud history save failed:", error);
       });
     }
 
@@ -1196,7 +1180,7 @@
             lastSeenAtMs: profileNow
           });
         } catch (profileError) {
-          console.warn("Vee - Ai visitor profile could not be loaded:", profileError);
+          console.warn("Vee-AI visitor profile could not be loaded:", profileError);
         }
 
         var networkResponse = await fetch("/.netlify/functions/chat", {
@@ -1238,64 +1222,20 @@
 
         veeCloudReady = true;
         veeSaveSessions();
-        veeMaybeAskVisitorName();
+
         if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
           veeRenderHistoryList();
         }
-        console.info("Vee - Ai Firebase connected.");
+        console.info("Vee-AI Firebase connected.");
       } catch (error) {
-        console.error("Vee - Ai Firebase initialisation failed:", error);
+        console.error("Vee-AI Firebase initialisation failed:", error);
       }
-    }
-
-    function veeMaybeAskVisitorName() {
-      if (!veeCloudReady || !veeVisitorProfileRef || veeNamePromptShown) return;
-      var profile = veeVisitorProfileData || {};
-      if (profile.name) return;
-      try {
-        if (sessionStorage.getItem("vee_name_prompt_skipped_" + veeCloudUid) === "1") return;
-      } catch (storageError) {}
-      veeNamePromptShown = true;
-      veeOpenModal("visitorNameModal");
-      setTimeout(function () {
-        var field = document.getElementById("visitorNameInput");
-        if (field) field.focus();
-      }, 180);
-    }
-
-    async function veeSaveVisitorName(event) {
-      if (event) event.preventDefault();
-      if (!veeVisitorProfileRef) return;
-      var field = document.getElementById("visitorNameInput");
-      var name = (field && field.value || "").trim().replace(/\s+/g, " ").slice(0, 60);
-      var status = document.getElementById("visitorNameStatus");
-      if (!name) {
-        if (status) status.textContent = "Enter your name or choose Skip.";
-        return;
-      }
-      var now = Date.now();
-      if (status) status.textContent = "Saving...";
-      try {
-        await veeVisitorProfileRef.update({ name: name, nameProvidedAtMs: now, namePromptHandledAtMs: now });
-        veeVisitorProfileData = Object.assign({}, veeVisitorProfileData || {}, { name: name, nameProvidedAtMs: now, namePromptHandledAtMs: now });
-        veeCloseModal("visitorNameModal");
-      } catch (error) {
-        console.error("Vee - Ai visitor name save failed:", error);
-        if (status) status.textContent = "Your name was not saved. Please try again or skip.";
-      }
-    }
-
-    async function veeSkipVisitorName() {
-      try {
-        if (veeCloudUid) sessionStorage.setItem("vee_name_prompt_skipped_" + veeCloudUid, "1");
-      } catch (storageError) {}
-      veeCloseModal("visitorNameModal");
     }
 
     function veeDeleteCloudHistory() {
       if (veeCloudReady && veeCloudSessionsRef) {
         veeCloudSessionsRef.remove().catch(function (error) {
-          console.error("Vee - Ai cloud history deletion failed:", error);
+          console.error("Vee-AI cloud history deletion failed:", error);
         });
       }
     }
@@ -1338,7 +1278,7 @@
 
     function veeShare() {
       var url = window.location.href;
-      var text = "Come chat with Vee - Ai (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
+      var text = "Come chat with Vee-AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
       window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     }
 
@@ -1418,7 +1358,7 @@
       var list = document.getElementById("historyList");
       if (!list) return;
       if (!veeSessions.length) {
-        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vee - Ai!</p>';
+        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vee-AI!</p>';
         return;
       }
       list.innerHTML = veeSessions.map(function (s) {
@@ -1526,7 +1466,7 @@
 
       var label = document.createElement("div");
       label.className = "msg-sender";
-      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vee - Ai';
+      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vee-AI';
       row.appendChild(label);
 
       var bubble = document.createElement("div");
@@ -1560,7 +1500,7 @@
       var row = document.createElement("div");
       row.className = "msg-row bot";
       row.innerHTML =
-        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vee - Ai</div>' +
+        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vee-AI</div>' +
         '<div class="ai-thinking-bubble glass-surface">' +
           '<div class="orb-spinner"></div>' +
           '<div class="wave-bars"><span></span><span></span><span></span></div>' +
