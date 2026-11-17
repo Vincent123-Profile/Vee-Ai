@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#FFFFFF" id="metaThemeColor" />
-  <title>Vincent AI — Intelligent Nigerian AI Companion</title>
+  <title>Vee - Ai — Intelligent Nigerian AI Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -919,7 +919,7 @@
         </div>
         <div class="brand-meta">
           <div class="brand-title-row">
-            <span class="brand-title">Vincent AI</span>
+            <span class="brand-title">Vee - Ai</span>
             <span class="brand-badge">Liquid Glass</span>
           </div>
           <div class="brand-sub">
@@ -1016,7 +1016,7 @@
       </div>
 
       <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
-        <textarea id="userInput" rows="1" placeholder="Yarn with Vincent AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
+        <textarea id="userInput" rows="1" placeholder="Yarn with Vee - Ai in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
         <div class="composer-controls">
           <button type="button" class="mic-btn" id="micBtn" title="Voice Input">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
@@ -1027,7 +1027,7 @@
           </button>
         </div>
       </div>
-      <div class="composer-footer">Vincent AI • Multilingual Intelligence & Nigerian Innovation</div>
+      <div class="composer-footer">Vee - Ai • Multilingual Intelligence & Nigerian Innovation</div>
     </div>
   </div>
 
@@ -1047,7 +1047,7 @@
   <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) veeCloseModal('settingsModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>Vincent AI Settings</h2>
+        <h2>Vee - Ai Settings</h2>
         <button type="button" class="icon-btn" onclick="veeCloseModal('settingsModal')">✕</button>
       </div>
       <div class="setting-row">
@@ -1059,7 +1059,7 @@
         <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
       </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-        <span style="color: var(--orange);">About Vincent AI</span>
+        <span style="color: var(--orange);">About Vee - Ai</span>
         <p style="font-size: 12.5px; font-weight: 400; color: var(--text-secondary); line-height: 1.5;">
           Engineered by <strong>Agboola Vincent Oluwaseyi</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
         </p>
@@ -1127,7 +1127,7 @@
         messages: (Array.isArray(session.messages) ? session.messages : []).slice(-100)
       };
       veeCloudSessionsRef.child(session.id).set(safeSession).catch(function (error) {
-        console.error("Vincent AI cloud history save failed:", error);
+        console.error("Vee - Ai cloud history save failed:", error);
       });
     }
 
@@ -1183,16 +1183,16 @@
         if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
           veeRenderHistoryList();
         }
-        console.info("Vincent AI Firebase connected.");
+        console.info("Vee - Ai Firebase connected.");
       } catch (error) {
-        console.error("Vincent AI Firebase initialisation failed:", error);
+        console.error("Vee - Ai Firebase initialisation failed:", error);
       }
     }
 
     function veeDeleteCloudHistory() {
       if (veeCloudReady && veeCloudSessionsRef) {
         veeCloudSessionsRef.remove().catch(function (error) {
-          console.error("Vincent AI cloud history deletion failed:", error);
+          console.error("Vee - Ai cloud history deletion failed:", error);
         });
       }
     }
@@ -1235,7 +1235,7 @@
 
     function veeShare() {
       var url = window.location.href;
-      var text = "Come chat with Vincent AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
+      var text = "Come chat with Vee - Ai (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
       window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     }
 
@@ -1315,7 +1315,7 @@
       var list = document.getElementById("historyList");
       if (!list) return;
       if (!veeSessions.length) {
-        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vincent AI!</p>';
+        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vee - Ai!</p>';
         return;
       }
       list.innerHTML = veeSessions.map(function (s) {
@@ -1423,7 +1423,7 @@
 
       var label = document.createElement("div");
       label.className = "msg-sender";
-      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vincent AI';
+      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vee - Ai';
       row.appendChild(label);
 
       var bubble = document.createElement("div");
@@ -1457,7 +1457,7 @@
       var row = document.createElement("div");
       row.className = "msg-row bot";
       row.innerHTML =
-        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vincent AI</div>' +
+        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vee - Ai</div>' +
         '<div class="ai-thinking-bubble glass-surface">' +
           '<div class="orb-spinner"></div>' +
           '<div class="wave-bars"><span></span><span></span><span></span></div>' +
