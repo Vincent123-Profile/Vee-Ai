@@ -115,6 +115,7 @@ function renderDetail(){
   (Array.isArray(s.messages)?s.messages:[]).forEach(m=>{html+='<div class="message '+(m.role==="user"?"user":"assistant")+'"><strong>'+esc(m.role==="user"?"Visitor":"Vee - Ai")+'</strong><br>'+esc(m.content||"")+'</div>';});
   html+='</article>';
  });
+ if(!v.sessions.length) html+='<div class="empty">No conversation transcripts are stored in Firebase for this visitor yet. New chats will appear after the visitor uses the updated Vee - Ai preview.</div>';
  $("visitorDetail").innerHTML=html;
  const deleteButton=$("deleteVisitorHistory");
  if(deleteButton)deleteButton.addEventListener("click",()=>deleteVisitorHistory(v.uid,v.profile.name||v.uid));
