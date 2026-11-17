@@ -87,6 +87,7 @@ exports.handler = async event => {
       const updates = {
         "profile/createdAtMs": current.profile && current.profile.createdAtMs || now,
         "profile/lastSeenAtMs": now,
+        "profile/visitCount": admin.database.ServerValue.increment(1),
         "profile/googleLinked": !!(current.identity && current.identity.googleUid),
         ["networks/" + fp + "/lastSeenAtMs"]: now
       };
