@@ -100,7 +100,7 @@ function flatten(data){
 function renderList(){
  const q=$("search").value.trim().toLowerCase();
  const rows=flatten(visitorData).filter(v=>(v.uid+" "+(v.profile.displayName||"")+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q));
- $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+esc(v.uid)+'</strong><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
+ $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+esc(v.profile.displayName||"Unnamed visitor")+'</strong><small>'+esc(v.uid)+'</small><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
  $("visitorList").querySelectorAll("[data-uid]").forEach(btn=>btn.addEventListener("click",()=>{selectedUid=btn.dataset.uid;renderList();renderDetail();}));
 }
 function renderDetail(){
