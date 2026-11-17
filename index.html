@@ -1251,13 +1251,16 @@
     function veeMaybeAskVisitorName() {
       if (!veeCloudReady || !veeVisitorProfileRef || veeNamePromptShown) return;
       var profile = veeVisitorProfileData || {};
-      if (profile.name || profile.namePromptHandledAtMs) return;
+      if (profile.name) return;
+      try {
+        if (sessionStorage.getItem("vee_name_prompt_skipped_" + veeCloudUid) === "1") return;
+      } catch (storageError) {}
       veeNamePromptShown = true;
       veeOpenModal("visitorNameModal");
       setTimeout(function () {
         var field = document.getElementById("visitorNameInput");
         if (field) field.focus();
-      }, 120);
+      }, 180);
     }
 
     async function veeSaveVisitorName(event) {
@@ -1283,18 +1286,10 @@
     }
 
     async function veeSkipVisitorName() {
-      if (!veeVisitorProfileRef) { veeCloseModal("visitorNameModal"); return; }
-      var now = Date.now();
-      var status = document.getElementById("visitorNameStatus");
-      if (status) status.textContent = "Saving your choice...";
       try {
-        await veeVisitorProfileRef.update({ namePromptHandledAtMs: now });
-        veeVisitorProfileData = Object.assign({}, veeVisitorProfileData || {}, { namePromptHandledAtMs: now });
-        veeCloseModal("visitorNameModal");
-      } catch (error) {
-        console.error("Vee - Ai name prompt preference save failed:", error);
-        if (status) status.textContent = "Your choice was not saved. Please try again.";
-      }
+        if (veeCloudUid) sessionStorage.setItem("vee_name_prompt_skipped_" + veeCloudUid, "1");
+      } catch (storageError) {}
+      veeCloseModal("visitorNameModal");
     }
 
     function veeDeleteCloudHistory() {
