@@ -109,13 +109,34 @@ function renderDetail(){
   const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
   html+='<div class="network"><strong>Fingerprint</strong><p style="overflow-wrap:anywhere">'+esc(fp)+'</p><small>'+sessions.length+' conversations · First seen '+esc(date(times.length?Math.min(...times):0))+' · Last seen '+esc(date(times.length?Math.max(...times):0))+'</small></div>';
  });
- html+='<h2 style="margin-top:20px">Conversation history</h2>';
+ html+='<div style="margin:18px 0;padding:14px;border:1px solid #f0c7bd;border-radius:12px"><button type="button" id="deleteVisitorHistory" style="background:#b42318">Delete visitor conversation history</button><p class="muted">Permanently removes saved conversations and network fingerprints from Firebase. The visitor ID and saved name are retained.</p></div><h2 style="margin-top:20px">Conversation history</h2>';
  v.sessions.sort((a,b)=>Number(b.updatedAtMs||0)-Number(a.updatedAtMs||0)).forEach(s=>{
   html+='<article class="session"><strong>'+esc(s.title||"Untitled conversation")+'</strong><p class="muted">Started '+esc(date(s.createdAtMs))+' · Updated '+esc(date(s.updatedAtMs))+' · Network '+esc(s.fingerprint)+'</p>';
   (Array.isArray(s.messages)?s.messages:[]).forEach(m=>{html+='<div class="message '+(m.role==="user"?"user":"assistant")+'"><strong>'+esc(m.role==="user"?"Visitor":"Vee - Ai")+'</strong><br>'+esc(m.content||"")+'</div>';});
   html+='</article>';
  });
  $("visitorDetail").innerHTML=html;
+ const deleteButton=$("deleteVisitorHistory");
+ if(deleteButton)deleteButton.addEventListener("click",()=>deleteVisitorHistory(v.uid,v.profile.name||v.uid));
+}
+async function deleteVisitorHistory(uid,label){
+ if(!uid||!auth.currentUser||(auth.currentUser.email||"").toLowerCase()!==ADMIN_EMAIL)return;
+ if(!window.confirm("Delete all saved conversations and network fingerprints for "+label+"? The visitor ID and saved name will remain. This cannot be undone."))return;
+ const button=$("deleteVisitorHistory");if(button)button.disabled=true;
+ try{
+  const clearedAtMs=Date.now();
+  await db.ref("visitors/"+uid).update({networks:null,"profile/historyClearedAtMs":clearedAtMs});
+  if(visitorData[uid]){
+   visitorData[uid].networks={};
+   visitorData[uid].profile=visitorData[uid].profile||{};
+   visitorData[uid].profile.historyClearedAtMs=clearedAtMs;
+  }
+  loadVisitors();
+  alert("Visitor conversation history and network records were deleted from Firebase.");
+ }catch(err){
+  if(button)button.disabled=false;
+  alert("Deletion failed: "+(err.message||"Check Firebase database rules."));
+ }
 }
 async function loadVisitors(){
  $("visitorList").innerHTML='<div class="empty">Loading visitor records...</div>';
