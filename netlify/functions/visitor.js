@@ -58,7 +58,7 @@ function networkFingerprint(event) {
 }
 async function requireAdmin(idToken) {
   const decoded = await auth().verifyIdToken(idToken);
-  if ((decoded.email || "").toLowerCase() !== "agboolavincent67@icloud.com") throw new Error("Administrator access denied.");
+  if ((decoded.email || "").toLowerCase() !== "agboolavincent67@icloud.com" || decoded.email_verified !== true) throw new Error("Administrator access denied.");
   return decoded;
 }
 exports.handler = async event => {
