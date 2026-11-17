@@ -1098,7 +1098,7 @@
     var veeParticlesEnabled = true;
 
     try {
-      veeSessions = JSON.parse(localStorage.getItem("vincent_ai_sessions") || "[]");
+      veeSessions = JSON.parse(localStorage.getItem("vee_ai_sessions_v2") || "[]");
       veeParticlesEnabled = localStorage.getItem("vincent_ai_particles") !== "false";
     } catch (e) {}
 
@@ -1130,7 +1130,7 @@
 
     function veeSaveSessions() {
       try {
-        localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
+        localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions.slice(0, 25)));
       } catch (e) {}
       if (veeCloudReady) {
         veeSessions.forEach(function (session) { veePersistSessionToCloud(session); });
@@ -1164,6 +1164,10 @@
         veeFirebaseAuth = firebase.auth();
         var visitorId = localStorage.getItem("vee_ai_visitor_id") || "";
         var visitorToken = localStorage.getItem("vee_ai_visitor_token") || "";
+        if (!visitorId || !visitorToken) {
+          console.info("Vee-AI is waiting for a guest visit or Google recovery.");
+          return;
+        }
         var result = await veeVisitorRequest({
           action: "identify",
           visitorId: visitorId,
@@ -1206,6 +1210,40 @@
       } catch (error) {
         console.error("Vee-AI visitor identity initialisation failed:", error);
       }
+    }
+
+    async function veeEnsureVisitorIdentity() {
+      if (veeCloudUid && veeVisitorToken) return;
+      var result = await veeVisitorRequest({
+        action: "identify",
+        visitorId: localStorage.getItem("vee_ai_visitor_id") || "",
+        visitorToken: localStorage.getItem("vee_ai_visitor_token") || ""
+      });
+      veeCloudUid = result.visitorId;
+      veeVisitorToken = result.visitorToken;
+      veeNetworkFingerprint = result.networkFingerprint || "network_unknown";
+      localStorage.setItem("vee_ai_visitor_id", veeCloudUid);
+      localStorage.setItem("vee_ai_visitor_token", veeVisitorToken);
+      var history = await veeVisitorRequest({
+        action: "load-sessions",
+        visitorId: veeCloudUid,
+        visitorToken: veeVisitorToken
+      });
+      var sessions = (history.sessions || []).map(function (item) {
+        return {
+          id: item.id,
+          title: item.title || "New conversation",
+          updatedAt: new Date(Number(item.updatedAtMs || Date.now())).toLocaleDateString(),
+          createdAtMs: Number(item.createdAtMs || item.updatedAtMs || Date.now()),
+          updatedAtMs: Number(item.updatedAtMs || Date.now()),
+          messages: Array.isArray(item.messages) ? item.messages : []
+        };
+      });
+      var merged = {};
+      veeSessions.forEach(function (item) { merged[item.id] = item; });
+      sessions.forEach(function (item) { merged[item.id] = item; });
+      veeSessions = Object.keys(merged).map(function (key) { return merged[key]; }).slice(0, 50);
+      veeCloudReady = true;
     }
 
     async function veeGoogleLinkOrRecover() {
@@ -1581,6 +1619,7 @@
       var thinkingRow = veeAppendThinking();
 
       try {
+        await veeEnsureVisitorIdentity();
         var res = await fetch("/.netlify/functions/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
