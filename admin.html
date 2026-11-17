@@ -88,8 +88,9 @@ function flatten(data){
   Object.entries(networks).forEach(([fingerprint,network])=>{
    Object.entries(network&&network.sessions||{}).forEach(([sid,s])=>sessions.push({...s,id:s&&s.id||sid,fingerprint})); 
   });
-  const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
-  rows.push({uid,profile:profile&&profile.profile||{},networks,sessions,first:times.length?Math.min(...times):0,last:times.length?Math.max(...times):0});
+  const profileMeta=profile&&profile.profile||{};
+  const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).concat([Number(profileMeta.createdAtMs||0),Number(profileMeta.lastSeenAtMs||0)]).filter(Boolean);
+  rows.push({uid,profile:profileMeta,networks,sessions,first:times.length?Math.min(...times):0,last:times.length?Math.max(...times):0});
  });
  return rows.sort((a,b)=>b.last-a.last);
 }
