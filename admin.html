@@ -89,20 +89,20 @@ function flatten(data){
    Object.entries(network&&network.sessions||{}).forEach(([sid,s])=>sessions.push({...s,id:s&&s.id||sid,fingerprint})); 
   });
   const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
-  rows.push({uid,networks,sessions,first:times.length?Math.min(...times):0,last:times.length?Math.max(...times):0});
+  rows.push({uid,profile:profile&&profile.profile||{},networks,sessions,first:times.length?Math.min(...times):0,last:times.length?Math.max(...times):0});
  });
  return rows.sort((a,b)=>b.last-a.last);
 }
 function renderList(){
  const q=$("search").value.trim().toLowerCase();
- const rows=flatten(visitorData).filter(v=>(v.uid+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q));
- $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+esc(v.uid)+'</strong><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
+ const rows=flatten(visitorData).filter(v=>(v.uid+" "+(v.profile.name||"")+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q));
+ $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+esc(v.profile.name||"Name not provided")+'</strong><small>'+esc(v.uid)+'</small><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
  $("visitorList").querySelectorAll("[data-uid]").forEach(btn=>btn.addEventListener("click",()=>{selectedUid=btn.dataset.uid;renderList();renderDetail();}));
 }
 function renderDetail(){
  const v=flatten(visitorData).find(x=>x.uid===selectedUid);
  if(!v){$("visitorDetail").innerHTML='<div class="empty">Select a visitor to view details.</div>';return;}
- let html='<h2>Visitor profile</h2><div class="muted">Unique visitor ID</div><p style="overflow-wrap:anywhere"><strong>'+esc(v.uid)+'</strong></p><div class="chips"><span class="chip">First visit: '+esc(date(v.first))+'</span><span class="chip">Last activity: '+esc(date(v.last))+'</span><span class="chip">'+v.sessions.length+' conversations</span></div><h2>Network activity</h2><p class="muted">Fingerprints are privacy-preserving hashes. They are not raw IP addresses.</p>';
+ let html='<h2>Visitor profile</h2><div class="muted">Visitor name</div><p><strong>'+esc(v.profile.name||"Not provided") + '</strong></p><div class="muted" style="margin-top:10px">Unique visitor ID</div><p style="overflow-wrap:anywhere"><strong>'+esc(v.uid)+'</strong></p><div class="chips"><span class="chip">Name status: '+(v.profile.name? "Provided":"Not provided")+'</span><span class="chip">First visit: '+esc(date(v.first))+'</span><span class="chip">Last activity: '+esc(date(v.last))+'</span><span class="chip">'+v.sessions.length+' conversations</span></div><h2>Network activity</h2><p class="muted">Fingerprints are privacy-preserving hashes. They are not raw IP addresses.</p>';
  Object.entries(v.networks).forEach(([fp,n])=>{
   const sessions=Object.values(n.sessions||{});
   const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
