@@ -9,6 +9,7 @@ Vee - Ai is a personal AI project developed by **Agboola Vincent Oluwaseyi**. Th
 - **Conversational AI:** Chat interface designed for natural conversations in English, Nigerian Pidgin, Yoruba, Hausa, Igbo, and other languages supported by the model.
 - **Persistent conversations:** Recent chat sessions are cached in the visitor's browser and synchronised with Firebase Realtime Database.
 - **Anonymous visitor identity:** Firebase Authentication assigns each browser an anonymous UID.
+- **Optional name collection:** On the first visit, Vee - Ai asks what to call the visitor. The visitor may save a name or skip. The choice is remembered in the visitor profile.
 - **Network-change grouping:** A server-side keyed HMAC-SHA256 fingerprint groups activity by network without writing the raw IP address into the app's database.
 - **Private admin dashboard:** An authenticated administrator reviews visitor records, activity dates, network fingerprints, conversation titles, and saved transcripts.
 - **Responsive interface:** Mobile-friendly layout with light and dark themes.
@@ -58,6 +59,11 @@ The database structure follows this pattern:
 ```text
 visitors/
   {visitorUid}/
+    profile/
+      name
+      nameProvidedAtMs
+      namePromptHandledAtMs
+      createdAtMs
     networks/
       {networkFingerprint}/
         sessions/
@@ -82,12 +88,14 @@ https://YOUR-SITE-DOMAIN/admin.html
 The dashboard provides:
 
 - Visitor count, network fingerprint count, and conversation count.
+- Visitor-provided names, with a clear “Not provided” state when skipped.
+- Search by visitor name as well as UID, fingerprint, or conversation title.
 - Search by visitor UID, fingerprint, or conversation title.
 - Visitor activity dates.
 - Network fingerprint history.
 - Saved conversation transcripts.
 
-The dashboard is read-only. The dashboard page itself is not a security boundary. Firebase Authentication and Realtime Database rules control access to visitor records. The authorised administrator email must match the value configured in both `admin.html` and `database.rules.json`.
+Visitor names are self-reported and are not verified legal identities. Visitors may skip the name prompt. The dashboard is read-only. The dashboard page itself is not a security boundary. Firebase Authentication and Realtime Database rules control access to visitor records. The authorised administrator email must match the value configured in both `admin.html` and `database.rules.json`.
 
 ## Privacy and security
 
