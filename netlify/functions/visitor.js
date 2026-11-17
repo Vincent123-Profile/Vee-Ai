@@ -78,17 +78,9 @@ exports.handler = async event => {
         ["networks/" + fp + "/lastSeenAtMs"]: now
       };
       await ref.update(updates);
-      return json(200, { visitorId, visitorToken: signVisitor(visitorId), networkFingerprint: fp, displayName: current.profile && current.profile.displayName || "" });
+      return json(200, { visitorId, visitorToken: signVisitor(visitorId), networkFingerprint: fp });
     }
 
-    if (body.action === "update-profile") {
-      const visitorId = verifyVisitor(body.visitorToken);
-      if (visitorId !== body.visitorId) throw new Error("Visitor identity mismatch.");
-      const displayName = String(body.displayName || "").trim().slice(0, 60);
-      await database.ref("visitors/" + visitorId + "/profile/displayName").set(displayName || null);
-      await database.ref("visitors/" + visitorId + "/profile/lastSeenAtMs").set(now);
-      return json(200, { success: true, displayName });
-    }
 
     if (body.action === "save-session") {
       const visitorId = verifyVisitor(body.visitorToken);
