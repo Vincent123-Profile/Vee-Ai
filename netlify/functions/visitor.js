@@ -27,7 +27,7 @@ function secret() {
   return value;
 }
 function signVisitor(visitorId) {
-  const payload = Buffer.from(JSON.stringify({ visitorId, exp: Date.now() + 30 * 86400000 })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ visitorId, exp: Date.now() + 365 * 86400000 })).toString("base64url");
   const signature = crypto.createHmac("sha256", secret()).update(payload).digest("base64url");
   return payload + "." + signature;
 }
