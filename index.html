@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#FFFFFF" id="metaThemeColor" />
-  <meta name="description" content="Vee-Ai — Intelligent Nigerian AI companion created and developed by Agboola Vincent Oluwaseyi (Vincent)." />
-  <title>Vee-Ai — Intelligent Nigerian AI Companion</title>
+  <title>Vincent AI — Intelligent Nigerian AI Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -213,7 +212,7 @@
     }
 
     .brand-title {
-      font-size: 15.5px;
+      font-size: 15px;
       font-weight: 800;
       letter-spacing: -0.02em;
       white-space: nowrap;
@@ -608,17 +607,6 @@
       color: var(--orange);
     }
 
-    .storage-note {
-      align-self: center;
-      font-size: 11px;
-      color: var(--orange);
-      background: var(--orange-soft);
-      border: 1px solid rgba(241, 76, 21, 0.25);
-      padding: 5px 12px;
-      border-radius: 999px;
-      text-align: center;
-    }
-
     /* AI Reasoning Indicator */
     .ai-thinking-bubble {
       display: inline-flex;
@@ -848,24 +836,6 @@
       font-weight: 800;
     }
 
-    .network-banner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 12px;
-      background: var(--orange-soft);
-      border: 1px solid rgba(241, 76, 21, 0.22);
-      font-size: 11.5px;
-      color: var(--text-secondary);
-    }
-
-    .network-banner strong {
-      color: var(--orange);
-      font-family: "JetBrains Mono", monospace;
-    }
-
     .history-list {
       overflow-y: auto;
       display: flex;
@@ -949,12 +919,12 @@
         </div>
         <div class="brand-meta">
           <div class="brand-title-row">
-            <span class="brand-title">Vee-Ai</span>
+            <span class="brand-title">Vincent AI</span>
             <span class="brand-badge">Liquid Glass</span>
           </div>
           <div class="brand-sub">
             <span class="status-pulse"></span>
-            <span id="brandSubText">Created by Agboola Vincent Oluwaseyi</span>
+            <span>Created by Agboola Vincent Oluwaseyi</span>
           </div>
         </div>
       </button>
@@ -964,14 +934,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span class="btn-label">New</span>
         </button>
-        <button type="button" class="icon-btn" onclick="veeOpenModal('historyModal')" title="Chat History (Last 30 Days)">
+        <button type="button" class="icon-btn" onclick="veeOpenModal('historyModal')" title="Chat History">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span class="btn-label">History</span>
         </button>
         <button type="button" class="icon-btn" onclick="veeToggleTheme()" title="Switch Light/Dark Mode">
           <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
-        <button type="button" class="icon-btn" onclick="veeShare()" title="Share Vee-Ai on WhatsApp">
+        <button type="button" class="icon-btn" onclick="veeShare()" title="Share on WhatsApp">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
         <button type="button" class="icon-btn" onclick="veeOpenModal('settingsModal')" title="Settings">
@@ -994,7 +964,7 @@
         </div>
 
         <h1 class="welcome-headline">How far? Wetin we dey reason today?</h1>
-        <p class="welcome-sub">Welcome to Vee-Ai — your intelligent AI companion created by Vincent. Ready to think, create, explore and gist with you.</p>
+        <p class="welcome-sub">Your intelligent AI companion. Ready to think, create, explore and gist with you.</p>
 
         <div class="prompt-grid">
           <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Who created you and what is his story?')">
@@ -1046,7 +1016,7 @@
       </div>
 
       <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
-        <textarea id="userInput" rows="1" placeholder="Yarn with Vee-Ai in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
+        <textarea id="userInput" rows="1" placeholder="Yarn with Vincent AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
         <div class="composer-controls">
           <button type="button" class="mic-btn" id="micBtn" title="Voice Input">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
@@ -1057,7 +1027,7 @@
           </button>
         </div>
       </div>
-      <div class="composer-footer">Vee-Ai • Created by Vincent • Multilingual Intelligence & Nigerian Innovation</div>
+      <div class="composer-footer">Vincent AI • Multilingual Intelligence & Nigerian Innovation</div>
     </div>
   </div>
 
@@ -1065,15 +1035,11 @@
   <div class="modal-backdrop" id="historyModal" onclick="if(event.target===this) veeCloseModal('historyModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>Conversation History (30 Days)</h2>
+        <h2>Conversation History</h2>
         <button type="button" class="icon-btn" onclick="veeCloseModal('historyModal')">✕</button>
       </div>
-      <div class="network-banner">
-        <span>Branch: <strong id="networkBranchDisplay">network_001</strong></span>
-        <span id="visitorUidDisplay" style="font-family: 'JetBrains Mono', monospace;">UID: Initializing...</span>
-      </div>
       <div class="history-list" id="historyList"></div>
-      <button type="button" class="icon-btn" style="width: 100%; justify-content: center; color: var(--orange);" onclick="veeClearHistory()">Clear Local View</button>
+      <button type="button" class="icon-btn" style="width: 100%; justify-content: center; color: var(--orange);" onclick="veeClearHistory()">Clear All Conversations</button>
     </div>
   </div>
 
@@ -1081,7 +1047,7 @@
   <div class="modal-backdrop" id="settingsModal" onclick="if(event.target===this) veeCloseModal('settingsModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head">
-        <h2>Vee-Ai Settings</h2>
+        <h2>Vincent AI Settings</h2>
         <button type="button" class="icon-btn" onclick="veeCloseModal('settingsModal')">✕</button>
       </div>
       <div class="setting-row">
@@ -1092,24 +1058,14 @@
         <span>Ambient AI Particles</span>
         <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
       </div>
-      <div class="setting-row">
-        <span>Active Network Branch</span>
-        <span id="settingsNetworkVal" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--orange);">network_001</span>
-      </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
-        <span style="color: var(--orange);">About Vee-Ai</span>
+        <span style="color: var(--orange);">About Vincent AI</span>
         <p style="font-size: 12.5px; font-weight: 400; color: var(--text-secondary); line-height: 1.5;">
-          Created and developed by <strong>Agboola Vincent Oluwaseyi (Vincent)</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
+          Engineered by <strong>Agboola Vincent Oluwaseyi</strong> — Nigerian technology entrepreneur, cybersecurity specialist, and founder of <strong>Vee Gadget Autos Tech</strong> & <strong>VeeCore Group</strong>.
         </p>
       </div>
     </div>
   </div>
-
-  <!-- Firebase Compat SDKs (Preserves Classic Global Script Architecture) -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
 
   <script>
     /* =========================================================
@@ -1121,181 +1077,15 @@
     var veeIsGenerating = false;
     var veeParticlesEnabled = true;
 
-    // Firebase Visitor & Network Branch State
-    var veeVisitorUid = null;
-    var veeActiveNetwork = "network_001";
-    var veeFirebaseReady = false;
-
-    // Set your exact Realtime Database URL from Firebase Console -> Realtime Database -> Data
-    var FIREBASE_DB_URL = "";
-
-    function veeStorageKey() {
-      return "vee_ai_sessions_" + (veeVisitorUid || "guest") + "_" + veeActiveNetwork;
-    }
-
-    function veeLoadLocalSessions() {
-      try {
-        veeSessions = JSON.parse(localStorage.getItem(veeStorageKey()) || "[]");
-      } catch (e) {
-        veeSessions = [];
-      }
-    }
-
     try {
-      veeParticlesEnabled = localStorage.getItem("vee_ai_particles") !== "false";
-      veeLoadLocalSessions();
+      veeSessions = JSON.parse(localStorage.getItem("vincent_ai_sessions") || "[]");
+      veeParticlesEnabled = localStorage.getItem("vincent_ai_particles") !== "false";
     } catch (e) {}
 
     function veeSaveSessions() {
       try {
-        localStorage.setItem(veeStorageKey(), JSON.stringify(veeSessions.slice(0, 30)));
+        localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
       } catch (e) {}
-    }
-
-    function veeGenerateId(prefix) {
-      return prefix + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-    }
-
-    function veeUpdateIdentityUi() {
-      var subEl = document.getElementById("brandSubText");
-      if (subEl) {
-        subEl.textContent = veeVisitorUid
-          ? "Created by Vincent • " + veeActiveNetwork
-          : "Created by Agboola Vincent Oluwaseyi";
-      }
-      var netDisplay = document.getElementById("networkBranchDisplay");
-      if (netDisplay) netDisplay.textContent = veeActiveNetwork;
-
-      var uidDisplay = document.getElementById("visitorUidDisplay");
-      if (uidDisplay) {
-        uidDisplay.textContent = veeVisitorUid
-          ? "UID: " + veeVisitorUid.slice(0, 8) + "..."
-          : "UID: Local Mode";
-      }
-
-      var settingsNet = document.getElementById("settingsNetworkVal");
-      if (settingsNet) settingsNet.textContent = veeActiveNetwork;
-    }
-
-    /* =========================================================
-       FIREBASE INITIALIZATION & VISITOR IDENTIFICATION (NON-BLOCKING)
-       ========================================================= */
-    (function initVeeFirebase() {
-      try {
-        if (!window.firebase) return;
-
-        var firebaseConfig = {
-          apiKey: "AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",
-          authDomain: "vee-ai-e745e.firebaseapp.com",
-          projectId: "vee-ai-e745e",
-          storageBucket: "vee-ai-e745e.firebasestorage.app",
-          messagingSenderId: "351206567728",
-          appId: "1:351206567728:web:10a197b7c9752daf12e2f5",
-          measurementId: "G-CC61N9WKSJ"
-        };
-
-        if (FIREBASE_DB_URL && FIREBASE_DB_URL.indexOf("https://") === 0) {
-          firebaseConfig.databaseURL = FIREBASE_DB_URL.replace(/\/+$/, "");
-        }
-
-        // Reuse existing Firebase instance if already initialized
-        var app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
-
-        // Initialize Analytics only where browser support is available
-        try {
-          if (firebase.analytics && typeof firebase.analytics.isSupported === "function") {
-            firebase.analytics.isSupported().then(function (supported) {
-              if (supported) firebase.analytics(app);
-            }).catch(function () {});
-          }
-        } catch (e) {}
-
-        // Persistent browser anonymous session
-        firebase.auth(app).setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function () {});
-
-        firebase.auth(app).onAuthStateChanged(function (user) {
-          if (!user) {
-            firebase.auth(app).signInAnonymously().catch(function () {});
-            return;
-          }
-
-          veeVisitorUid = user.uid;
-          veeFirebaseReady = true;
-          veeLoadLocalSessions();
-          veeUpdateIdentityUi();
-
-          // Sync visitor profile, network branch, and 30-day history from Netlify backend
-          user.getIdToken().then(function (token) {
-            return fetch("/.netlify/functions/chat", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
-              },
-              body: JSON.stringify({ action: "session_init" })
-            });
-          })
-          .then(function (res) { return res.json(); })
-          .then(function (data) {
-            if (data && data.activeNetwork) {
-              veeActiveNetwork = data.activeNetwork;
-              veeLoadLocalSessions();
-              veeUpdateIdentityUi();
-            }
-            if (data && Array.isArray(data.conversations) && data.conversations.length > 0) {
-              veeMergeCloudConversations(data.conversations);
-            }
-          })
-          .catch(function () {});
-        });
-      } catch (e) {}
-    })();
-
-    function veeMergeCloudConversations(cloudConvs) {
-      var byId = {};
-      for (var i = 0; i < veeSessions.length; i++) {
-        byId[veeSessions[i].id] = veeSessions[i];
-      }
-      for (var j = 0; j < cloudConvs.length; j++) {
-        var c = cloudConvs[j];
-        if (!c || !c.id) continue;
-        var existing = byId[c.id];
-        var formattedMsgs = Array.isArray(c.messages) ? c.messages : (existing ? existing.messages : []);
-        byId[c.id] = {
-          id: c.id,
-          title: c.title || (existing ? existing.title : "Conversation"),
-          updatedAt: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : (existing ? existing.updatedAt : "Recent"),
-          updatedAtTs: Number(c.updatedAt || (existing ? existing.updatedAtTs : 0)),
-          messages: formattedMsgs
-        };
-      }
-      var merged = Object.keys(byId).map(function (k) { return byId[k]; });
-      merged.sort(function (a, b) { return (b.updatedAtTs || 0) - (a.updatedAtTs || 0); });
-      veeSessions = merged.slice(0, 30);
-      veeSaveSessions();
-      if (document.getElementById("historyModal").classList.contains("open")) {
-        veeRenderHistoryList();
-      }
-    }
-
-    async function veeGetIdTokenSafe() {
-      try {
-        if (!window.firebase || !firebase.apps.length) return null;
-        var user = firebase.auth().currentUser;
-        if (!user) {
-          var timeout = new Promise(function (resolve) { setTimeout(function () { resolve(null); }, 2000); });
-          var signIn = firebase.auth().signInAnonymously().then(function (cred) {
-            veeVisitorUid = cred.user.uid;
-            veeFirebaseReady = true;
-            return cred.user;
-          }).catch(function () { return null; });
-          user = await Promise.race([signIn, timeout]);
-        }
-        if (!user) return null;
-        return await user.getIdToken();
-      } catch (e) {
-        return null;
-      }
     }
 
     /* =========================================================
@@ -1303,7 +1093,7 @@
        ========================================================= */
     function veeApplyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      try { localStorage.setItem("vee_ai_theme", theme); } catch (e) {}
+      try { localStorage.setItem("vincent_ai_theme", theme); } catch (e) {}
       var meta = document.getElementById("metaThemeColor");
       if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0B0B" : "#FFFFFF");
       var label = document.getElementById("modalThemeToggle");
@@ -1322,10 +1112,7 @@
     }
 
     function veeOpenModal(id) {
-      if (id === "historyModal") {
-        veeUpdateIdentityUi();
-        veeRenderHistoryList();
-      }
+      if (id === "historyModal") veeRenderHistoryList();
       var el = document.getElementById(id);
       if (el) el.classList.add("open");
     }
@@ -1337,7 +1124,7 @@
 
     function veeShare() {
       var url = window.location.href;
-      var text = "Come chat with Vee-Ai (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
+      var text = "Come chat with Vincent AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
       window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     }
 
@@ -1366,26 +1153,21 @@
 
     function veeUpdateSessionRecord(firstUserMsg) {
       if (!veeCurrentSessionId) {
-        veeCurrentSessionId = veeGenerateId("conv");
-      }
-      var found = false;
-      for (var i = 0; i < veeSessions.length; i++) {
-        if (veeSessions[i].id === veeCurrentSessionId) {
-          veeSessions[i].messages = veeHistory.slice();
-          veeSessions[i].updatedAt = new Date().toLocaleDateString();
-          veeSessions[i].updatedAtTs = Date.now();
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
+        veeCurrentSessionId = "sess_" + Date.now();
         veeSessions.unshift({
           id: veeCurrentSessionId,
           title: firstUserMsg.slice(0, 42) + (firstUserMsg.length > 42 ? "..." : ""),
           updatedAt: new Date().toLocaleDateString(),
-          updatedAtTs: Date.now(),
           messages: veeHistory.slice()
         });
+      } else {
+        for (var i = 0; i < veeSessions.length; i++) {
+          if (veeSessions[i].id === veeCurrentSessionId) {
+            veeSessions[i].messages = veeHistory.slice();
+            veeSessions[i].updatedAt = new Date().toLocaleDateString();
+            break;
+          }
+        }
       }
       veeSaveSessions();
     }
@@ -1397,7 +1179,7 @@
       }
       if (!found) return;
       veeCurrentSessionId = found.id;
-      veeHistory = (found.messages || []).slice();
+      veeHistory = found.messages.slice();
       var stream = document.getElementById("chatStream");
       stream.innerHTML = "";
       veeShowChatView();
@@ -1418,16 +1200,15 @@
       var list = document.getElementById("historyList");
       if (!list) return;
       if (!veeSessions.length) {
-        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations on ' + veeEscapeHtml(veeActiveNetwork) + ' yet. Start chatting with Vee-Ai!</p>';
+        list.innerHTML = '<p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved conversations yet. Start chatting with Vincent AI!</p>';
         return;
       }
       list.innerHTML = veeSessions.map(function (s) {
         var activeClass = s.id === veeCurrentSessionId ? "active" : "";
-        var msgCount = Array.isArray(s.messages) ? s.messages.length : 0;
-        return '<div class="history-item ' + activeClass + '" onclick="veeLoadSession(\'' + veeEscapeHtml(s.id) + '\')">' +
+        return '<div class="history-item ' + activeClass + '" onclick="veeLoadSession(\'' + s.id + '\')">' +
           '<div style="min-width: 0;">' +
             '<div class="history-title">' + veeEscapeHtml(s.title) + '</div>' +
-            '<div class="history-date">' + veeEscapeHtml(s.updatedAt) + ' • ' + msgCount + ' messages</div>' +
+            '<div class="history-date">' + s.updatedAt + ' • ' + s.messages.length + ' messages</div>' +
           '</div>' +
           '<span style="color: var(--orange); font-weight: 700;">→</span>' +
         '</div>';
@@ -1439,37 +1220,26 @@
        ========================================================= */
     function veeEscapeHtml(str) {
       return String(str)
-        .replace(/&/g, "&")
-        .replace(/</g, "<")
-        .replace(/>/g, ">")
-        .replace(/"/g, """)
-        .replace(/'/g, "'");
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
     function veeRenderMarkdown(rawText) {
       if (!rawText) return "";
-      var fence = String.fromCharCode(96).repeat(3);
       var codeBlocks = [];
-      var text = String(rawText);
-
-      var startIdx = text.indexOf(fence);
-      while (startIdx !== -1) {
-        var endIdx = text.indexOf(fence, startIdx + 3);
-        if (endIdx === -1) break;
-        var inner = text.slice(startIdx + 3, endIdx);
-        var firstNewline = inner.indexOf("\n");
-        var lang = firstNewline !== -1 ? inner.slice(0, firstNewline).trim() : "code";
-        var code = firstNewline !== -1 ? inner.slice(firstNewline + 1) : inner;
+      var text = rawText.replace(/```(\w*)\n([\s\S]*?)```/g, function (_, lang, code) {
         var idx = codeBlocks.length;
+        var safeLang = veeEscapeHtml(lang || "code");
         codeBlocks.push(
           '<div class="code-block-wrap">' +
-            '<div class="code-header"><span>' + veeEscapeHtml(lang || "code") + '</span><button type="button" class="copy-code-btn" onclick="veeCopyCode(this)">Copy</button></div>' +
+            '<div class="code-header"><span>' + safeLang + '</span><button type="button" class="copy-code-btn" onclick="veeCopyCode(this)">Copy</button></div>' +
             '<pre><code>' + veeEscapeHtml(code.trim()) + '</code></pre>' +
           '</div>'
         );
-        text = text.slice(0, startIdx) + "@@CODEBLOCK_" + idx + "@@" + text.slice(endIdx + 3);
-        startIdx = text.indexOf(fence);
-      }
+        return "@@CODEBLOCK_" + idx + "@@";
+      });
 
       text = veeEscapeHtml(text);
       text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -1497,9 +1267,6 @@
         } else if (/^[-*]\s+/.test(trimmed)) {
           if (!inUl) { out.push("<ul>"); inUl = true; }
           out.push("<li>" + trimmed.replace(/^[-*]\s+/, "") + "</li>");
-        } else if (/^>\s+/.test(trimmed)) {
-          if (inUl) { out.push("</ul>"); inUl = false; }
-          out.push("<blockquote>" + trimmed.replace(/^>\s+/, "") + "</blockquote>");
         } else if (trimmed === "") {
           if (inUl) { out.push("</ul>"); inUl = false; }
         } else {
@@ -1541,7 +1308,7 @@
 
       var label = document.createElement("div");
       label.className = "msg-sender";
-      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vee-Ai';
+      label.innerHTML = sender === "user" ? "You" : '<span style="color: var(--orange);">●</span> Vincent AI';
       row.appendChild(label);
 
       var bubble = document.createElement("div");
@@ -1570,25 +1337,12 @@
       stream.scrollTop = stream.scrollHeight;
     }
 
-    function veeAppendStorageNote(text) {
-      var stream = document.getElementById("chatStream");
-      if (!stream) return;
-      var existing = document.getElementById("veeStorageNote");
-      if (existing) existing.remove();
-      var note = document.createElement("div");
-      note.id = "veeStorageNote";
-      note.className = "storage-note";
-      note.textContent = text;
-      stream.appendChild(note);
-      stream.scrollTop = stream.scrollHeight;
-    }
-
     function veeAppendThinking() {
       var stream = document.getElementById("chatStream");
       var row = document.createElement("div");
       row.className = "msg-row bot";
       row.innerHTML =
-        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vee-Ai</div>' +
+        '<div class="msg-sender"><span style="color: var(--orange);">●</span> Vincent AI</div>' +
         '<div class="ai-thinking-bubble glass-surface">' +
           '<div class="orb-spinner"></div>' +
           '<div class="wave-bars"><span></span><span></span><span></span></div>' +
@@ -1642,10 +1396,6 @@
         return;
       }
 
-      if (!veeCurrentSessionId) {
-        veeCurrentSessionId = veeGenerateId("conv");
-      }
-
       veeShowChatView();
       veeAppendMessage(message, "user");
       input.value = "";
@@ -1661,37 +1411,15 @@
       if (sendBtnText) sendBtnText.textContent = "...";
 
       var thinkingRow = veeAppendThinking();
-      var userMsgId = veeGenerateId("msg");
-      var botMsgId = veeGenerateId("msg");
 
       try {
-        var token = await veeGetIdTokenSafe();
-        var headers = { "Content-Type": "application/json" };
-        if (token) {
-          headers["Authorization"] = "Bearer " + token;
-        }
-
         var res = await fetch("/.netlify/functions/chat", {
           method: "POST",
-          headers: headers,
-          body: JSON.stringify({
-            message: message,
-            history: contextHistory,
-            conversationId: veeCurrentSessionId,
-            userMsgId: userMsgId,
-            botMsgId: botMsgId
-          })
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message, history: contextHistory })
         });
         var data = await res.json();
         var reply = data.reply || "Chai, small network blink! Try send am again.";
-
-        if (data.activeNetwork && data.activeNetwork !== veeActiveNetwork) {
-          veeActiveNetwork = data.activeNetwork;
-          veeUpdateIdentityUi();
-        }
-        if (data.conversationId) {
-          veeCurrentSessionId = data.conversationId;
-        }
 
         thinkingRow.remove();
         veeAppendMessage(reply, "bot");
@@ -1702,10 +1430,6 @@
         veeHistory.push({ role: "assistant", content: reply });
         if (veeHistory.length > 20) veeHistory = veeHistory.slice(-20);
         veeUpdateSessionRecord(message);
-
-        if (data.storageSaved === false && data.storageError) {
-          veeAppendStorageNote("Saved locally • " + data.storageError);
-        }
       } catch (err) {
         thinkingRow.remove();
         veeAppendMessage("Omo, small network wahala happen! Check your connection and try again.", "bot");
@@ -1721,7 +1445,7 @@
     (function initVisualEffects() {
       try {
         var savedTheme = "light";
-        try { savedTheme = localStorage.getItem("vee_ai_theme") || "light"; } catch (e) {}
+        try { savedTheme = localStorage.getItem("vincent_ai_theme") || "light"; } catch (e) {}
         veeApplyTheme(savedTheme);
 
         // Mobile virtual keyboard height sync
@@ -1789,7 +1513,7 @@
 
         window.veeToggleParticles = function () {
           veeParticlesEnabled = !veeParticlesEnabled;
-          try { localStorage.setItem("vee_ai_particles", veeParticlesEnabled); } catch (e) {}
+          try { localStorage.setItem("vincent_ai_particles", veeParticlesEnabled); } catch (e) {}
           var btn = document.getElementById("particleToggleBtn");
           if (btn) btn.textContent = veeParticlesEnabled ? "Enabled" : "Disabled";
           if (veeParticlesEnabled) { setupCanvas(); drawFrame(); }
