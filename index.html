@@ -1067,6 +1067,9 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
   <script>
     /* =========================================================
        CORE STATE & SAFE STORAGE
@@ -1082,11 +1085,119 @@
       veeParticlesEnabled = localStorage.getItem("vincent_ai_particles") !== "false";
     } catch (e) {}
 
+    var veeFirebaseAuth = null;
+    var veeFirebaseDb = null;
+    var veeCloudUid = null;
+    var veeNetworkFingerprint = null;
+    var veeCloudSessionsRef = null;
+    var veeCloudReady = false;
+
+    var veeFirebaseConfig = {
+      apiKey: "AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",
+      authDomain: "vee-ai-e745e.firebaseapp.com",
+      databaseURL: "https://vee-ai-e745e-default-rtdb.firebaseio.com",
+      projectId: "vee-ai-e745e",
+      storageBucket: "vee-ai-e745e.firebasestorage.app",
+      messagingSenderId: "351206567728",
+      appId: "1:351206567728:web:10a197b7c9752daf12e2f5",
+      measurementId: "G-CC61N9WKSJ"
+    };
+
     function veeSaveSessions() {
       try {
         localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
       } catch (e) {}
+      if (veeCloudReady && veeCloudSessionsRef) {
+        veeSessions.forEach(function (session) {
+          veePersistSessionToCloud(session);
+        });
+      }
     }
+
+    function veePersistSessionToCloud(session) {
+      if (!veeCloudReady || !veeCloudSessionsRef || !session || !session.id) return;
+      var now = Date.now();
+      var createdAtMs = Number(session.createdAtMs || session.updatedAtMs || now);
+      var updatedAtMs = Number(session.updatedAtMs || now);
+      var safeSession = {
+        id: session.id,
+        title: String(session.title || "New conversation").slice(0, 100),
+        createdAtMs: createdAtMs,
+        updatedAtMs: updatedAtMs,
+        messages: (Array.isArray(session.messages) ? session.messages : []).slice(-100)
+      };
+      veeCloudSessionsRef.child(session.id).set(safeSession).catch(function (error) {
+        console.error("Vincent AI cloud history save failed:", error);
+      });
+    }
+
+    async function veeInitFirebase() {
+      try {
+        if (!window.firebase || !firebase.apps.length) {
+          if (!window.firebase) throw new Error("Firebase SDK did not load.");
+          firebase.initializeApp(veeFirebaseConfig);
+        }
+        veeFirebaseAuth = firebase.auth();
+        veeFirebaseDb = firebase.database();
+        var credential = await veeFirebaseAuth.signInAnonymously();
+        veeCloudUid = credential.user.uid;
+
+        var networkResponse = await fetch("/.netlify/functions/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "visitor-network" })
+        });
+        if (!networkResponse.ok) throw new Error("Unable to identify the current network.");
+        var networkData = await networkResponse.json();
+        veeNetworkFingerprint = networkData.fingerprint || "network_unknown";
+
+        veeCloudSessionsRef = veeFirebaseDb.ref(
+          "visitors/" + veeCloudUid + "/networks/" + veeNetworkFingerprint + "/sessions"
+        );
+
+        var snapshot = await veeCloudSessionsRef.once("value");
+        var cloudData = snapshot.val() || {};
+        var cloudSessions = Object.keys(cloudData).map(function (key) {
+          var item = cloudData[key] || {};
+          return {
+            id: item.id || key,
+            title: item.title || "New conversation",
+            updatedAt: new Date(Number(item.updatedAtMs || Date.now())).toLocaleDateString(),
+            createdAtMs: Number(item.createdAtMs || item.updatedAtMs || Date.now()),
+            updatedAtMs: Number(item.updatedAtMs || Date.now()),
+            messages: Array.isArray(item.messages) ? item.messages : []
+          };
+        }).filter(function (item) {
+          return item.updatedAtMs >= Date.now() - (30 * 24 * 60 * 60 * 1000);
+        });
+
+        var merged = {};
+        veeSessions.forEach(function (item) { merged[item.id] = item; });
+        cloudSessions.forEach(function (item) { merged[item.id] = item; });
+        veeSessions = Object.keys(merged).map(function (key) { return merged[key]; })
+          .sort(function (a, b) { return Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0); })
+          .slice(0, 50);
+
+        veeCloudReady = true;
+        veeSaveSessions();
+        if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
+          veeRenderHistoryList();
+        }
+        console.info("Vincent AI Firebase connected.");
+      } catch (error) {
+        console.error("Vincent AI Firebase initialisation failed:", error);
+      }
+    }
+
+    function veeDeleteCloudHistory() {
+      if (veeCloudReady && veeCloudSessionsRef) {
+        veeCloudSessionsRef.remove().catch(function (error) {
+          console.error("Vincent AI cloud history deletion failed:", error);
+        });
+      }
+    }
+
+    veeInitFirebase();
 
     /* =========================================================
        THEME & MODALS (DIRECT GLOBAL FUNCTIONS)
@@ -1158,6 +1269,8 @@
           id: veeCurrentSessionId,
           title: firstUserMsg.slice(0, 42) + (firstUserMsg.length > 42 ? "..." : ""),
           updatedAt: new Date().toLocaleDateString(),
+          createdAtMs: Date.now(),
+          updatedAtMs: Date.now(),
           messages: veeHistory.slice()
         });
       } else {
@@ -1165,6 +1278,7 @@
           if (veeSessions[i].id === veeCurrentSessionId) {
             veeSessions[i].messages = veeHistory.slice();
             veeSessions[i].updatedAt = new Date().toLocaleDateString();
+            veeSessions[i].updatedAtMs = Date.now();
             break;
           }
         }
@@ -1190,6 +1304,7 @@
     }
 
     function veeClearHistory() {
+      veeDeleteCloudHistory();
       veeSessions = [];
       veeSaveSessions();
       veeRenderHistoryList();
