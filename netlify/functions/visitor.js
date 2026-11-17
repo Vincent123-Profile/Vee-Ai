@@ -133,6 +133,9 @@ exports.handler = async event => {
         messages
       };
       const ref = database.ref("visitors/" + visitorId);
+      const profileSnapshot = await ref.child("profile").once("value");
+      const clearedAt = Number(profileSnapshot.val() && profileSnapshot.val().historyClearedAtMs || 0);
+      if (record.updatedAtMs <= clearedAt) return json(200, { success: true, ignored: true });
       await ref.child("profile/lastSeenAtMs").set(now);
       await ref.child("networks/" + fp + "/lastSeenAtMs").set(now);
       await ref.child("networks/" + fp + "/sessions/" + s.id).set(record);
