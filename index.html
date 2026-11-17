@@ -1123,6 +1123,7 @@
     var veeVisitorProfileData = null;
     var veeNamePromptShown = false;
     var veeCloudReady = false;
+    var veeHistoryClearedAtMs = 0;
 
     var veeFirebaseConfig = {
       apiKey: "AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",
@@ -1177,6 +1178,16 @@
         try {
           var profileSnapshot = await veeVisitorProfileRef.once("value");
           veeVisitorProfileData = profileSnapshot.val() || {};
+          veeHistoryClearedAtMs = Number(veeVisitorProfileData.historyClearedAtMs || 0);
+          if (veeHistoryClearedAtMs) {
+            veeSessions = veeSessions.filter(function (session) {
+              var savedAt = Number(session.updatedAtMs || session.createdAtMs || 0);
+              return savedAt > veeHistoryClearedAtMs;
+            });
+            try {
+              localStorage.setItem("vincent_ai_sessions", JSON.stringify(veeSessions.slice(0, 25)));
+            } catch (storageError) {}
+          }
           var profileNow = Date.now();
           var profileCreatedAt = Number(veeVisitorProfileData.createdAtMs || profileNow);
           await veeVisitorProfileRef.update({ createdAtMs: profileCreatedAt, lastSeenAtMs: profileNow });
@@ -1214,7 +1225,8 @@
             messages: Array.isArray(item.messages) ? item.messages : []
           };
         }).filter(function (item) {
-          return item.updatedAtMs >= Date.now() - (30 * 24 * 60 * 60 * 1000);
+          return item.updatedAtMs >= Date.now() - (30 * 24 * 60 * 60 * 1000) &&
+            item.updatedAtMs > veeHistoryClearedAtMs;
         });
 
         var merged = {};
