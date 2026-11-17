@@ -1181,8 +1181,6 @@
         cloudSessions.forEach(function (item) { merged[item.id] = item; });
         veeSessions = Object.keys(merged).map(function (key) { return merged[key]; }).sort(function(a,b){return Number(b.updatedAtMs||0)-Number(a.updatedAtMs||0);}).slice(0,50);
         veeCloudReady = true;
-        var nameInput=document.getElementById("veeVisitorName");
-        if(nameInput) nameInput.value=result.displayName||"";
         if(document.getElementById("historyModal")&&document.getElementById("historyModal").classList.contains("open")) veeRenderHistoryList();
       } catch(error) { console.error("Vee-AI visitor identity initialisation failed:",error); }
     }
@@ -1219,17 +1217,6 @@
       sessions.forEach(function (item) { merged[item.id] = item; });
       veeSessions = Object.keys(merged).map(function (key) { return merged[key]; }).slice(0, 50);
       veeCloudReady = true;
-    }
-
-    async function veeSaveVisitorName() {
-      var input=document.getElementById("veeVisitorName");
-      var status=document.getElementById("veeVisitorNameStatus");
-      var displayName=(input&&input.value||"").trim().slice(0,60);
-      try {
-        await veeEnsureVisitorIdentity();
-        await veeVisitorRequest({action:"update-profile",visitorId:veeCloudUid,visitorToken:veeVisitorToken,displayName:displayName});
-        if(status) status.textContent=displayName?"Name saved.":"Name cleared.";
-      } catch(error) { if(status) status.textContent=error.message||"Unable to save name."; }
     }
 
     veeInitFirebase();
