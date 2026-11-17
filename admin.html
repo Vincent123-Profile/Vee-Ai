@@ -37,7 +37,7 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px;ma
 <div class="panel stat"><small>Network fingerprints</small><strong id="networkCount">0</strong></div>
 <div class="panel stat"><small>Conversations</small><strong id="sessionCount">0</strong></div>
 </div>
-<div class="toolbar"><input id="search" type="search" placeholder="Search visitor ID, network fingerprint or conversation title"><button id="refresh" class="secondary">Refresh</button></div>
+<div class="panel" style="margin-bottom:16px"><strong>Visitor identity</strong><p class="muted" style="margin:7px 0 0">Visitors are anonymous by default. Firebase assigns each visitor a unique ID. A real name appears only after the visitor submits the name prompt. Older visits cannot be identified by name retroactively.</p></div><div class="toolbar"><input id="search" type="search" placeholder="Search visitor ID, name, network fingerprint or conversation title"><button id="refresh" class="secondary">Refresh</button></div>
 <div class="layout">
 <section class="panel list" id="visitorList"><div class="empty">Loading visitors...</div></section>
 <section class="panel detail" id="visitorDetail"><div class="empty">Select a visitor to view profile and conversation history.</div></section>
@@ -97,13 +97,13 @@ function flatten(data){
 function renderList(){
  const q=$("search").value.trim().toLowerCase();
  const rows=flatten(visitorData).filter(v=>(v.uid+" "+(v.profile.name||"")+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q));
- $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+esc(v.profile.name||"Name not provided")+'</strong><small>'+esc(v.uid)+'</small><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
+ $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+esc(v.profile.name||"Anonymous visitor · name not shared")+'</strong><small>'+esc(v.uid)+'</small><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
  $("visitorList").querySelectorAll("[data-uid]").forEach(btn=>btn.addEventListener("click",()=>{selectedUid=btn.dataset.uid;renderList();renderDetail();}));
 }
 function renderDetail(){
  const v=flatten(visitorData).find(x=>x.uid===selectedUid);
  if(!v){$("visitorDetail").innerHTML='<div class="empty">Select a visitor to view details.</div>';return;}
- let html='<h2>Visitor profile</h2><div class="muted">Visitor-provided name · self-reported</div><p><strong>'+esc(v.profile.name||"Not provided") + '</strong></p><div class="muted" style="margin-top:10px">Unique visitor ID</div><p style="overflow-wrap:anywhere"><strong>'+esc(v.uid)+'</strong></p><div class="chips"><span class="chip">Name status: '+(v.profile.name? "Provided":"Not provided")+'</span><span class="chip">First visit: '+esc(date(v.first))+'</span><span class="chip">Last activity: '+esc(date(v.last))+'</span><span class="chip">'+v.sessions.length+' conversations</span></div><h2>Network activity</h2><p class="muted">Fingerprints are privacy-preserving hashes. They are not raw IP addresses.</p>';
+ let html='<h2>Visitor profile</h2><div class="muted">Visitor-provided name · self-reported</div><p><strong>'+esc(v.profile.name||"Anonymous visitor · name not shared") + '</strong></p><div class="muted" style="margin-top:10px">Unique visitor ID</div><p style="overflow-wrap:anywhere"><strong>'+esc(v.uid)+'</strong></p><div class="chips"><span class="chip">Name status: '+(v.profile.name? "Provided":"Anonymous")+'</span><span class="chip">First visit: '+esc(date(v.first))+'</span><span class="chip">Last activity: '+esc(date(v.last))+'</span><span class="chip">'+v.sessions.length+' conversations</span></div><h2>Network activity</h2><p class="muted">Fingerprints are privacy-preserving hashes. They are not raw IP addresses.</p>';
  Object.entries(v.networks).forEach(([fp,n])=>{
   const sessions=Object.values(n.sessions||{});
   const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
