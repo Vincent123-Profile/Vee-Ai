@@ -147,6 +147,35 @@ exports.handler = async event => {
       const snap = await database.ref("googleIndex/" + googleUid).once("value");
       const visitorId = snap.val();
       if (!visitorId) return json(404, { error: "No Vee-AI visitor record is linked to this Google account." });
+
+      if (body.currentVisitorId && body.currentVisitorToken) {
+        let currentId = null;
+        try { currentId = verifyVisitor(body.currentVisitorToken); } catch (_) {}
+        if (currentId && currentId === body.currentVisitorId && currentId !== visitorId) {
+          const currentRef = database.ref("visitors/" + currentId);
+          const targetRef = database.ref("visitors/" + visitorId);
+          const currentSnap = await currentRef.once("value");
+          const currentData = currentSnap.val() || {};
+          const targetSnap = await targetRef.once("value");
+          const targetData = targetSnap.val() || {};
+          const mergedNetworks = Object.assign({}, targetData.networks || {});
+          Object.entries(currentData.networks || {}).forEach(([fingerprint, network]) => {
+            const oldNetwork = mergedNetworks[fingerprint] || {};
+            mergedNetworks[fingerprint] = Object.assign({}, oldNetwork, network || {}, {
+              sessions: Object.assign({}, oldNetwork.sessions || {}, network && network.sessions || {})
+            });
+          });
+          const currentCreated = Number(currentData.profile && currentData.profile.createdAtMs || now);
+          const targetCreated = Number(targetData.profile && targetData.profile.createdAtMs || now);
+          await targetRef.update({
+            networks: mergedNetworks,
+            "profile/createdAtMs": Math.min(currentCreated, targetCreated),
+            "profile/lastSeenAtMs": now,
+            "profile/googleLinked": true
+          });
+          await currentRef.remove();
+        }
+      }
       return json(200, { visitorId, visitorToken: signVisitor(visitorId) });
     }
 
