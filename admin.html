@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0B0B0B">
+<title>Vee - Ai | Private Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{font-family:"Plus Jakarta Sans",Arial,sans-serif;color:#0b0b0b;background:#f7f7f7;--orange:#F14C15}
+*{box-sizing:border-box}body{margin:0}button,input{font:inherit}.wrap{max-width:1200px;margin:auto;padding:24px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px}h1{font-size:24px;margin:0}small,.muted{color:#777}.brand{font-weight:800}.brand span{color:var(--orange)}
+.panel{background:#fff;border:1px solid #e8e8e8;border-radius:18px;padding:20px;box-shadow:0 8px 28px #00000008}
+#login{max-width:420px;margin:9vh auto}label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;background:#fff}button{border:0;border-radius:10px;padding:12px 16px;background:var(--orange);color:#fff;font-weight:700;cursor:pointer}button.secondary{background:#111}button:disabled{opacity:.6}
+#app{display:none}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.stat strong{display:block;font-size:25px;margin-top:6px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.toolbar input{flex:1;min-width:220px}
+.layout{display:grid;grid-template-columns:minmax(250px, .85fr) minmax(0,2fr);gap:16px}.list{max-height:68vh;overflow:auto}.visitor{width:100%;text-align:left;background:#fff;color:#111;border:1px solid #eee;margin-bottom:8px;padding:12px}.visitor.active{border-color:var(--orange);background:#fff5f1}.visitor strong{display:block;overflow-wrap:anywhere}.detail h2{font-size:19px;margin:0 0 8px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.chip{background:#f1f1f1;padding:6px 9px;border-radius:20px;font-size:12px}
+.network{border:1px solid #eee;border-radius:12px;padding:12px;margin:10px 0}.session{border-top:1px solid #eee;padding:14px 0}.message{padding:10px 12px;border-radius:10px;margin:8px 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}.message.user{background:#111;color:white;margin-left:8%}.message.assistant{background:#f2f2f2;margin-right:8%}.empty{color:#777;padding:24px;text-align:center}#status{margin-top:12px;color:#b42318;font-size:13px}
+@media(max-width:760px){.wrap{padding:14px}.layout{grid-template-columns:1fr}.list{max-height:35vh}.stats{grid-template-columns:1fr 1fr}header{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div><div class="brand">Vee <span>- Ai</span></div><small>Private visitor management</small></div><button id="logout" class="secondary" style="display:none">Sign out</button></header>
+<section id="login" class="panel">
+<h1>Admin sign in</h1><p class="muted">Sign in with your authorised administrator account.</p>
+<form id="loginForm">
+<label for="email">Email</label><input id="email" type="email" autocomplete="username" value="agboolavincent67@icloud.com" required>
+<label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
+<br><br><button id="loginButton" type="submit">Sign in</button>
+</form><div id="status" role="status"></div>
+</section>
+<main id="app">
+<div class="stats">
+<div class="panel stat"><small>Visitors</small><strong id="visitorCount">0</strong></div>
+<div class="panel stat"><small>Network fingerprints</small><strong id="networkCount">0</strong></div>
+<div class="panel stat"><small>Conversations</small><strong id="sessionCount">0</strong></div>
+</div>
+<div class="toolbar"><input id="search" type="search" placeholder="Search visitor ID, network fingerprint or conversation title"><button id="refresh" class="secondary">Refresh</button></div>
+<div class="layout">
+<section class="panel list" id="visitorList"><div class="empty">Loading visitors...</div></section>
+<section class="panel detail" id="visitorDetail"><div class="empty">Select a visitor to view profile and conversation history.</div></section>
+</div>
+</main>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script>
+const ADMIN_EMAIL = "agboolavincent67@icloud.com";
+const firebaseConfig = {
+ apiKey:"AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",
+ authDomain:"vee-ai-e745e.firebaseapp.com",
+ databaseURL:"https://vee-ai-e745e-default-rtdb.firebaseio.com",
+ projectId:"vee-ai-e745e",
+ storageBucket:"vee-ai-e745e.firebasestorage.app",
+ messagingSenderId:"351206567728",
+ appId:"1:351206567728:web:10a197b7c9752daf12e2f5"
+};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(), db=firebase.database();
+const $=id=>document.getElementById(id);
+let visitorData={}, selectedUid=null;
+const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const date=value=>value?new Date(Number(value)).toLocaleString():"Unknown";
+function status(message){$("status").textContent=message||""}
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();status("");$("loginButton").disabled=true;
+ try{
+  const email=$("email").value.trim().toLowerCase();
+  if(email!==ADMIN_EMAIL){throw new Error("This account is not authorised for admin access.");}
+  await auth.signInWithEmailAndPassword(email,$("password").value);
+ }catch(err){status(err.message||"Sign-in failed.");}
+ finally{$("loginButton").disabled=false;}
+});
+$("logout").addEventListener("click",()=>auth.signOut());
+auth.onAuthStateChanged(async user=>{
+ if(!user){$("login").style.display="block";$("app").style.display="none";$("logout").style.display="none";return;}
+ if((user.email||"").toLowerCase()!==ADMIN_EMAIL){await auth.signOut();status("This account is not authorised.");return;}
+ $("login").style.display="none";$("app").style.display="block";$("logout").style.display="inline-block";await loadVisitors();
+});
+function flatten(data){
+ const rows=[];
+ Object.entries(data||{}).forEach(([uid,profile])=>{
+  const networks=profile&&profile.networks||{};
+  const sessions=[];
+  Object.entries(networks).forEach(([fingerprint,network])=>{
+   Object.entries(network&&network.sessions||{}).forEach(([sid,s])=>sessions.push({...s,id:s&&s.id||sid,fingerprint})); 
+  });
+  const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
+  rows.push({uid,networks,sessions,first:times.length?Math.min(...times):0,last:times.length?Math.max(...times):0});
+ });
+ return rows.sort((a,b)=>b.last-a.last);
+}
+function renderList(){
+ const q=$("search").value.trim().toLowerCase();
+ const rows=flatten(visitorData).filter(v=>(v.uid+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q));
+ $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+esc(v.uid)+'</strong><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
+ $("visitorList").querySelectorAll("[data-uid]").forEach(btn=>btn.addEventListener("click",()=>{selectedUid=btn.dataset.uid;renderList();renderDetail();}));
+}
+function renderDetail(){
+ const v=flatten(visitorData).find(x=>x.uid===selectedUid);
+ if(!v){$("visitorDetail").innerHTML='<div class="empty">Select a visitor to view details.</div>';return;}
+ let html='<h2>Visitor profile</h2><div class="muted">Unique visitor ID</div><p style="overflow-wrap:anywhere"><strong>'+esc(v.uid)+'</strong></p><div class="chips"><span class="chip">First visit: '+esc(date(v.first))+'</span><span class="chip">Last activity: '+esc(date(v.last))+'</span><span class="chip">'+v.sessions.length+' conversations</span></div><h2>Network activity</h2><p class="muted">Fingerprints are privacy-preserving hashes. They are not raw IP addresses.</p>';
+ Object.entries(v.networks).forEach(([fp,n])=>{
+  const sessions=Object.values(n.sessions||{});
+  const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
+  html+='<div class="network"><strong>Fingerprint</strong><p style="overflow-wrap:anywhere">'+esc(fp)+'</p><small>'+sessions.length+' conversations · First seen '+esc(date(times.length?Math.min(...times):0))+' · Last seen '+esc(date(times.length?Math.max(...times):0))+'</small></div>';
+ });
+ html+='<h2 style="margin-top:20px">Conversation history</h2>';
+ v.sessions.sort((a,b)=>Number(b.updatedAtMs||0)-Number(a.updatedAtMs||0)).forEach(s=>{
+  html+='<article class="session"><strong>'+esc(s.title||"Untitled conversation")+'</strong><p class="muted">Started '+esc(date(s.createdAtMs))+' · Updated '+esc(date(s.updatedAtMs))+' · Network '+esc(s.fingerprint)+'</p>';
+  (Array.isArray(s.messages)?s.messages:[]).forEach(m=>{html+='<div class="message '+(m.role==="user"?"user":"assistant")+'"><strong>'+esc(m.role==="user"?"Visitor":"Vee - Ai")+'</strong><br>'+esc(m.content||"")+'</div>';});
+  html+='</article>';
+ });
+ $("visitorDetail").innerHTML=html;
+}
+async function loadVisitors(){
+ $("visitorList").innerHTML='<div class="empty">Loading visitor records...</div>';
+ try{
+  const snap=await db.ref("visitors").once("value");visitorData=snap.val()||{};
+  const rows=flatten(visitorData);
+  $("visitorCount").textContent=rows.length;
+  $("networkCount").textContent=rows.reduce((n,v)=>n+Object.keys(v.networks).length,0);
+  $("sessionCount").textContent=rows.reduce((n,v)=>n+v.sessions.length,0);
+  if(!selectedUid&&rows.length)selectedUid=rows[0].uid;
+  renderList();renderDetail();
+ }catch(err){$("visitorList").innerHTML='<div class="empty">Unable to load records. Check admin access and database rules.</div>';console.error(err);}
+}
+$("search").addEventListener("input",renderList);
+$("refresh").addEventListener("click",loadVisitors);
+</script>
+</body>
+</html>
