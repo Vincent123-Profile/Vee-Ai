@@ -353,6 +353,53 @@ exports.handler = async function (event) {
     };
   }
 
+  let requestBody = {};
+  try {
+    requestBody = JSON.parse(event.body || "{}");
+  } catch (error) {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Invalid JSON body." }),
+    };
+  }
+
+  if (requestBody.action === "visitor-network") {
+    const crypto = require("crypto");
+    const secret = (process.env.IP_HASH_SECRET || "").trim();
+    if (!secret) {
+      return {
+        statusCode: 503,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Visitor network fingerprint is not configured." }),
+      };
+    }
+
+    const headers = event.headers || {};
+    const rawIp = headers["x-nf-client-connection-ip"] || headers["X-Nf-Client-Connection-Ip"] || "";
+    if (!rawIp) {
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fingerprint: "network_unknown" }),
+      };
+    }
+
+    const fingerprint = crypto.createHmac("sha256", secret)
+      .update(String(rawIp).trim())
+      .digest("hex")
+      .slice(0, 32);
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+      body: JSON.stringify({ fingerprint }),
+    };
+  }
+
   const apiKey = (process.env.GROQ_API_KEY || "").trim();
   if (!apiKey) {
     return {
@@ -365,7 +412,7 @@ exports.handler = async function (event) {
   }
 
   try {
-    const { message, history = [] } = JSON.parse(event.body || "{}");
+    const { message, history = [] } = requestBody;
     const messages = [
       { role: "system", content: SYSTEM_PROMPT },
       ...history,
