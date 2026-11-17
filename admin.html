@@ -22,7 +22,7 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px;ma
 </head>
 <body>
 <div class="wrap">
-<header><div><div class="brand">Vee <span>- Ai</span></div><small>Private visitor management</small></div><button id="logout" class="secondary" style="display:none">Sign out</button></header>
+<header><div><div class="brand">Vee<span>-AI</span></div><small>Private visitor management</small></div><button id="logout" class="secondary" style="display:none">Sign out</button></header>
 <section id="login" class="panel">
 <h1>Admin sign in</h1><p class="muted">Sign in with your authorised administrator account.</p>
 <form id="loginForm">
@@ -36,6 +36,7 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px;ma
 <div class="panel stat"><small>Visitors</small><strong id="visitorCount">0</strong></div>
 <div class="panel stat"><small>Network fingerprints</small><strong id="networkCount">0</strong></div>
 <div class="panel stat"><small>Conversations</small><strong id="sessionCount">0</strong></div>
+<div class="panel stat"><small>Google-linked visitors</small><strong id="googleCount">0</strong></div>
 </div>
 <div class="toolbar"><input id="search" type="search" placeholder="Search visitor ID, network fingerprint or conversation title"><button id="refresh" class="secondary">Refresh</button></div>
 <div class="layout">
@@ -147,6 +148,7 @@ async function loadVisitors(){
   $("visitorCount").textContent=rows.length;
   $("networkCount").textContent=rows.reduce((n,v)=>n+Object.keys(v.networks).length,0);
   $("sessionCount").textContent=rows.reduce((n,v)=>n+v.sessions.length,0);
+  $("googleCount").textContent=rows.reduce((n,v)=>n+(v.profile.googleLinked?1:0),0);
   if(!selectedUid&&rows.length)selectedUid=rows[0].uid;
   renderList();renderDetail();
  }catch(err){$("visitorList").innerHTML='<div class="empty">Unable to load records. Check admin access and database rules.</div>';console.error(err);}
