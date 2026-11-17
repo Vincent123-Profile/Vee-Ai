@@ -1132,8 +1132,9 @@
       try {
         localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions.slice(0, 25)));
       } catch (e) {}
-      if (veeCloudReady) {
-        veeSessions.forEach(function (session) { veePersistSessionToCloud(session); });
+      if (veeCloudReady && veeCurrentSessionId) {
+        var activeSession = veeSessions.find(function (session) { return session.id === veeCurrentSessionId; });
+        if (activeSession) veePersistSessionToCloud(activeSession);
       }
     }
 
@@ -1210,7 +1211,6 @@
           .sort(function (a, b) { return Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0); })
           .slice(0, 50);
         veeCloudReady = true;
-        veeSaveSessions();
         if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
           veeRenderHistoryList();
         }
