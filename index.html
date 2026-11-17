@@ -1257,7 +1257,12 @@
         var result = await veeFirebaseAuth.signInWithPopup(provider);
         var idToken = await result.user.getIdToken(true);
         try {
-          var recovered = await veeVisitorRequest({ action: "recover-google", googleIdToken: idToken });
+          var recovered = await veeVisitorRequest({
+            action: "recover-google",
+            googleIdToken: idToken,
+            currentVisitorId: veeCloudUid || localStorage.getItem("vee_ai_visitor_id") || "",
+            currentVisitorToken: veeVisitorToken || localStorage.getItem("vee_ai_visitor_token") || ""
+          });
           veeCloudUid = recovered.visitorId;
           veeVisitorToken = recovered.visitorToken;
           localStorage.setItem("vee_ai_visitor_id", veeCloudUid);
