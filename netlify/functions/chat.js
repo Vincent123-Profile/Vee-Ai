@@ -336,7 +336,7 @@ async function pickAvailableModel(apiKey) {
         !id.includes("orpheus")
     );
 
-  const preferred = ["llama-4", "llama-3", "gpt-oss", "qwen", "gemma"];
+  const preferred = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.8-27b", "minimaxai/minimax-m2.7", "meta-models/muse-spark-open"];
   for (const prefix of preferred) {
     const match = chatModels.find((id) => id.toLowerCase().includes(prefix));
     if (match) return match;
@@ -419,9 +419,9 @@ exports.handler = async function (event) {
       { role: "user", content: message },
     ];
 
-    let { response, data } = await requestCompletion(apiKey, "llama-3.1-8b-instant", messages);
+    let { response, data } = await requestCompletion(apiKey, "openai/gpt-oss-20b", messages);
 
-    if (response.status === 404) {
+    if ([400, 404, 422].includes(response.status)) {
       const detectedModel = await pickAvailableModel(apiKey);
       if (detectedModel) {
         ({ response, data } = await requestCompletion(apiKey, detectedModel, messages));
@@ -429,6 +429,7 @@ exports.handler = async function (event) {
     }
 
     if (!response.ok) {
+      console.error("Vee-AI chat provider error:", response.status, data?.error?.message || data);
       return {
         statusCode: 200,
         headers: { "Content-Type": "application/json" },
@@ -446,6 +447,7 @@ exports.handler = async function (event) {
       body: JSON.stringify({ reply }),
     };
   } catch (error) {
+    console.error("Vee-AI chat function error:", error);
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
