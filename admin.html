@@ -394,7 +394,7 @@ async function adminDeleteUserRecord(action){
 function loadAdminUsers(){
  if(adminUsersRef&&adminUsersListener)adminUsersRef.off('value',adminUsersListener);
  adminUsersRef=db.ref('users');
- adminUsersListener=adminUsersRef.on('value',snap=>{adminUsersData=snap.val()||{};const list=adminUserList();if(!adminUsersData[selectedAdminUid])selectedAdminUid=list.length?list[0].uid:null;renderAdminUserList();renderAdminUserDetail();},err=>{$('adminUserList').innerHTML='<div class="empty">Could not read account data. Publish the updated Firebase rules, then refresh.</div>';console.error(err);});
+ adminUsersListener=adminUsersRef.on('value',snap=>{adminUsersData=snap.val()||{};const list=adminUserList();if(!adminUsersData[selectedAdminUid])selectedAdminUid=list.length?list[0].uid:null;renderAdminUserList();renderAdminUserDetail();if(visitorData){renderList();renderDetail();}},err=>{$('adminUserList').innerHTML='<div class="empty">Could not read account data. Publish the updated Firebase rules, then refresh.</div>';console.error(err);});
 }
 $('userSearch').addEventListener('input',renderAdminUserList);
 $('exportUserData').addEventListener('click',()=>{const data=adminUsersData[selectedAdminUid];if(!data)return;const blob=new Blob([JSON.stringify({uid:selectedAdminUid,data},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='vee-ai-account-'+selectedAdminUid+'.json';link.click();URL.revokeObjectURL(url);});
