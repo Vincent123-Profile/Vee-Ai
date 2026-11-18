@@ -938,7 +938,7 @@
     .home-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:15px}.home-stat{padding:16px;border:1px solid var(--glass-border);border-radius:18px;background:var(--glass-surface)}
     .home-stat strong{display:block;font-size:23px;font-weight:800;letter-spacing:-.03em}.home-stat span{display:block;margin-top:4px;color:var(--text-secondary);font-size:11.5px}
     .home-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:26px 2px 12px}.home-section-head h2{font-size:15px;font-weight:800}.home-section-head span{font-size:11px;color:var(--text-muted)}
-    .home-feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.home-feature{min-height:116px;padding:15px;border:1px solid var(--glass-border);border-radius:18px;background:var(--glass-surface)}
+    .memory-card{padding:12px 14px;border:1px solid var(--glass-border);border-radius:14px;background:var(--glass-surface);margin:8px 0}.memory-card strong{display:block;font-size:12px}.memory-card p{font-size:12px;color:var(--text-secondary);line-height:1.5;margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere}.memory-delete{margin-top:8px;border:0;background:transparent;color:var(--orange);font:700 11px inherit;cursor:pointer}.memory-form{display:flex;flex-direction:column;gap:9px;margin-top:12px}.memory-form input,.memory-form textarea,.memory-form select{width:100%;padding:11px 12px;border:1px solid var(--glass-border);border-radius:12px;background:var(--glass-surface);color:var(--text-primary);font:inherit;font-size:13px}.memory-form textarea{min-height:82px;resize:vertical}.memory-toggle{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text-secondary);margin:10px 0}.home-feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.home-feature{min-height:116px;padding:15px;border:1px solid var(--glass-border);border-radius:18px;background:var(--glass-surface)}
     .home-feature-icon{width:31px;height:31px;display:grid;place-items:center;border-radius:10px;background:var(--orange-soft);color:var(--orange);font-size:15px;font-weight:800;margin-bottom:12px}
     .home-feature h3{font-size:12.5px;font-weight:800;margin-bottom:4px}.home-feature p{font-size:10.5px;line-height:1.45;color:var(--text-secondary)}.home-feature em{display:inline-block;margin-top:8px;color:var(--orange);font-size:9px;font-style:normal;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
     .home-recent{display:flex;flex-direction:column;gap:8px}.home-recent-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--glass-border);border-radius:14px;background:var(--glass-surface);cursor:pointer;text-align:left;color:var(--text-primary);font:inherit}
@@ -1042,7 +1042,7 @@
           <div class="home-section-head"><h2>Your workspace</h2><span>Features being built</span></div>
           <div class="home-feature-grid">
             <article class="home-feature"><div class="home-feature-icon">⌕</div><h3>Explore</h3><p>Research, learn and explore useful topics.</p><em>In development</em></article>
-            <article class="home-feature"><div class="home-feature-icon">◎</div><h3>My Memory</h3><p>Save details with your permission.</p><em>In development</em></article>
+            <article class="home-feature" role="button" tabindex="0" onclick="veeOpenMemory()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenMemory()}"><div class="home-feature-icon">◎</div><h3>My Memory</h3><p>Save details and choose what Vee-AI uses in future chats.</p><em id="memoryFeatureStatus">Open memory</em></article>
             <article class="home-feature"><div class="home-feature-icon">▦</div><h3>Planner</h3><p>Organise tasks, reminders and plans.</p><em>In development</em></article>
             <article class="home-feature"><div class="home-feature-icon">₦</div><h3>Finance</h3><p>Track budgets, spending and goals.</p><em>In development</em></article>
             <article class="home-feature"><div class="home-feature-icon">✎</div><h3>Content Studio</h3><p>Plan and create content with AI.</p><em>In development</em></article>
@@ -1155,6 +1155,23 @@
       <button type="button" class="account-secondary" id="accountTransferBtn" style="width:100%;display:none" onclick="veeTransferGuestHistory()">Transfer conversations to this account</button>
       <button type="button" class="account-secondary" id="accountSignOut" style="width:100%;display:none" onclick="veeSignOutAccount()">Sign out</button>
       <p class="account-copy" style="margin-top:4px">Guest conversations stay in this browser. Transfer makes a verified cloud copy and does not delete your original history.</p>
+    </div>
+  </div>
+
+  <!-- Personal Memory -->
+  <div class="modal-backdrop" id="memoryModal" onclick="if(event.target===this) veeCloseModal('memoryModal')">
+    <div class="modal-panel glass-chrome">
+      <div class="modal-head"><h2>My Memory</h2><button type="button" class="icon-btn" onclick="veeCloseModal('memoryModal')">✕</button></div>
+      <p class="account-copy">Save information you want Vee-AI to remember. Nothing is saved until you submit this form. Your memories belong to your account.</p>
+      <label class="memory-toggle"><input id="memoryUseToggle" type="checkbox" checked onchange="veeSetMemoryUse(this.checked)"> Allow Vee-AI to use saved memories in future chats</label>
+      <div id="memoryList" aria-live="polite"><div class="home-empty">Loading your memories...</div></div>
+      <form class="memory-form" id="memoryForm" onsubmit="veeSaveMemory(event)">
+        <select id="memoryCategory"><option>Personal</option><option>Preferences</option><option>Work</option><option>Goals</option><option>Projects</option><option>Other</option></select>
+        <input id="memoryTitle" maxlength="80" placeholder="Short title, e.g. Preferred language" required>
+        <textarea id="memoryContent" maxlength="600" placeholder="What should Vee-AI remember?" required></textarea>
+        <button class="send-btn" type="submit">Save this memory</button>
+      </form>
+      <p class="account-copy" id="memoryStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
 
@@ -1405,6 +1422,10 @@
     var veeAccountTransferComplete = false;
     var veeAccountKnownSessionIds = {};
     var veeAccountGuestSessionIds = {};
+    var veeMemories = [];
+    var veeMemoryUseEnabled = true;
+    try { veeMemories = JSON.parse(localStorage.getItem("vee_ai_guest_memories_v1") || "[]"); } catch (e) { veeMemories = []; }
+    try { veeMemoryUseEnabled = localStorage.getItem("vee_ai_memory_use") !== "false"; } catch (e) {}
 
     function veeAccountSessionData(session) {
       return {
@@ -1425,6 +1446,12 @@
       if (!user || !user.emailVerified || !veeFirebaseApp) return;
       veeAccountSyncReady = false;
       veeAccountDb = firebase.database(veeFirebaseApp);
+      var memorySnapshot = await veeAccountDb.ref("users/" + user.uid + "/memories").once("value");
+      var memoryData = memorySnapshot.val() || {};
+      veeMemories = Object.keys(memoryData).map(function(id) {
+        var item = memoryData[id];
+        return item && typeof item === "object" ? { id:id, category:String(item.category || "Other"), title:String(item.title || ""), content:String(item.content || ""), createdAtMs:Number(item.createdAtMs || Date.now()) } : null;
+      }).filter(Boolean).slice(0,50);
       var snapshot = await veeAccountDb.ref("users/" + user.uid + "/sessions").once("value");
       var accountData = snapshot.val() || {};
       veeAccountKnownSessionIds = {};
@@ -1452,6 +1479,7 @@
         .slice(0, 50);
       try { localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions)); } catch (e) {}
       veeAccountSyncReady = true;
+      veeRenderMemory();
       veeRenderHome();
       veeRenderHistoryList();
       var transfer = document.getElementById("accountTransferBtn");
@@ -1642,6 +1670,75 @@
       } catch (error) {
         document.getElementById("accountMessage").textContent = "Sign out failed. Please try again.";
       }
+    }
+
+    function veeRenderMemory() {
+      var list = document.getElementById("memoryList");
+      var toggle = document.getElementById("memoryUseToggle");
+      var status = document.getElementById("memoryFeatureStatus");
+      if (toggle) toggle.checked = veeMemoryUseEnabled;
+      if (status) status.textContent = veeMemories.length + " saved";
+      if (!list) return;
+      if (!veeMemories.length) {
+        list.innerHTML = '<div class="home-empty">No saved memories yet. Add one below when you are ready.</div>';
+        return;
+      }
+      list.innerHTML = veeMemories.map(function(item) {
+        return '<div class="memory-card"><strong>' + veeEscapeHtml(item.title) + '</strong><small>' + veeEscapeHtml(item.category) + '</small><p>' + veeEscapeHtml(item.content) + '</p><button type="button" class="memory-delete" onclick="veeDeleteMemory(\'' + veeEscapeHtml(item.id) + '\')">Delete memory</button></div>';
+      }).join("");
+    }
+    function veeSetMemoryUse(enabled) {
+      veeMemoryUseEnabled = !!enabled;
+      try { localStorage.setItem("vee_ai_memory_use", String(veeMemoryUseEnabled)); } catch (e) {}
+      var status = document.getElementById("memoryStatus");
+      if (status) status.textContent = veeMemoryUseEnabled ? "Saved memories will be included in future chats." : "Saved memories will not be included in future chats.";
+    }
+    async function veeSaveMemory(event) {
+      event.preventDefault();
+      if (!veeCurrentUser || !veeCurrentUser.emailVerified || !veeAccountDb || !veeAccountSyncReady) {
+        document.getElementById("memoryStatus").textContent = "Sign in with your verified account before saving cloud memories.";
+        return;
+      }
+      var title = document.getElementById("memoryTitle").value.trim();
+      var content = document.getElementById("memoryContent").value.trim();
+      var category = document.getElementById("memoryCategory").value;
+      if (!title || !content || title.length > 80 || content.length > 600) return;
+      var id = "mem_" + Date.now() + "_" + Math.random().toString(36).slice(2,8);
+      var item = { id:id, category:category, title:title, content:content, createdAtMs:Date.now() };
+      try {
+        await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/memories/" + id).set({ category:category, title:title, content:content, createdAtMs:item.createdAtMs });
+        veeMemories.unshift(item);
+        veeMemories = veeMemories.slice(0,50);
+        document.getElementById("memoryForm").reset();
+        veeRenderMemory();
+        document.getElementById("memoryStatus").textContent = "Memory saved to your account.";
+      } catch (error) {
+        document.getElementById("memoryStatus").textContent = "Memory could not be saved. Please try again.";
+      }
+    }
+    async function veeDeleteMemory(id) {
+      if (!veeCurrentUser || !veeAccountDb || !confirm("Delete this saved memory?")) return;
+      try {
+        await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/memories/" + id).remove();
+        veeMemories = veeMemories.filter(function(item){return item.id !== id;});
+        veeRenderMemory();
+        document.getElementById("memoryStatus").textContent = "Memory deleted.";
+      } catch (error) {
+        document.getElementById("memoryStatus").textContent = "Memory could not be deleted. Please try again.";
+      }
+    }
+    function veeOpenMemory() {
+      if (!veeCurrentUser || !veeCurrentUser.emailVerified) {
+        alert("Sign in with your verified account to use cloud memory.");
+        veeOpenAccount();
+        return;
+      }
+      if (!veeAccountSyncReady) {
+        alert("Your account is still loading. Please try again in a moment.");
+        return;
+      }
+      veeRenderMemory();
+      veeOpenModal("memoryModal");
     }
 
     function veeOpenAccount() {
@@ -2012,7 +2109,13 @@
         var res = await fetch("/.netlify/functions/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: message, history: contextHistory })
+          body: JSON.stringify({
+            message: message,
+            history: contextHistory,
+            memory: veeMemoryUseEnabled ? veeMemories.slice(0, 20).map(function(item) {
+              return { title:item.title, content:item.content, category:item.category };
+            }) : []
+          })
         });
         var data = await res.json().catch(function () { return {}; });
         if (!res.ok) throw new Error(data.error || "Vee-AI could not complete the response.");
