@@ -383,6 +383,9 @@ exports.handler = async function (event) {
   } catch (_) {
     return jsonResponse(400, { error: "Invalid JSON body." });
   }
+  if (!requestBody || typeof requestBody !== "object" || Array.isArray(requestBody)) {
+    return jsonResponse(400, { error: "Request body must be a JSON object." });
+  }
 
   if (requestBody.action === "visitor-network") {
     const secret = (process.env.IP_HASH_SECRET || "").trim();
