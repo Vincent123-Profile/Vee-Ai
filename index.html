@@ -1534,6 +1534,7 @@
       <div class="modal-head"><h2 id="accountTitle">Your Vee-AI account</h2><button type="button" class="icon-btn" onclick="veeCloseModal('accountModal')">✕</button></div>
       <p class="account-copy" id="accountDescription">Create an account to prepare for secure access across your devices. Guest access and current conversations stay available.</p>
       <form class="account-form" id="accountForm" onsubmit="veeSubmitAccount(event)">
+        <input id="accountFirstName" type="text" autocomplete="given-name" placeholder="First name" maxlength="40" required>
         <input id="accountEmail" type="email" autocomplete="email" placeholder="Email address" required>
         <input id="accountPassword" type="password" autocomplete="current-password" placeholder="Password, at least 6 characters" minlength="6" required>
         <div class="account-message" id="accountMessage" role="status" aria-live="polite"></div>
@@ -1878,6 +1879,7 @@
     var veeFirebaseAuth = null;
     var veeAccountMode = "signup";
     var veeCurrentUser = null;
+    var veeUserFirstName = "";
     var veeAccountDb = null;
     var veeAccountSyncReady = false;
     var veeAccountSyncPromise = null;
@@ -2063,6 +2065,7 @@
           if (signOut) signOut.style.display = user ? "block" : "none";
           if (form) form.style.display = user ? "none" : "flex";
           if (!user) {
+            veeUserFirstName = "";
             veeAccountSyncReady = false;
             veeAccountSyncPromise = null;
             veeAccountDb = null;
@@ -2073,6 +2076,9 @@
             var transferButton = document.getElementById("accountTransferBtn");
             if (transferButton) transferButton.style.display = "none";
           } else if (user.emailVerified) {
+            veePersistSignedInProfile(user, (document.getElementById("accountFirstName") && document.getElementById("accountFirstName").value) || "").catch(function(error) {
+              console.error("Vee-AI profile sync failed:", error);
+            });
             veeAccountGuestSessionIds = {};
             veeSessions.forEach(function(session) { if (session && session.id) veeAccountGuestSessionIds[session.id] = true; });
             veeAccountSyncPromise = veeLoadAccountSessions(user).catch(function(error) {
@@ -2099,6 +2105,11 @@
       document.getElementById("accountSubmit").textContent = signup ? "Create account" : "Sign in";
       document.getElementById("accountModeToggle").textContent = signup ? "I already have an account" : "Create a new account";
       document.getElementById("accountPassword").autocomplete = signup ? "new-password" : "current-password";
+      var firstNameInput = document.getElementById("accountFirstName");
+      if (firstNameInput) {
+        firstNameInput.required = signup;
+        firstNameInput.placeholder = signup ? "Your first name" : "First name (optional if already saved)";
+      }
       document.getElementById("accountMessage").textContent = "";
     }
 
@@ -2106,6 +2117,7 @@
       event.preventDefault();
       var email = document.getElementById("accountEmail").value.trim();
       var password = document.getElementById("accountPassword").value;
+      var suppliedFirstName = (document.getElementById("accountFirstName").value || "").trim().replace(/\\s+/g, " ").slice(0, 40);
       var message = document.getElementById("accountMessage");
       var submit = document.getElementById("accountSubmit");
       if (!veeFirebaseAuth) { message.textContent = "Account service is unavailable. Please refresh and try again."; return; }
@@ -2114,7 +2126,9 @@
       message.textContent = "";
       try {
         if (veeAccountMode === "signup") {
+          if (!suppliedFirstName) throw new Error("Enter your first name to create your Vee-AI account.");
           var credential = await veeFirebaseAuth.createUserWithEmailAndPassword(email, password);
+          await credential.user.updateProfile({ displayName: suppliedFirstName });
           await credential.user.sendEmailVerification();
           await veeFirebaseAuth.signOut();
           message.dataset.authNotice = "true";
@@ -2127,8 +2141,9 @@
             message.dataset.authNotice = "true";
             message.textContent = "Your email is not verified. We sent a new verification link. Verify your email, then sign in.";
           } else {
+            await veePersistSignedInProfile(login.user, suppliedFirstName);
             message.dataset.authNotice = "true";
-            message.textContent = "Login successful.";
+            message.textContent = "Login successful. Welcome, " + veeUserFirstName + ".";
           }
         }
       } catch (error) {
@@ -2146,6 +2161,30 @@
         submit.disabled = false;
         submit.textContent = veeAccountMode === "signup" ? "Create account" : "Sign in";
       }
+    }
+
+    async function veePersistSignedInProfile(user, suppliedName) {
+      if (!user || !user.uid || !user.emailVerified) return "";
+      var database = firebase.database(veeFirebaseApp || undefined);
+      var profileRef = database.ref("users/" + user.uid + "/profile");
+      var snapshot = await profileRef.once("value");
+      var saved = snapshot.val() || {};
+      var firstName = String(suppliedName || saved.firstName || user.displayName || (user.email || "").split("@")[0] || "there").trim().replace(/\\s+/g, " ").slice(0, 40);
+      if (!firstName) firstName = "there";
+      var visitorIds = saved.visitorIds && typeof saved.visitorIds === "object" ? saved.visitorIds : {};
+      if (veeCloudUid) visitorIds[veeCloudUid] = true;
+      var update = {
+        firstName: firstName,
+        displayName: firstName,
+        email: user.email || "",
+        lastSeenAtMs: Date.now(),
+        visitorIds: visitorIds
+      };
+      await profileRef.update(update);
+      veeUserFirstName = firstName;
+      if (user.displayName !== firstName) await user.updateProfile({ displayName: firstName }).catch(function(){});
+      veeRenderHome();
+      return firstName;
     }
 
     async function veeResetAccountPassword() {
@@ -2546,7 +2585,8 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       var greeting = document.getElementById("homeGreeting");
       var hour = new Date().getHours();
       var greetingText = hour >= 5 && hour < 12 ? "Good morning" : hour >= 12 && hour < 17 ? "Good afternoon" : hour >= 17 && hour < 21 ? "Good evening" : "Good night";
-      if (greeting) greeting.textContent = greetingText + ", welcome to Vee-AI."
+      var firstName = veeUserFirstName || (veeCurrentUser && veeCurrentUser.displayName ? veeCurrentUser.displayName.split(/\\s+/)[0] : "");
+      if (greeting) greeting.textContent = greetingText + (firstName ? ", " + firstName : "") + ", welcome to Vee-AI.";
       var conversations = document.getElementById("homeConversationCount");
       var messages = document.getElementById("homeMessageCount");
       var recentCount = document.getElementById("homeRecentCount");
