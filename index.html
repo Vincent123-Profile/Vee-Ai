@@ -1312,6 +1312,16 @@
         veeSessions = Object.keys(merged).map(function (key) { return merged[key]; })
           .sort(function (a, b) { return Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0); })
           .slice(0, 50);
+        if (veeCurrentUser && !veeAccountTransferComplete) {
+          veeSessions.forEach(function(session) {
+            if (session && session.id) veeAccountGuestSessionIds[session.id] = true;
+          });
+        }
+        var transferButton = document.getElementById("accountTransferBtn");
+        if (transferButton && veeCurrentUser && !veeAccountTransferComplete) {
+          transferButton.style.display = veeSessions.length ? "block" : "none";
+          transferButton.textContent = "Transfer " + veeSessions.length + " conversations to this account";
+        }
         veeCloudReady = true;
         try { localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions.slice(0, 25))); } catch (e) {}
         if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
