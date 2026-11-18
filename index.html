@@ -1330,6 +1330,16 @@
       }
     }
 
+  
+    /* Explore specialist workspace */
+    .explore-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+    .explore-card{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;padding:17px;border:1px solid var(--glass-border);border-radius:16px;background:var(--glass-surface);color:var(--text-primary);cursor:pointer;min-height:138px;transition:transform .2s,border-color .2s,box-shadow .2s}
+    .explore-card:hover{transform:translateY(-2px);border-color:var(--orange);box-shadow:0 8px 24px rgba(241,76,21,.09)}
+    .explore-card-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--orange-soft);color:var(--orange);font-size:19px;font-weight:800}
+    .explore-card strong{font-size:14px}.explore-card span:last-child{font-size:12px;line-height:1.5;color:var(--text-secondary)}
+    .explore-intro{font-size:13px;line-height:1.6;color:var(--text-secondary)}
+    @media(max-width:480px){.explore-grid{grid-template-columns:1fr;gap:9px}.explore-card{min-height:0;padding:14px}.explore-card span:last-child{font-size:12px}}
+
   </style>
 </head>
 <body>
@@ -1406,7 +1416,7 @@
           </div>
           <div class="home-section-head"><h2>Your workspace</h2><span>Features being built</span></div>
           <div class="home-feature-grid">
-            <article class="home-feature"><div class="home-feature-icon">⌕</div><h3>Explore</h3><p>Research, learn and explore useful topics.</p><em>In development</em></article>
+            <article class="home-feature" role="button" tabindex="0" onclick="veeOpenExplore()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenExplore()}"><div class="home-feature-icon">⌕</div><h3>Explore</h3><p>Meet specialist assistants for focused help across everyday life.</p><em>Open Explore</em></article>
             <article class="home-feature" role="button" tabindex="0" onclick="veeOpenMemory()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenMemory()}"><div class="home-feature-icon">◎</div><h3>My Memory</h3><p>Save details and choose what Vee-AI uses in future chats.</p><em id="memoryFeatureStatus">Open memory</em></article>
             <article class="home-feature planner-feature" role="button" tabindex="0" onclick="veeOpenPlanner()" onkeydown="veePlannerKey(event)"><div class="home-feature-icon">▦</div><h3>Planner</h3><p>Organise tasks, due dates and daily plans.</p><em id="plannerFeatureStatus">Open planner</em></article>
             <article class="home-feature"><div class="home-feature-icon">₦</div><h3>Finance</h3><p>Track budgets, spending and goals.</p><em>In development</em></article>
@@ -1520,6 +1530,25 @@
       <button type="button" class="account-secondary" id="accountTransferBtn" style="width:100%;display:none" onclick="veeTransferGuestHistory()">Transfer conversations to this account</button>
       <button type="button" class="account-secondary" id="accountSignOut" style="width:100%;display:none" onclick="veeSignOutAccount()">Sign out</button>
       <p class="account-copy" style="margin-top:4px">Guest conversations stay in this browser. Transfer makes a verified cloud copy and does not delete your original history.</p>
+    </div>
+  </div>
+
+
+  <!-- Explore Specialist Assistants -->
+  <div class="modal-backdrop" id="exploreModal" onclick="if(event.target===this) veeCloseModal('exploreModal')">
+    <div class="modal-panel glass-chrome" style="max-width:760px;width:min(760px,calc(100% - 28px));max-height:88vh;overflow-y:auto">
+      <div class="modal-head"><h2>Explore Vee-AI</h2><button type="button" class="icon-btn" onclick="veeCloseModal('exploreModal')" aria-label="Close Explore">✕</button></div>
+      <p class="explore-intro">Choose a specialist workspace. Vee-AI will guide the conversation with a focused approach. You remain in control of what you share.</p>
+      <div class="explore-grid">
+        <button type="button" class="explore-card" onclick="veeStartExplore('Personal Growth')"><span class="explore-card-icon">✦</span><strong>Personal Growth</strong><span>Build habits, confidence, self-awareness and personal goals.</span></button>
+        <button type="button" class="explore-card" onclick="veeStartExplore('Finance')"><span class="explore-card-icon">₦</span><strong>Finance</strong><span>Understand money, plan budgets, savings and financial goals.</span></button>
+        <button type="button" class="explore-card" onclick="veeStartExplore('Study & Learning')"><span class="explore-card-icon">⌑</span><strong>Study &amp; Learning</strong><span>Learn topics step by step, practise and prepare for exams.</span></button>
+        <button type="button" class="explore-card" onclick="veeStartExplore('Content Creation Studio')"><span class="explore-card-icon">✎</span><strong>Content Creation Studio</strong><span>Develop ideas, scripts, captions and content plans.</span></button>
+        <button type="button" class="explore-card" onclick="veeStartExplore('Business')"><span class="explore-card-icon">⌂</span><strong>Business</strong><span>Work through operations, customer service and business planning.</span></button>
+        <button type="button" class="explore-card" onclick="veeStartExplore('Career')"><span class="explore-card-icon">↗</span><strong>Career</strong><span>Improve your CV, prepare for interviews and plan career moves.</span></button>
+        <button type="button" class="explore-card" onclick="veeStartExplore('Productivity & Planning')"><span class="explore-card-icon">▦</span><strong>Productivity &amp; Planning</strong><span>Break goals into tasks, priorities and realistic schedules.</span></button>
+        <button type="button" class="explore-card" onclick="veeStartExplore('Research')"><span class="explore-card-icon">⌕</span><strong>Research</strong><span>Structure research, compare evidence and explain complex topics.</span></button>
+      </div>
     </div>
   </div>
 
@@ -2385,6 +2414,29 @@
         veeRenderPlanner();
       }
     });
+
+
+    function veeOpenExplore() {
+      veeOpenModal("exploreModal");
+    }
+
+    function veeStartExplore(category) {
+      var guidance = {
+        "Personal Growth": "Act as my Personal Growth coach. Help me clarify goals, build practical habits, reflect without judgement, and turn ideas into small measurable actions. Ask one focused question at a time. Do not present yourself as a therapist.",
+        "Finance": "Act as my personal finance guide. Help me understand income, expenses, budgets, savings, debt and financial decisions. Explain calculations clearly, separate cash movement from profit, flag assumptions, and never claim to access my bank or move money.",
+        "Study & Learning": "Act as my Study and Learning tutor. Teach step by step, adapt to my level, use simple examples, check my understanding, and give practice questions with feedback.",
+        "Content Creation Studio": "Act as my Content Creation Studio. Help develop original ideas, hooks, scripts, captions, outlines and publishing plans. Ask about platform and audience when needed. Keep outputs practical and ready to edit.",
+        "Business": "Act as my Business assistant. Help with planning, operations, customer communication, sales processes and performance tracking. Ask for missing figures, distinguish confirmed facts from estimates, and never invent business records.",
+        "Career": "Act as my Career assistant. Help with CVs, applications, interview practice, skills planning and job decisions. Keep advice honest and tailor documents to the information I provide.",
+        "Productivity & Planning": "Act as my Productivity and Planning assistant. Help prioritise tasks, break large goals into manageable steps, create realistic schedules and review progress. Ask one question at a time.",
+        "Research": "Act as my Research assistant. Help define the question, organise evidence, compare claims, identify uncertainty and present clear findings. Do not invent sources or citations."
+      };
+      var instruction = guidance[category];
+      if (!instruction) return;
+      veeCloseModal("exploreModal");
+      veeNewChat();
+      veeSendPrompt(instruction + " Start by briefly introducing this workspace and asking what I want to work on today.");
+    }
 
     function veeOpenMemory() {
       if (!veeCurrentUser || !veeCurrentUser.emailVerified) {
