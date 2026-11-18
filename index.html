@@ -796,6 +796,20 @@
       margin-top: 6px;
     }
 
+
+    /* Account access */
+    .account-btn{border:1px solid rgba(241,76,21,.28)!important;background:var(--orange-soft)!important;color:var(--orange)!important}
+    .account-panel{width:100%;max-width:440px;max-height:88dvh;overflow:auto;border-radius:24px;padding:22px}
+    .account-copy{font-size:12.5px;line-height:1.55;color:var(--text-secondary)}
+    .account-form{display:flex;flex-direction:column;gap:11px}
+    .account-form input{width:100%;padding:13px 14px;border:1px solid var(--glass-border);border-radius:13px;background:var(--glass-surface);color:var(--text-primary);font:inherit;outline:none}
+    .account-form input:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+    .account-message{min-height:18px;font-size:12px;line-height:1.5;color:var(--text-secondary)}
+    .account-actions{display:flex;gap:9px;flex-wrap:wrap}
+    .account-actions button{flex:1;min-height:43px}
+    .account-secondary{border:1px solid var(--glass-border);border-radius:999px;background:transparent;color:var(--text-secondary);font:700 12px inherit;cursor:pointer;padding:10px}
+    .account-status{font-size:10px;color:var(--text-muted);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
     /* Modals */
     .modal-backdrop {
       position: fixed;
@@ -1000,6 +1014,7 @@
         <button type="button" class="icon-btn" onclick="veeToggleTheme()" title="Switch Light/Dark Mode">
           <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
+        <button type="button" class="icon-btn account-btn" id="accountNavBtn" onclick="veeOpenAccount()" title="Account access"><span id="accountStatus" class="account-status">Guest mode</span><span>Sign in</span></button>
         <button type="button" class="icon-btn" onclick="veeShare()" title="Share on WhatsApp">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
@@ -1121,6 +1136,27 @@
     </div>
   </div>
 
+
+  <!-- Account Access -->
+  <div class="modal-backdrop" id="accountModal" onclick="if(event.target===this) veeCloseModal('accountModal')">
+    <div class="modal-panel account-panel glass-chrome">
+      <div class="modal-head"><h2 id="accountTitle">Your Vee-AI account</h2><button type="button" class="icon-btn" onclick="veeCloseModal('accountModal')">✕</button></div>
+      <p class="account-copy" id="accountDescription">Create an account to prepare for secure access across your devices. Guest access and current conversations stay available.</p>
+      <form class="account-form" id="accountForm" onsubmit="veeSubmitAccount(event)">
+        <input id="accountEmail" type="email" autocomplete="email" placeholder="Email address" required>
+        <input id="accountPassword" type="password" autocomplete="current-password" placeholder="Password, at least 6 characters" minlength="6" required>
+        <div class="account-message" id="accountMessage" role="status" aria-live="polite"></div>
+        <div class="account-actions">
+          <button class="send-btn" id="accountSubmit" type="submit">Create account</button>
+          <button class="account-secondary" type="button" id="accountModeToggle" onclick="veeToggleAccountMode()">I already have an account</button>
+        </div>
+      </form>
+      <button type="button" class="account-secondary" style="width:100%" onclick="veeResetAccountPassword()">Forgot password?</button>
+      <button type="button" class="account-secondary" id="accountSignOut" style="width:100%;display:none" onclick="veeSignOutAccount()">Sign out</button>
+      <p class="account-copy" style="margin-top:4px">Your existing guest conversations will remain in this browser. We will add the account sync and guest-history transfer in the next stage.</p>
+    </div>
+  </div>
+
   <!-- History Modal -->
   <div class="modal-backdrop" id="historyModal" onclick="if(event.target===this) veeCloseModal('historyModal')">
     <div class="modal-panel glass-chrome">
@@ -1157,6 +1193,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script>
     /* =========================================================
        CORE STATE & SAFE STORAGE
@@ -1338,6 +1375,135 @@
       var text = "Come chat with Vee-AI (created by Agboola Vincent Oluwaseyi) — multilingual intelligence, tech & cybersecurity vibes, and sharp Nigerian humour! 🇳🇬🔥 " + url;
       window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
     }
+
+
+    /* =========================================================
+       FIREBASE ACCOUNT ACCESS
+       ========================================================= */
+    var veeFirebaseApp = null;
+    var veeFirebaseAuth = null;
+    var veeAccountMode = "signup";
+    var veeCurrentUser = null;
+
+    function veeInitAccountAuth() {
+      try {
+        if (!window.firebase || !firebase.auth) throw new Error("Firebase Authentication SDK did not load.");
+        veeFirebaseApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(veeFirebaseConfig);
+        veeFirebaseAuth = firebase.auth(veeFirebaseApp);
+        veeFirebaseAuth.onAuthStateChanged(function(user) {
+          veeCurrentUser = user || null;
+          var button = document.getElementById("accountNavBtn");
+          var status = document.getElementById("accountStatus");
+          var signOut = document.getElementById("accountSignOut");
+          var form = document.getElementById("accountForm");
+          var message = document.getElementById("accountMessage");
+          if (button) button.textContent = user ? "Account" : "Sign in";
+          if (status) status.textContent = user ? (user.email || "Signed in") : "Guest mode";
+          if (signOut) signOut.style.display = user ? "block" : "none";
+          if (form) form.style.display = user ? "none" : "flex";
+          if (user && message) message.textContent = "Signed in as " + user.email + ". Account sync will be enabled in the next stage.";
+          if (!user && message && message.dataset.authNotice !== "true") message.textContent = "";
+        });
+      } catch (error) {
+        console.error("Vee-AI account setup failed:", error);
+        var message = document.getElementById("accountMessage");
+        if (message) message.textContent = "Account service is unavailable. Guest mode is still available.";
+      }
+    }
+
+    function veeToggleAccountMode() {
+      veeAccountMode = veeAccountMode === "signup" ? "login" : "signup";
+      var signup = veeAccountMode === "signup";
+      document.getElementById("accountTitle").textContent = signup ? "Create your account" : "Welcome back";
+      document.getElementById("accountDescription").textContent = signup ? "Create an account with your email and password. We will send a verification link." : "Sign in with your verified email and password.";
+      document.getElementById("accountSubmit").textContent = signup ? "Create account" : "Sign in";
+      document.getElementById("accountModeToggle").textContent = signup ? "I already have an account" : "Create a new account";
+      document.getElementById("accountPassword").autocomplete = signup ? "new-password" : "current-password";
+      document.getElementById("accountMessage").textContent = "";
+    }
+
+    async function veeSubmitAccount(event) {
+      event.preventDefault();
+      var email = document.getElementById("accountEmail").value.trim();
+      var password = document.getElementById("accountPassword").value;
+      var message = document.getElementById("accountMessage");
+      var submit = document.getElementById("accountSubmit");
+      if (!veeFirebaseAuth) { message.textContent = "Account service is unavailable. Please refresh and try again."; return; }
+      submit.disabled = true;
+      submit.textContent = "Please wait...";
+      message.textContent = "";
+      try {
+        if (veeAccountMode === "signup") {
+          var credential = await veeFirebaseAuth.createUserWithEmailAndPassword(email, password);
+          await credential.user.sendEmailVerification();
+          await veeFirebaseAuth.signOut();
+          message.dataset.authNotice = "true";
+          message.textContent = "Account created. Check your inbox and verify your email, then sign in.";
+        } else {
+          var login = await veeFirebaseAuth.signInWithEmailAndPassword(email, password);
+          if (!login.user.emailVerified) {
+            await login.user.sendEmailVerification();
+            await veeFirebaseAuth.signOut();
+            message.dataset.authNotice = "true";
+            message.textContent = "Your email is not verified. We sent a new verification link. Verify your email, then sign in.";
+          } else {
+            message.dataset.authNotice = "true";
+            message.textContent = "Login successful.";
+          }
+        }
+      } catch (error) {
+        var messages = {
+          "auth/email-already-in-use":"An account already exists with this email. Choose Sign in.",
+          "auth/invalid-email":"Enter a valid email address.",
+          "auth/weak-password":"Use a password with at least 6 characters.",
+          "auth/user-not-found":"No account was found with this email.",
+          "auth/wrong-password":"The password is incorrect.",
+          "auth/invalid-credential":"Email or password is incorrect.",
+          "auth/too-many-requests":"Too many attempts. Wait a while and try again."
+        };
+        message.textContent = messages[error.code] || error.message || "Account request failed. Please try again.";
+      } finally {
+        submit.disabled = false;
+        submit.textContent = veeAccountMode === "signup" ? "Create account" : "Sign in";
+      }
+    }
+
+    async function veeResetAccountPassword() {
+      var email = document.getElementById("accountEmail").value.trim();
+      var message = document.getElementById("accountMessage");
+      if (!veeFirebaseAuth) { message.textContent = "Account service is unavailable."; return; }
+      if (!email) { message.textContent = "Enter your email address first."; return; }
+      try {
+        await veeFirebaseAuth.sendPasswordResetEmail(email);
+        message.textContent = "Password reset link sent. Check your inbox.";
+      } catch (error) {
+        message.textContent = error.code === "auth/user-not-found" ? "No account was found with this email." : "Unable to send reset link. Check the email and try again.";
+      }
+    }
+
+    async function veeSignOutAccount() {
+      if (!veeFirebaseAuth) return;
+      try {
+        await veeFirebaseAuth.signOut();
+        document.getElementById("accountMessage").textContent = "You are signed out. Your guest conversations remain available.";
+        document.getElementById("accountMessage").dataset.authNotice = "true";
+      } catch (error) {
+        document.getElementById("accountMessage").textContent = "Sign out failed. Please try again.";
+      }
+    }
+
+    function veeOpenAccount() {
+      if (veeCurrentUser) {
+        document.getElementById("accountTitle").textContent = "Your Vee-AI account";
+        document.getElementById("accountDescription").textContent = "You are signed in. Account synchronisation and guest-history transfer are the next development stage.";
+        document.getElementById("accountForm").style.display = "none";
+        document.getElementById("accountSignOut").style.display = "block";
+      } else {
+        document.getElementById("accountForm").style.display = "flex";
+      }
+      veeOpenModal("accountModal");
+    }
+    veeInitAccountAuth();
 
     /* =========================================================
        CHAT NAVIGATION & HISTORY
