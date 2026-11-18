@@ -1189,6 +1189,8 @@
       </form>
       <div class="planner-filters" role="group" aria-label="Filter tasks"><button type="button" class="planner-filter active" data-planner-filter="all">All</button><button type="button" class="planner-filter" data-planner-filter="open">Open</button><button type="button" class="planner-filter" data-planner-filter="done">Completed</button></div>
       <div id="plannerTaskList" aria-live="polite"><div class="home-empty">Your tasks will appear here.</div></div>
+      <div class="setting-row" style="margin-top:14px"><span>Task reminders</span><button type="button" class="toggle-pill" id="plannerReminderBtn" onclick="veeEnablePlannerReminders()">Enable reminders</button></div>
+      <p class="account-copy" id="plannerReminderStatus" role="status" aria-live="polite">Reminders are sent at 9:00 AM on the due date and daily while overdue, while Vee-AI is open.</p>
       <p class="account-copy" id="plannerStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
@@ -1444,6 +1446,8 @@
     var veeMemoryUseEnabled = true;
     var veePlannerTasks = [];
     var veePlannerFilter = "all";
+    var veePlannerRemindersEnabled = false;
+    try { veePlannerRemindersEnabled = localStorage.getItem("vee_ai_planner_reminders") === "true"; } catch (e) {}
     try { veePlannerTasks = JSON.parse(localStorage.getItem("vee_ai_planner_tasks_v1") || "[]"); if (!Array.isArray(veePlannerTasks)) veePlannerTasks = []; } catch (e) { veePlannerTasks = []; }
     try { veeMemories = JSON.parse(localStorage.getItem("vee_ai_guest_memories_v1") || "[]"); } catch (e) { veeMemories = []; }
     try { veeMemoryUseEnabled = localStorage.getItem("vee_ai_memory_use") !== "false"; } catch (e) {}
@@ -1896,8 +1900,57 @@
       }
       veeRenderPlanner();
     }
+    function veePlannerReminderStatus(message) {
+      var status = document.getElementById("plannerReminderStatus");
+      if (status && message) status.textContent = message;
+      var button = document.getElementById("plannerReminderBtn");
+      if (button) button.textContent = veePlannerRemindersEnabled ? "Reminders enabled" : "Enable reminders";
+    }
+    async function veeEnablePlannerReminders() {
+      if (!("Notification" in window)) {
+        veePlannerReminderStatus("This browser does not support desktop notifications.");
+        return;
+      }
+      try {
+        var permission = Notification.permission;
+        if (permission !== "granted") permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          veePlannerReminderStatus("Notifications were not enabled. Allow notifications for this site in your browser settings, then try again.");
+          return;
+        }
+        veePlannerRemindersEnabled = true;
+        try { localStorage.setItem("vee_ai_planner_reminders", "true"); } catch (e) {}
+        veePlannerReminderStatus("Reminders enabled. Vee-AI checks due tasks while this page is open.");
+        veeCheckPlannerReminders();
+      } catch (error) {
+        veePlannerReminderStatus("Unable to enable reminders in this browser.");
+      }
+    }
+    function veeCheckPlannerReminders() {
+      if (!veePlannerRemindersEnabled || !("Notification" in window) || Notification.permission !== "granted") return;
+      var now = new Date();
+      var today = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
+      if (now.getHours() < 9) return;
+      veePlannerTasks.forEach(function(task) {
+        if (!task || task.done || !task.dueDate || task.dueDate > today) return;
+        var reminderKey = "vee_ai_planner_notice_" + task.id + "_" + today;
+        try { if (localStorage.getItem(reminderKey) === "sent") return; } catch (e) {}
+        var overdue = task.dueDate < today;
+        try {
+          var notice = new Notification(overdue ? "Overdue task" : "Task due today", {
+            body: task.title + (overdue ? " is overdue. Open Vee-AI to review it." : " is due today."),
+            tag: reminderKey
+          });
+          notice.onclick = function() { window.focus(); veeOpenPlanner(); notice.close(); };
+          try { localStorage.setItem(reminderKey, "sent"); } catch (e) {}
+        } catch (error) {
+          console.warn("Vee-AI reminder notification failed:", error);
+        }
+      });
+    }
     function veeOpenPlanner() {
       veeRenderPlanner();
+      veePlannerReminderStatus();
       veeOpenModal("plannerModal");
     }
     function veePlannerKey(event) {
@@ -2417,6 +2470,12 @@
         }
       } catch (e) {}
     })();
+    // Check task reminders while Vee-AI is open and when the page returns to the foreground.
+    veeCheckPlannerReminders();
+    window.setInterval(veeCheckPlannerReminders, 60000);
+    document.addEventListener("visibilitychange", function() {
+      if (!document.hidden) veeCheckPlannerReminders();
+    });
     // Open the personal Home workspace first. Existing chat sessions remain untouched.
     veeShowHomeView();
   </script>
