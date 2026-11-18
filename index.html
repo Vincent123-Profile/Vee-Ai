@@ -1214,16 +1214,13 @@
     }
 
     veeInitFirebase().catch(function () {});
-    function veeDeleteCloudHistory() {
-      if (veeCloudReady && veeCloudUid && veeVisitorToken) {
-        veeVisitorRequest({
-          action: "clear-history",
-          visitorId: veeCloudUid,
-          visitorToken: veeVisitorToken
-        }).catch(function (error) {
-          console.error("Vee-AI cloud history deletion failed:", error);
-        });
-      }
+    async function veeDeleteCloudHistory() {
+      await veeEnsureVisitorIdentity();
+      return veeVisitorRequest({
+        action: "clear-history",
+        visitorId: veeCloudUid,
+        visitorToken: veeVisitorToken
+      });
     }
 
     /* =========================================================
@@ -1330,8 +1327,14 @@
       veeCloseModal("historyModal");
     }
 
-    function veeClearHistory() {
-      veeDeleteCloudHistory();
+    async function veeClearHistory() {
+      try {
+        await veeDeleteCloudHistory();
+      } catch (error) {
+        console.error("Vee-AI cloud history deletion failed:", error);
+        alert("Cloud history could not be cleared. Please try again.");
+        return;
+      }
       veeSessions = [];
       veeSaveSessions();
       veeRenderHistoryList();
