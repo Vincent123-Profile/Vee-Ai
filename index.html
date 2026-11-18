@@ -920,7 +920,7 @@
     .home-description{color:var(--text-secondary);font-size:14px;line-height:1.6;max-width:580px}
     .home-hero{margin-top:22px;padding:clamp(20px,4vw,30px);border:1px solid var(--glass-border);border-radius:26px;background:linear-gradient(135deg,var(--glass-chrome),var(--glass-surface));box-shadow:var(--glass-shadow);display:flex;align-items:center;justify-content:space-between;gap:18px}
     .home-hero h2{font-size:17px;font-weight:800;margin-bottom:6px}.home-hero p{font-size:12.5px;line-height:1.55;color:var(--text-secondary);max-width:430px}
-    .home-primary-btn{flex-shrink:0;border:0;border-radius:999px;padding:12px 17px;background:var(--orange);color:#fff;font:700 12.5px inherit;cursor:pointer;box-shadow:0 7px 18px rgba(241,76,21,.25)}
+    .home-primary-btn{flex-shrink:0;border:0;border-radius:999px;padding:12px 17px;background:var(--orange);color:#fff;font:700 12.5px "Plus Jakarta Sans",sans-serif;cursor:pointer;box-shadow:0 7px 18px rgba(241,76,21,.25)}
     .home-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:15px}.home-stat{padding:16px;border:1px solid var(--glass-border);border-radius:18px;background:var(--glass-surface)}
     .home-stat strong{display:block;font-size:23px;font-weight:800;letter-spacing:-.03em}.home-stat span{display:block;margin-top:4px;color:var(--text-secondary);font-size:11.5px}
     .home-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:26px 2px 12px}.home-section-head h2{font-size:15px;font-weight:800}.home-section-head span{font-size:11px;color:var(--text-muted)}
@@ -930,7 +930,7 @@
     .home-recent{display:flex;flex-direction:column;gap:8px}.home-recent-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--glass-border);border-radius:14px;background:var(--glass-surface);cursor:pointer;text-align:left;color:var(--text-primary);font:inherit}
     .home-recent-item:hover{border-color:rgba(241,76,21,.5);background:var(--orange-soft)}.home-recent-item strong{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.home-recent-item small{display:block;margin-top:3px;color:var(--text-muted);font-size:10px}
     .home-empty{padding:17px;border:1px dashed var(--glass-border);border-radius:14px;color:var(--text-muted);font-size:12px;text-align:center}
-    .workspace-nav{display:flex;align-items:center;gap:5px;margin-left:auto;margin-right:6px}.workspace-nav button{border:1px solid transparent;border-radius:999px;padding:8px 11px;background:transparent;color:var(--text-secondary);font:700 11.5px inherit;cursor:pointer;white-space:nowrap}
+    .workspace-nav{display:flex;align-items:center;gap:5px;margin-left:auto;margin-right:6px}.workspace-nav button{border:1px solid transparent;border-radius:999px;padding:8px 11px;background:transparent;color:var(--text-secondary);font:700 11.5px "Plus Jakarta Sans",sans-serif;cursor:pointer;white-space:nowrap}
     .workspace-nav button.active,.workspace-nav button:hover{border-color:rgba(241,76,21,.25);background:var(--orange-soft);color:var(--orange)}.composer-wrap.home-hidden{display:none}
     @media(max-width:700px){.workspace-nav{gap:2px;margin-right:0}.workspace-nav button{padding:8px;font-size:10.5px}.home-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:480px){.workspace-nav button{padding:7px 6px;font-size:10px}.home-hero{align-items:flex-start;flex-direction:column}.home-primary-btn{width:100%}.home-feature-grid{gap:8px}.home-feature{min-height:108px;padding:12px}}
@@ -965,7 +965,7 @@
   <!-- Main Interactive App -->
   <div class="app-shell" id="appShell">
     <header class="top-nav glass-chrome">
-      <button type="button" class="brand-group" onclick="veeNewChat()" title="Start New Conversation">
+      <button type="button" class="brand-group" onclick="veeShowHomeView()" title="Go to Home">
         <div class="brand-emblem">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 5l8 14 8-14" />
@@ -1275,6 +1275,7 @@
         if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
           veeRenderHistoryList();
         }
+        veeRenderHome();
         return true;
       })().catch(function (error) {
         veeIdentityPromise = null;
