@@ -87,16 +87,26 @@ exports.handler = async event => {
       if (visitorId !== body.visitorId) throw new Error("Visitor identity mismatch.");
       const s = body.session || {};
       if (!/^[A-Za-z0-9_-]{1,100}$/.test(String(s.id || ""))) throw new Error("Invalid session ID.");
-      const messages = Array.isArray(s.messages) ? s.messages.slice(-100).map(m => ({
-        role: m && m.role === "user" ? "user" : "assistant",
-        content: String(m && m.content || "").slice(0, 12000)
-      })) : [];
+      if (!Array.isArray(s.messages) || s.messages.length > 100) throw new Error("Invalid conversation messages.");
+      const messages = s.messages.map(m => {
+        if (!m || !["user", "assistant"].includes(m.role) || typeof m.content !== "string") {
+          throw new Error("Invalid conversation message.");
+        }
+        if (!m.content.trim() || m.content.length > 12000) throw new Error("Conversation message is too large or empty.");
+        return { role: m.role, content: m.content };
+      });
+      const createdAtInput = Number(s.createdAtMs);
+      const updatedAtInput = Number(s.updatedAtMs);
+      const createdAtMs = Number.isFinite(createdAtInput) && createdAtInput > 0
+        ? Math.min(createdAtInput, now) : now;
+      const updatedAtMs = Number.isFinite(updatedAtInput) && updatedAtInput > 0
+        ? Math.min(updatedAtInput, now + 60000) : now;
       const fp = networkFingerprint(event);
       const record = {
         id: s.id,
         title: String(s.title || "New conversation").slice(0, 100),
-        createdAtMs: Number(s.createdAtMs || now),
-        updatedAtMs: Number(s.updatedAtMs || now),
+        createdAtMs,
+        updatedAtMs,
         messages
       };
       const ref = database.ref("visitors/" + visitorId);
@@ -105,7 +115,11 @@ exports.handler = async event => {
       if (record.updatedAtMs <= clearedAt) return json(200, { success: true, ignored: true });
       await ref.child("profile/lastSeenAtMs").set(now);
       await ref.child("networks/" + fp + "/lastSeenAtMs").set(now);
-      await ref.child("networks/" + fp + "/sessions/" + s.id).set(record);
+      const sessionRef = ref.child("networks/" + fp + "/sessions/" + s.id);
+      await sessionRef.transaction(current => {
+        if (current && Number(current.updatedAtMs || 0) > record.updatedAtMs) return;
+        return record;
+      });
       return json(200, { success: true });
     }
 
