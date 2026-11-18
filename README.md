@@ -68,7 +68,7 @@ Enable Email/Password authentication for the administrator account. Visitor sign
 
 Publish the rules from `database.rules.json`. Direct database access requires the authorised administrator email and a verified email claim. The admin dashboard enforces the same check. The Netlify function uses Firebase Admin SDK for visitor operations and transaction-safe conversation writes. Chat rate limiting uses hashed network fingerprints in Firebase. The public client has no direct access to rate-limit records.
 
-Administrator email: `agboolavincent67@icloud.com`.
+Administrator email: `agboolavincent67@gmail.com`.
 
 ## Admin dashboard
 
