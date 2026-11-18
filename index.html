@@ -847,6 +847,15 @@
       scrollbar-gutter: stable;
     }
 
+    .settings-section{display:flex;flex-direction:column;gap:12px;padding:14px;border:1px solid var(--glass-border);border-radius:16px;background:var(--glass-surface)}
+    .settings-section h3{font-size:14px;color:var(--orange)}
+    #settingsProfileForm{display:grid;gap:8px}
+    #settingsProfileForm label{font-size:12px;color:var(--text-secondary);font-weight:700}
+    #settingsProfileForm input{width:100%;min-width:0;padding:12px;border:1px solid var(--glass-border);border-radius:11px;background:var(--glass-chrome);color:var(--text-primary);font:inherit}
+    #settingsProfileForm input[readonly]{opacity:.7}
+    #settingsProfileForm button{min-height:44px}
+    .settings-account-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .settings-account-actions button{flex:1;min-height:42px}
     .content-studio-panel{max-width:680px;width:min(680px,calc(100% - 28px));max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
     .content-studio-form{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;min-width:0}
     .content-studio-form label{color:var(--text-secondary);font-size:12px;font-weight:700;align-self:end}
@@ -1688,13 +1697,22 @@
         <h2>Vee-AI Settings</h2>
         <button type="button" class="icon-btn" onclick="veeCloseModal('settingsModal')">✕</button>
       </div>
-      <div class="setting-row">
-        <span>Appearance Mode</span>
-        <button type="button" class="toggle-pill" id="modalThemeToggle" onclick="veeToggleTheme()">Light (70% White)</button>
+      <div class="settings-section"><h3>Appearance</h3>
+        <div class="setting-row"><span>Appearance mode</span><button type="button" class="toggle-pill" id="modalThemeToggle" onclick="veeToggleTheme()">Light (70% White)</button></div>
+        <div class="setting-row"><span>Ambient AI particles</span><button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button></div>
       </div>
-      <div class="setting-row">
-        <span>Ambient AI Particles</span>
-        <button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button>
+      <div class="settings-section"><h3>Personalisation</h3>
+        <form id="settingsProfileForm" onsubmit="veeSaveSettingsProfile(event)">
+          <label for="settingsFirstName">Your first name</label><input id="settingsFirstName" maxlength="40" placeholder="First name" required>
+          <label for="settingsEmail">Account email</label><input id="settingsEmail" type="email" readonly>
+          <button type="submit" class="send-btn" id="settingsProfileSave">Save profile</button>
+        </form>
+        <div class="setting-row"><span>Use saved memory in chats</span><input id="settingsMemoryToggle" type="checkbox" onchange="veeSetMemoryUse(this.checked)"></div>
+        <p id="settingsStatus" class="account-copy" role="status" aria-live="polite"></p>
+      </div>
+      <div class="settings-section"><h3>Account</h3>
+        <p id="settingsAccountStatus" class="account-copy">You are using Vee-AI as a guest.</p>
+        <div class="settings-account-actions"><button type="button" class="account-secondary" onclick="veeOpenModal('accountModal')">Account access</button><button type="button" class="account-secondary" onclick="veeSignOutAccount()">Sign out</button></div>
       </div>
       <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
         <span style="color: var(--orange);">About Vee-AI</span>
@@ -1867,6 +1885,33 @@
     /* =========================================================
        THEME & MODALS (DIRECT GLOBAL FUNCTIONS)
        ========================================================= */
+    function veeToggleParticles(){
+      veeParticlesEnabled=!veeParticlesEnabled;
+      try{localStorage.setItem("vincent_ai_particles",String(veeParticlesEnabled));}catch(e){}
+      var layer=document.querySelector(".ambient-layer");if(layer)layer.style.display=veeParticlesEnabled?"":"none";
+      var button=document.getElementById("particleToggleBtn");if(button)button.textContent=veeParticlesEnabled?"Enabled":"Disabled";
+    }
+    function veeRefreshSettings(){
+      var name=document.getElementById("settingsFirstName"),email=document.getElementById("settingsEmail"),memory=document.getElementById("settingsMemoryToggle"),status=document.getElementById("settingsAccountStatus"),signout=document.querySelector(".settings-account-actions button:last-child");
+      if(name)name.value=veeUserFirstName||"";
+      if(email)email.value=veeCurrentUser&&veeCurrentUser.email?veeCurrentUser.email:"Guest access";
+      if(memory)memory.checked=veeMemoryUseEnabled;
+      if(status)status.textContent=veeCurrentUser&&veeCurrentUser.emailVerified?"Signed in as "+(veeUserFirstName||veeCurrentUser.email)+". Your account data syncs across devices.":"You are using Vee-AI as a guest. Your guest data stays in this browser.";
+      if(signout)signout.style.display=veeCurrentUser?"inline-flex":"none";
+      var theme=document.getElementById("modalThemeToggle");if(theme)theme.textContent=(document.documentElement.getAttribute("data-theme")||"light")==="dark"?"Dark (#0B0B0B)":"Light (70% White)";
+      var particles=document.getElementById("particleToggleBtn");if(particles)particles.textContent=veeParticlesEnabled?"Enabled":"Disabled";
+    }
+    async function veeSaveSettingsProfile(event){
+      event.preventDefault();var field=document.getElementById("settingsFirstName"),status=document.getElementById("settingsStatus"),firstName=(field.value||"").trim().replace(/\s+/g," ").slice(0,40);
+      if(!firstName){status.textContent="Enter your first name.";return;}
+      if(!veeCurrentUser||!veeCurrentUser.emailVerified||!veeAccountDb){status.textContent="Sign in with a verified account to save your profile.";return;}
+      try{
+        await veeCurrentUser.updateProfile({displayName:firstName});
+        await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/profile").update({firstName:firstName,displayName:firstName,email:veeCurrentUser.email||"",lastSeenAtMs:Date.now()});
+        veeUserFirstName=firstName;veeRenderHome();veeRefreshSettings();status.textContent="Your profile name has been updated.";
+      }catch(error){status.textContent="Profile update failed. Please try again.";}
+    }
+
     function veeApplyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
       try { localStorage.setItem("vincent_ai_theme", theme); } catch (e) {}
@@ -1889,6 +1934,7 @@
 
     function veeOpenModal(id) {
       if (id === "historyModal") veeRenderHistoryList();
+      if (id === "settingsModal") veeRefreshSettings();
       var el = document.getElementById(id);
       if (el) el.classList.add("open");
     }
