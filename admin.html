@@ -50,6 +50,8 @@ input{background:var(--surface);color:var(--ink);border-color:var(--line)}
 .data-row{display:flex;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid var(--line);font-size:13px}.data-row:last-child{border:0}
 .setting-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}.setting-row:last-child{border:0}
 button.ghost{background:var(--bg);border:1px solid var(--line);color:var(--ink)}
+
+.timeline{position:relative;margin:14px 0 22px;padding-left:22px}.timeline:before{content:"";position:absolute;left:6px;top:5px;bottom:8px;width:2px;background:var(--line)}.timeline-item{position:relative;padding:0 0 16px 12px}.timeline-item:before{content:"";position:absolute;left:-20px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px var(--soft)}.timeline-item strong{display:block;font-size:13px}.timeline-item small{display:block;color:var(--muted);margin-top:4px}
 @media(max-width:1000px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.wrap{padding:15px}.stats{grid-template-columns:1fr 1fr}.overview-grid{grid-template-columns:1fr}.admin-head{align-items:flex-start;flex-direction:column}.nav{display:grid;grid-template-columns:1fr 1fr}.nav button{width:100%}}
 </style>
@@ -247,6 +249,15 @@ function renderDetail(){
   const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
   html+='<div class="network"><strong>Fingerprint</strong><p style="overflow-wrap:anywhere">'+esc(fp)+'</p><small>'+sessions.length+' conversations · First seen '+esc(date(times.length?Math.min(...times):0))+' · Last seen '+esc(date(times.length?Math.max(...times):0))+'</small></div>';
  });
+ const timelineEvents=[];
+ if(v.first)timelineEvents.push({time:v.first,title:"First recorded visit",detail:"Visitor profile activity began"});
+ if(v.profile.lastSeenAtMs)timelineEvents.push({time:Number(v.profile.lastSeenAtMs),title:"Latest visitor activity",detail:"Most recent recorded profile activity"});
+ v.sessions.forEach(s=>{
+  if(s.createdAtMs)timelineEvents.push({time:Number(s.createdAtMs),title:"Conversation started",detail:s.title||"Untitled conversation"});
+  if(s.updatedAtMs&&Number(s.updatedAtMs)!==Number(s.createdAtMs))timelineEvents.push({time:Number(s.updatedAtMs),title:"Conversation updated",detail:s.title||"Untitled conversation"});
+ });
+ timelineEvents.sort((a,b)=>b.time-a.time);
+ html+='<h2 style="margin-top:20px">Activity timeline</h2><p class="muted">Recorded visits and conversation events, newest first.</p><div class="timeline">'+(timelineEvents.length?timelineEvents.map(event=>'<div class="timeline-item"><strong>'+esc(event.title)+'</strong><small>'+esc(date(event.time))+'</small><small>'+esc(event.detail)+'</small></div>').join(""):'<div class="empty">No timeline events recorded yet.</div>')+'</div>';
  html+='<div style="margin:18px 0;padding:14px;border:1px solid #f0c7bd;border-radius:12px"><button type="button" id="deleteVisitorHistory" style="background:#b42318">Delete visitor conversation history</button><p class="muted">Permanently removes saved conversations and network fingerprints from Firebase. The visitor ID is retained.</p></div><h2 style="margin-top:20px">Conversation history</h2>';
  v.sessions.sort((a,b)=>Number(b.updatedAtMs||0)-Number(a.updatedAtMs||0)).forEach(s=>{
   html+='<article class="session"><strong>'+esc(s.title||"Untitled conversation")+'</strong><p class="muted">Started '+esc(date(s.createdAtMs))+' · Updated '+esc(date(s.updatedAtMs))+' · Network '+esc(s.fingerprint)+'</p>';
