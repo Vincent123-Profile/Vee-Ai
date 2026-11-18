@@ -1190,7 +1190,16 @@
       <div class="planner-filters" role="group" aria-label="Filter tasks"><button type="button" class="planner-filter active" data-planner-filter="all">All</button><button type="button" class="planner-filter" data-planner-filter="open">Open</button><button type="button" class="planner-filter" data-planner-filter="done">Completed</button></div>
       <div id="plannerTaskList" aria-live="polite"><div class="home-empty">Your tasks will appear here.</div></div>
       <div class="setting-row" style="margin-top:14px"><span>Task reminders</span><button type="button" class="toggle-pill" id="plannerReminderBtn" onclick="veeEnablePlannerReminders()">Enable reminders</button></div>
-      <p class="account-copy" id="plannerReminderStatus" role="status" aria-live="polite">Reminders are sent at 9:00 AM on the due date and daily while overdue, while Vee-AI is open.</p>
+      <form class="planner-form" id="plannerReminderSettingsForm" onsubmit="veeSavePlannerReminderSettings(event)">
+        <label for="plannerReminderTime" class="account-copy">Reminder time, based on this device's local time</label>
+        <input id="plannerReminderTime" type="time" value="09:00" required>
+        <span class="account-copy">Choose the days you want reminders.</span>
+        <div class="planner-filters" id="plannerReminderDays">
+          <label><input type="checkbox" value="1"> Mon</label><label><input type="checkbox" value="2"> Tue</label><label><input type="checkbox" value="3"> Wed</label><label><input type="checkbox" value="4"> Thu</label><label><input type="checkbox" value="5"> Fri</label><label><input type="checkbox" value="6"> Sat</label><label><input type="checkbox" value="0"> Sun</label>
+        </div>
+        <button class="send-btn" type="submit">Save reminder schedule</button>
+      </form>
+      <p class="account-copy" id="plannerReminderStatus" role="status" aria-live="polite">Choose a time and one or more days. Reminders run while Vee-AI is open.</p>
       <p class="account-copy" id="plannerStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
@@ -1447,7 +1456,14 @@
     var veePlannerTasks = [];
     var veePlannerFilter = "all";
     var veePlannerRemindersEnabled = false;
-    try { veePlannerRemindersEnabled = localStorage.getItem("vee_ai_planner_reminders") === "true"; } catch (e) {}
+    var veePlannerReminderSettings = { time:"09:00", days:[0,1,2,3,4,5,6] };
+    try {
+      veePlannerRemindersEnabled = localStorage.getItem("vee_ai_planner_reminders") === "true";
+      var savedReminderSettings = JSON.parse(localStorage.getItem("vee_ai_planner_reminder_settings") || "null");
+      if (savedReminderSettings && /^([01]\\d|2[0-3]):[0-5]\\d$/.test(savedReminderSettings.time) && Array.isArray(savedReminderSettings.days)) {
+        veePlannerReminderSettings = { time:savedReminderSettings.time, days:savedReminderSettings.days.filter(function(day){return Number.isInteger(day) && day >= 0 && day <= 6;}) };
+      }
+    } catch (e) {}
     try { veePlannerTasks = JSON.parse(localStorage.getItem("vee_ai_planner_tasks_v1") || "[]"); if (!Array.isArray(veePlannerTasks)) veePlannerTasks = []; } catch (e) { veePlannerTasks = []; }
     try { veeMemories = JSON.parse(localStorage.getItem("vee_ai_guest_memories_v1") || "[]"); } catch (e) { veeMemories = []; }
     try { veeMemoryUseEnabled = localStorage.getItem("vee_ai_memory_use") !== "false"; } catch (e) {}
@@ -1479,6 +1495,14 @@
         var item = memoryData[id];
         return item && typeof item === "object" ? { id:id, category:String(item.category || "Other"), title:String(item.title || ""), content:String(item.content || ""), createdAtMs:Number(item.createdAtMs || Date.now()) } : null;
       }).filter(Boolean).slice(0,50);
+      var reminderSettingsSnapshot = await veeAccountDb.ref("users/" + user.uid + "/planner/reminderSettings").once("value");
+      if (reminderSettingsSnapshot.exists()) {
+        var cloudReminderSettings = reminderSettingsSnapshot.val() || {};
+        if (/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(cloudReminderSettings.time || "")) && Array.isArray(cloudReminderSettings.days)) {
+          veePlannerReminderSettings = { time:cloudReminderSettings.time, days:cloudReminderSettings.days.filter(function(day){return Number.isInteger(day) && day >= 0 && day <= 6;}) };
+        }
+      }
+      try { localStorage.setItem("vee_ai_planner_reminder_settings", JSON.stringify(veePlannerReminderSettings)); } catch (e) {}
       var plannerSnapshot = await veeAccountDb.ref("users/" + user.uid + "/planner/tasks").once("value");
       var cloudPlannerTasks = plannerSnapshot.val() || {};
       if (Object.keys(cloudPlannerTasks).length) {
@@ -1906,31 +1930,60 @@
       var button = document.getElementById("plannerReminderBtn");
       if (button) button.textContent = veePlannerRemindersEnabled ? "Reminders enabled" : "Enable reminders";
     }
+    function veeRenderPlannerReminderSettings() {
+      var timeInput = document.getElementById("plannerReminderTime");
+      if (timeInput) timeInput.value = veePlannerReminderSettings.time || "09:00";
+      var dayInputs = document.querySelectorAll("#plannerReminderDays input[type='checkbox']");
+      dayInputs.forEach(function(input) { input.checked = veePlannerReminderSettings.days.indexOf(Number(input.value)) !== -1; });
+    }
+    async function veeSavePlannerReminderSettings(event) {
+      if (event) event.preventDefault();
+      var timeInput = document.getElementById("plannerReminderTime");
+      var selectedDays = Array.from(document.querySelectorAll("#plannerReminderDays input[type='checkbox']:checked")).map(function(input){return Number(input.value);});
+      if (!timeInput || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(timeInput.value) || !selectedDays.length) {
+        veePlannerReminderStatus("Choose a valid time and at least one day.");
+        return;
+      }
+      var settings = { time:timeInput.value, days:selectedDays };
+      try {
+        if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
+          await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/planner/reminderSettings").set(settings);
+        }
+        localStorage.setItem("vee_ai_planner_reminder_settings", JSON.stringify(settings));
+        veePlannerReminderSettings = settings;
+        veePlannerReminderStatus("Saved. Reminders are scheduled for " + settings.time + " on your selected days, using this device's local time.");
+        veeCheckPlannerReminders();
+      } catch (error) {
+        console.error("Vee-AI reminder settings save failed:", error);
+        veePlannerReminderStatus("Could not save your reminder schedule. Please try again.");
+      }
+    }
     async function veeEnablePlannerReminders() {
       if (!("Notification" in window)) {
-        veePlannerReminderStatus("This browser does not support desktop notifications.");
+        veePlannerReminderStatus("This browser does not support notifications.");
         return;
       }
       try {
         var permission = Notification.permission;
         if (permission !== "granted") permission = await Notification.requestPermission();
         if (permission !== "granted") {
-          veePlannerReminderStatus("Notifications were not enabled. Allow notifications for this site in your browser settings, then try again.");
+          veePlannerReminderStatus("Notifications were not enabled. Allow notifications in your browser settings, then try again.");
           return;
         }
         veePlannerRemindersEnabled = true;
         try { localStorage.setItem("vee_ai_planner_reminders", "true"); } catch (e) {}
-        veePlannerReminderStatus("Reminders enabled. Vee-AI checks due tasks while this page is open.");
+        veePlannerReminderStatus("Notifications enabled. Save your preferred time and days below.");
         veeCheckPlannerReminders();
       } catch (error) {
-        veePlannerReminderStatus("Unable to enable reminders in this browser.");
+        veePlannerReminderStatus("Unable to enable notifications in this browser.");
       }
     }
     function veeCheckPlannerReminders() {
       if (!veePlannerRemindersEnabled || !("Notification" in window) || Notification.permission !== "granted") return;
       var now = new Date();
       var today = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
-      if (now.getHours() < 9) return;
+      var currentTime = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+      if (currentTime !== veePlannerReminderSettings.time || veePlannerReminderSettings.days.indexOf(now.getDay()) === -1) return;
       veePlannerTasks.forEach(function(task) {
         if (!task || task.done || !task.dueDate || task.dueDate > today) return;
         var reminderKey = "vee_ai_planner_notice_" + task.id + "_" + today;
@@ -1950,6 +2003,7 @@
     }
     function veeOpenPlanner() {
       veeRenderPlanner();
+      veeRenderPlannerReminderSettings();
       veePlannerReminderStatus();
       veeOpenModal("plannerModal");
     }
