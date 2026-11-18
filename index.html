@@ -1475,6 +1475,21 @@
         var item = memoryData[id];
         return item && typeof item === "object" ? { id:id, category:String(item.category || "Other"), title:String(item.title || ""), content:String(item.content || ""), createdAtMs:Number(item.createdAtMs || Date.now()) } : null;
       }).filter(Boolean).slice(0,50);
+      var plannerSnapshot = await veeAccountDb.ref("users/" + user.uid + "/planner/tasks").once("value");
+      var cloudPlannerTasks = plannerSnapshot.val() || {};
+      if (Object.keys(cloudPlannerTasks).length) {
+        veePlannerTasks = Object.keys(cloudPlannerTasks).map(function(id) {
+          var task = cloudPlannerTasks[id];
+          return task && typeof task === "object" ? { id:id, title:String(task.title || "").slice(0,120), notes:String(task.notes || "").slice(0,500), dueDate:String(task.dueDate || ""), done:task.done === true, createdAtMs:Number(task.createdAtMs || Date.now()), updatedAtMs:Number(task.updatedAtMs || Date.now()) } : null;
+        }).filter(Boolean).slice(0,200);
+      } else if (veePlannerTasks.length) {
+        var initialPlannerData = {};
+        veePlannerTasks.slice(0,200).forEach(function(task) {
+          if (task && /^[A-Za-z0-9_-]{1,128}$/.test(task.id || "")) initialPlannerData[task.id] = veePlannerTaskData(task);
+        });
+        if (Object.keys(initialPlannerData).length) await veeAccountDb.ref("users/" + user.uid + "/planner/tasks").update(initialPlannerData);
+      }
+      try { localStorage.setItem("vee_ai_planner_tasks_v1", JSON.stringify(veePlannerTasks)); } catch (e) {}
       var snapshot = await veeAccountDb.ref("users/" + user.uid + "/sessions").once("value");
       var accountData = snapshot.val() || {};
       veeAccountKnownSessionIds = {};
@@ -1503,6 +1518,7 @@
       try { localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions)); } catch (e) {}
       veeAccountSyncReady = true;
       veeRenderMemory();
+      veeRenderPlanner();
       veeRenderHome();
       veeRenderHistoryList();
       var transfer = document.getElementById("accountTransferBtn");
@@ -1790,6 +1806,114 @@
         document.getElementById("memoryStatus").textContent = "Memory could not be deleted. Please try again.";
       }
     }
+    function veePlannerTaskData(task) {
+      return { title:String(task.title || "").slice(0,120), notes:String(task.notes || "").slice(0,500), dueDate:String(task.dueDate || ""), done:task.done === true, createdAtMs:Number(task.createdAtMs || Date.now()), updatedAtMs:Number(task.updatedAtMs || Date.now()) };
+    }
+    async function veePersistPlannerTask(task) {
+      try {
+        localStorage.setItem("vee_ai_planner_tasks_v1", JSON.stringify(veePlannerTasks.slice(0,200)));
+        if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
+          await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/planner/tasks/" + task.id).set(veePlannerTaskData(task));
+        }
+        return true;
+      } catch (error) {
+        console.error("Vee-AI planner sync failed:", error);
+        return false;
+      }
+    }
+    function veeRenderPlanner() {
+      var list = document.getElementById("plannerTaskList");
+      var total = document.getElementById("plannerTotal");
+      var open = document.getElementById("plannerOpen");
+      var done = document.getElementById("plannerDone");
+      var status = document.getElementById("plannerFeatureStatus");
+      if (total) total.textContent = String(veePlannerTasks.length);
+      if (open) open.textContent = String(veePlannerTasks.filter(function(t){return !t.done;}).length);
+      if (done) done.textContent = String(veePlannerTasks.filter(function(t){return t.done;}).length);
+      if (status) status.textContent = veePlannerTasks.length + " tasks";
+      if (!list) return;
+      var tasks = veePlannerTasks.filter(function(t){return veePlannerFilter === "all" || (veePlannerFilter === "done" ? t.done : !t.done);}).sort(function(a,b){return a.done === b.done ? String(a.dueDate || "9999").localeCompare(String(b.dueDate || "9999")) : (a.done ? 1 : -1);});
+      if (!tasks.length) {
+        list.innerHTML = '<div class="home-empty">No tasks in this view. Add a task above to get started.</div>';
+      } else {
+        list.innerHTML = tasks.map(function(task) {
+          return '<div class="planner-task ' + (task.done ? 'done' : '') + '"><input type="checkbox" data-planner-toggle="' + veeEscapeHtml(task.id) + '" ' + (task.done ? 'checked' : '') + ' aria-label="Mark task complete"><div class="planner-task-main"><div class="planner-task-title">' + veeEscapeHtml(task.title) + '</div>' + (task.notes ? '<div class="planner-task-notes">' + veeEscapeHtml(task.notes) + '</div>' : '') + '<div class="planner-task-meta">' + (task.dueDate ? 'Due ' + veeEscapeHtml(task.dueDate) : 'No due date') + '</div></div><button type="button" class="planner-task-delete" data-planner-delete="' + veeEscapeHtml(task.id) + '">Delete</button></div>';
+        }).join("");
+        list.querySelectorAll("[data-planner-toggle]").forEach(function(input) {
+          input.addEventListener("change",function(){veeTogglePlannerTask(input.getAttribute("data-planner-toggle"),input.checked);});
+        });
+        list.querySelectorAll("[data-planner-delete]").forEach(function(button) {
+          button.addEventListener("click",function(){veeDeletePlannerTask(button.getAttribute("data-planner-delete"));});
+        });
+      }
+      document.querySelectorAll("[data-planner-filter]").forEach(function(button) {
+        button.classList.toggle("active",button.getAttribute("data-planner-filter") === veePlannerFilter);
+      });
+    }
+    async function veeAddPlannerTask(event) {
+      event.preventDefault();
+      var title = document.getElementById("plannerTitle").value.trim();
+      var notes = document.getElementById("plannerNotes").value.trim();
+      var dueDate = document.getElementById("plannerDue").value;
+      if (!title || title.length > 120 || notes.length > 500) return;
+      var task = { id:"task_" + Date.now() + "_" + Math.random().toString(36).slice(2,8), title:title, notes:notes, dueDate:dueDate, done:false, createdAtMs:Date.now(), updatedAtMs:Date.now() };
+      veePlannerTasks.unshift(task);
+      var saved = await veePersistPlannerTask(task);
+      if (!saved) {
+        veePlannerTasks = veePlannerTasks.filter(function(t){return t.id !== task.id;});
+        document.getElementById("plannerStatus").textContent = "Task could not be saved. Please try again.";
+        return;
+      }
+      document.getElementById("plannerForm").reset();
+      document.getElementById("plannerStatus").textContent = "Task saved.";
+      veeRenderPlanner();
+    }
+    async function veeTogglePlannerTask(id, checked) {
+      var task = veePlannerTasks.find(function(t){return t.id === id;});
+      if (!task) return;
+      var previous = task.done;
+      task.done = !!checked;
+      task.updatedAtMs = Date.now();
+      if (!await veePersistPlannerTask(task)) {
+        task.done = previous;
+        document.getElementById("plannerStatus").textContent = "Task update failed. Please try again.";
+      }
+      veeRenderPlanner();
+    }
+    async function veeDeletePlannerTask(id) {
+      if (!/^[A-Za-z0-9_-]{1,128}$/.test(id || "") || !confirm("Delete this task?")) return;
+      var task = veePlannerTasks.find(function(t){return t.id === id;});
+      if (!task) return;
+      try {
+        if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
+          await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/planner/tasks/" + id).remove();
+        }
+        veePlannerTasks = veePlannerTasks.filter(function(t){return t.id !== id;});
+        localStorage.setItem("vee_ai_planner_tasks_v1", JSON.stringify(veePlannerTasks));
+        document.getElementById("plannerStatus").textContent = "Task deleted.";
+      } catch (error) {
+        document.getElementById("plannerStatus").textContent = "Task could not be deleted. Please try again.";
+      }
+      veeRenderPlanner();
+    }
+    function veeOpenPlanner() {
+      veeRenderPlanner();
+      veeOpenModal("plannerModal");
+    }
+    function veePlannerKey(event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        veeOpenPlanner();
+      }
+    }
+    document.addEventListener("click", function(event) {
+      var filter = event.target.closest("[data-planner-filter]");
+      if (filter) {
+        veePlannerFilter = filter.getAttribute("data-planner-filter");
+        veeRenderPlanner();
+      }
+    });
+
     function veeOpenMemory() {
       if (!veeCurrentUser || !veeCurrentUser.emailVerified) {
         alert("Sign in with your verified account to use cloud memory.");
