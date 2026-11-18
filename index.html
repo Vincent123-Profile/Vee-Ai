@@ -1102,6 +1102,7 @@
     var veeNetworkFingerprint = null;
     var veeVisitorToken = null;
     var veeCloudReady = false;
+    var veeIdentityPromise = null;
     var veeHistoryClearedAtMs = 0;
 
     var veeFirebaseConfig = {
@@ -1124,7 +1125,7 @@
 
     function veeSaveSessions() {
       try {
-        localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions.slice(0, 25)));
+        localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions.slice(0, 50)));
       } catch (e) {}
       if (veeCloudReady && veeCurrentSessionId) {
         var activeSession = veeSessions.find(function (session) { return session.id === veeCurrentSessionId; });
@@ -1152,8 +1153,9 @@
       }
     }
 
-    async function veeInitFirebase() {
-      try {
+    function veeInitFirebase() {
+      if (veeIdentityPromise) return veeIdentityPromise;
+      veeIdentityPromise = (async function () {
         var result = await veeVisitorRequest({
           action: "identify",
           visitorId: localStorage.getItem("vee_ai_visitor_id") || "",
@@ -1164,55 +1166,54 @@
         veeNetworkFingerprint = result.networkFingerprint || "network_unknown";
         localStorage.setItem("vee_ai_visitor_id", veeCloudUid);
         localStorage.setItem("vee_ai_visitor_token", veeVisitorToken);
-        var history = await veeVisitorRequest({ action: "load-sessions", visitorId: veeCloudUid, visitorToken: veeVisitorToken });
+
+        var history = await veeVisitorRequest({
+          action: "load-sessions",
+          visitorId: veeCloudUid,
+          visitorToken: veeVisitorToken
+        });
         var cloudSessions = (history.sessions || []).map(function (item) {
-          return { id:item.id, title:item.title||"New conversation", updatedAt:new Date(Number(item.updatedAtMs||Date.now())).toLocaleDateString(), createdAtMs:Number(item.createdAtMs||item.updatedAtMs||Date.now()), updatedAtMs:Number(item.updatedAtMs||Date.now()), messages:Array.isArray(item.messages)?item.messages:[] };
-        }).filter(function (item) { return item.updatedAtMs >= Date.now() - (30*24*60*60*1000); });
+          return {
+            id: item.id,
+            title: item.title || "New conversation",
+            updatedAt: new Date(Number(item.updatedAtMs || Date.now())).toLocaleDateString(),
+            createdAtMs: Number(item.createdAtMs || item.updatedAtMs || Date.now()),
+            updatedAtMs: Number(item.updatedAtMs || Date.now()),
+            messages: Array.isArray(item.messages) ? item.messages : []
+          };
+        });
         var merged = {};
-        veeSessions.forEach(function (item) { merged[item.id] = item; });
-        cloudSessions.forEach(function (item) { merged[item.id] = item; });
-        veeSessions = Object.keys(merged).map(function (key) { return merged[key]; }).sort(function(a,b){return Number(b.updatedAtMs||0)-Number(a.updatedAtMs||0);}).slice(0,50);
+        veeSessions.forEach(function (item) {
+          if (item && item.id) merged[item.id] = item;
+        });
+        cloudSessions.forEach(function (item) {
+          var local = merged[item.id];
+          if (!local || Number(item.updatedAtMs || 0) > Number(local.updatedAtMs || 0)) {
+            merged[item.id] = item;
+          }
+        });
+        veeSessions = Object.keys(merged).map(function (key) { return merged[key]; })
+          .sort(function (a, b) { return Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0); })
+          .slice(0, 50);
         veeCloudReady = true;
-        if(document.getElementById("historyModal")&&document.getElementById("historyModal").classList.contains("open")) veeRenderHistoryList();
-      } catch(error) { console.error("Vee-AI visitor identity initialisation failed:",error); }
+        try { localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions.slice(0, 25))); } catch (e) {}
+        if (document.getElementById("historyModal") && document.getElementById("historyModal").classList.contains("open")) {
+          veeRenderHistoryList();
+        }
+        return true;
+      })().catch(function (error) {
+        veeIdentityPromise = null;
+        console.error("Vee-AI visitor identity initialisation failed:", error);
+        throw error;
+      });
+      return veeIdentityPromise;
     }
 
-    async function veeEnsureVisitorIdentity() {
-      if (veeCloudUid && veeVisitorToken) return;
-      var result = await veeVisitorRequest({
-        action: "identify",
-        visitorId: localStorage.getItem("vee_ai_visitor_id") || "",
-        visitorToken: localStorage.getItem("vee_ai_visitor_token") || ""
-      });
-      veeCloudUid = result.visitorId;
-      veeVisitorToken = result.visitorToken;
-      veeNetworkFingerprint = result.networkFingerprint || "network_unknown";
-      localStorage.setItem("vee_ai_visitor_id", veeCloudUid);
-      localStorage.setItem("vee_ai_visitor_token", veeVisitorToken);
-      var history = await veeVisitorRequest({
-        action: "load-sessions",
-        visitorId: veeCloudUid,
-        visitorToken: veeVisitorToken
-      });
-      var sessions = (history.sessions || []).map(function (item) {
-        return {
-          id: item.id,
-          title: item.title || "New conversation",
-          updatedAt: new Date(Number(item.updatedAtMs || Date.now())).toLocaleDateString(),
-          createdAtMs: Number(item.createdAtMs || item.updatedAtMs || Date.now()),
-          updatedAtMs: Number(item.updatedAtMs || Date.now()),
-          messages: Array.isArray(item.messages) ? item.messages : []
-        };
-      });
-      var merged = {};
-      veeSessions.forEach(function (item) { merged[item.id] = item; });
-      sessions.forEach(function (item) { merged[item.id] = item; });
-      veeSessions = Object.keys(merged).map(function (key) { return merged[key]; }).slice(0, 50);
-      veeCloudReady = true;
+    function veeEnsureVisitorIdentity() {
+      return veeInitFirebase();
     }
 
-    veeInitFirebase();
-
+    veeInitFirebase().catch(function () {});
     function veeDeleteCloudHistory() {
       if (veeCloudReady && veeCloudUid && veeVisitorToken) {
         veeVisitorRequest({
@@ -1560,7 +1561,8 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: message, history: contextHistory })
         });
-        var data = await res.json();
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || "Vee-AI could not complete the response.");
         var reply = data.reply || "Chai, small network blink! Try send am again.";
 
         thinkingRow.remove();
@@ -1574,7 +1576,8 @@
         veeUpdateSessionRecord(message);
       } catch (err) {
         thinkingRow.remove();
-        veeAppendMessage("Omo, small network wahala happen! Check your connection and try again.", "bot");
+        console.error("Vee-AI chat request failed:", err);
+        veeAppendMessage(err && err.message ? err.message : "Omo, small network wahala happen! Check your connection and try again.", "bot");
       } finally {
         veeIsGenerating = false;
         if (sendBtnText) sendBtnText.textContent = "Send";
