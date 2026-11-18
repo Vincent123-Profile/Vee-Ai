@@ -2165,6 +2165,7 @@
 
     async function veePersistSignedInProfile(user, suppliedName) {
       if (!user || !user.uid || !user.emailVerified) return "";
+      try { await veeInitFirebase(); } catch (identityError) { console.warn("Visitor profile link was unavailable:", identityError); }
       var database = firebase.database(veeFirebaseApp || undefined);
       var profileRef = database.ref("users/" + user.uid + "/profile");
       var snapshot = await profileRef.once("value");
