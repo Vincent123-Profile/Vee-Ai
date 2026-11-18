@@ -1686,8 +1686,11 @@
         return;
       }
       list.innerHTML = veeMemories.map(function(item) {
-        return '<div class="memory-card"><strong>' + veeEscapeHtml(item.title) + '</strong><small>' + veeEscapeHtml(item.category) + '</small><p>' + veeEscapeHtml(item.content) + '</p><button type="button" class="memory-delete" data-memory-id="' + veeEscapeHtml(item.id) + '">Delete memory</button></div>';
+        return '<div class="memory-card"><strong>' + veeEscapeHtml(item.title) + '</strong><small>' + veeEscapeHtml(item.category) + '</small><p>' + veeEscapeHtml(item.content) + '</p><button type="button" class="memory-edit" data-memory-id="' + veeEscapeHtml(item.id) + '">Edit</button> <button type="button" class="memory-delete" data-memory-id="' + veeEscapeHtml(item.id) + '">Delete memory</button></div>';
       }).join("");
+      list.querySelectorAll(".memory-edit").forEach(function(button) {
+        button.addEventListener("click", function() { veeEditMemory(button.getAttribute("data-memory-id")); });
+      });
       list.querySelectorAll(".memory-delete").forEach(function(button) {
         button.addEventListener("click", function() { veeDeleteMemory(button.getAttribute("data-memory-id")); });
       });
@@ -1729,6 +1732,30 @@
         document.getElementById("memoryStatus").textContent = "Memory saved to your account.";
       } catch (error) {
         document.getElementById("memoryStatus").textContent = "Memory could not be saved. Please try again.";
+      }
+    }
+    async function veeEditMemory(id) {
+      if (!/^[A-Za-z0-9_-]{1,128}$/.test(id || "") || !veeCurrentUser || !veeAccountDb) return;
+      var item = veeMemories.find(function(memory) { return memory.id === id; });
+      if (!item) return;
+      var title = prompt("Edit memory title", item.title);
+      if (title === null) return;
+      var content = prompt("Edit memory details", item.content);
+      if (content === null) return;
+      title = title.trim();
+      content = content.trim();
+      if (!title || !content || title.length > 80 || content.length > 600) {
+        document.getElementById("memoryStatus").textContent = "Title or details are empty or too long.";
+        return;
+      }
+      try {
+        await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/memories/" + id).update({ title:title, content:content });
+        item.title = title;
+        item.content = content;
+        veeRenderMemory();
+        document.getElementById("memoryStatus").textContent = "Memory updated.";
+      } catch (error) {
+        document.getElementById("memoryStatus").textContent = "Memory could not be updated. Please try again.";
       }
     }
     async function veeDeleteMemory(id) {
