@@ -258,16 +258,20 @@ function flatten(data){
  });
  return rows.sort((a,b)=>b.last-a.last);
 }
+function visitorFirstName(visitorId){
+ const match=adminUserList().find(x=>x.data.profile&&x.data.profile.visitorIds&&x.data.profile.visitorIds[visitorId]);
+ return match?match.name:"Visitor";
+}
 function renderList(){
  const q=$("search").value.trim().toLowerCase();
- const rows=flatten(visitorData).filter(v=>(v.uid+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q)&&inDateRange(v.last,"visitorFrom","visitorTo"));
- $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>Visitor</strong><small>'+esc(v.uid)+'</small><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
+ const rows=flatten(visitorData).filter(v=>(v.uid+" "+visitorFirstName(v.uid)+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q)&&inDateRange(v.last,"visitorFrom","visitorTo"));
+ $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>'+esc(visitorFirstName(v.uid))+'</strong><small>'+esc(v.uid)+'</small><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
  $("visitorList").querySelectorAll("[data-uid]").forEach(btn=>btn.addEventListener("click",()=>{selectedUid=btn.dataset.uid;renderList();renderDetail();}));
 }
 function renderDetail(){
  const v=flatten(visitorData).find(x=>x.uid===selectedUid);
  if(!v){$("visitorDetail").innerHTML='<div class="empty">Select a visitor to view details.</div>';return;}
- let html='<h2>Visitor profile</h2><div class="muted" style="margin-top:10px">Unique visitor ID</div><p style="overflow-wrap:anywhere"><strong>'+esc(v.uid)+'</strong></p><div class="chips"><span class="chip">First visit: '+esc(date(v.first))+'</span><span class="chip">Last activity: '+esc(date(v.last))+'</span><span class="chip">'+v.sessions.length+' conversations</span></div><h2>Network activity</h2><p class="muted">Fingerprints are privacy-preserving hashes. They are not raw IP addresses.</p>';
+ let html='<h2>'+esc(visitorFirstName(v.uid)==="Visitor"?"Visitor profile":visitorFirstName(v.uid)+" profile")+'</h2><div class="muted" style="margin-top:10px">Unique visitor ID</div><p style="overflow-wrap:anywhere"><strong>'+esc(v.uid)+'</strong></p><div class="chips"><span class="chip">First visit: '+esc(date(v.first))+'</span><span class="chip">Last activity: '+esc(date(v.last))+'</span><span class="chip">'+v.sessions.length+' conversations</span></div><h2>Network activity</h2><p class="muted">Fingerprints are privacy-preserving hashes. They are not raw IP addresses.</p>';
  Object.entries(v.networks).forEach(([fp,n])=>{
   const sessions=Object.values(n.sessions||{});
   const times=sessions.flatMap(s=>[Number(s.createdAtMs||0),Number(s.updatedAtMs||0)]).filter(Boolean);
@@ -326,12 +330,12 @@ function applyVisitorSnapshot(snapshot){
 
 let adminUsersData={},selectedAdminUid=null,adminUsersRef=null,adminUsersListener=null,userTab="summary";
 const validAdminKey=v=>/^[A-Za-z0-9_-]{1,128}$/.test(String(v||""));
-const adminUserList=()=>Object.entries(adminUsersData||{}).map(([uid,data])=>({uid,data:data||{}}));
+const adminUserList=()=>Object.entries(adminUsersData||{}).map(([uid,data])=>({uid,data:data||{},name:String(data&&data.profile&&(data.profile.firstName||data.profile.displayName)||data&&data.profile&&data.profile.email&&data.profile.email.split("@")[0]||"Name not set")}));
 const userDataStats=d=>({chats:Object.keys(d.sessions||{}).length,memories:Object.keys(d.memories||{}).length,tasks:Object.keys(d.planner?.tasks||{}).length,transactions:Array.isArray(d.finance?.transactions)?d.finance.transactions.length:0});
 function renderAdminUserList(){
  const q=($("userSearch")?.value||"").toLowerCase().trim();
- const rows=adminUserList().filter(x=>x.uid.toLowerCase().includes(q));
- $("adminUserList").innerHTML=rows.length?rows.map(x=>{const s=userDataStats(x.data);return '<button class="user-admin-item '+(x.uid===selectedAdminUid?'active':'')+'" data-admin-uid="'+esc(x.uid)+'"><strong>Account</strong><small>'+esc(x.uid)+'</small><small>'+s.chats+' chats · '+s.memories+' memories · '+s.tasks+' tasks</small></button>';}).join(""):'<div class="empty">No registered account data found.</div>';
+ const rows=adminUserList().filter(x=>(x.uid+" "+x.name+" "+String(x.data.profile&&x.data.profile.email||"")).toLowerCase().includes(q));
+ $("adminUserList").innerHTML=rows.length?rows.map(x=>{const s=userDataStats(x.data);return '<button class="user-admin-item '+(x.uid===selectedAdminUid?'active':'')+'" data-admin-uid="'+esc(x.uid)+'"><strong>'+esc(x.name)+'</strong><small>'+esc(String(x.data.profile&&x.data.profile.email||x.uid))+'</small><small>'+s.chats+' chats · '+s.memories+' memories · '+s.tasks+' tasks</small></button>';}).join(""):'<div class="empty">No registered account data found.</div>';
  $("adminUserList").querySelectorAll("[data-admin-uid]").forEach(b=>b.addEventListener("click",()=>{selectedAdminUid=b.dataset.adminUid;userTab="summary";renderAdminUserList();renderAdminUserDetail();}));
 }
 function adminRow(title,detail,action){return '<div class="user-data-row"><div class="user-data-row-main"><strong>'+esc(title)+'</strong><small>'+esc(detail)+'</small></div>'+(action?'<button class="danger" data-admin-delete="'+esc(action)+'">Delete</button>':'')+'</div>';}
@@ -341,7 +345,9 @@ function renderAdminUserDetail(){
  $("exportUserData").disabled=!d;
  if(!d){el.innerHTML='<div class="empty">Select an account.</div>';return;}
  const s=userDataStats(d),fin=d.finance||{},planner=d.planner||{},prefs=d.settings||{};
- let h='<h2 style="font-size:18px;margin:0">Account details</h2><p class="muted" style="overflow-wrap:anywhere;margin-top:6px">'+esc(selectedAdminUid)+'</p>';
+ const accountProfile=d.profile||{};
+ const accountName=String(accountProfile.firstName||accountProfile.displayName||accountProfile.email&&accountProfile.email.split("@")[0]||"Name not set");
+ let h='<h2 style="font-size:18px;margin:0">'+esc(accountName)+'</h2><p class="muted" style="overflow-wrap:anywhere;margin-top:6px">'+esc(accountProfile.email||selectedAdminUid)+'</p><p class="muted" style="overflow-wrap:anywhere">'+esc(selectedAdminUid)+'</p>';
  h+='<div class="chips"><span class="chip">Memory use: '+(prefs.useMemory===false?'Off':'On')+'</span><span class="chip">Last seen: '+esc(date(d.profile?.lastSeenAtMs))+'</span></div>';
  h+='<div class="user-data-grid">'+[['Chats',s.chats],['Memories',s.memories],['Tasks',s.tasks],['Transactions',s.transactions]].map(x=>'<div class="user-data-stat"><strong>'+x[1]+'</strong><small>'+x[0]+'</small></div>').join("")+'</div>';
  h+='<div class="user-admin-tabs">'+[['summary','Summary'],['sessions','Chats'],['memories','Memory'],['planner','Planner'],['finance','Finance']].map(x=>'<button class="'+(userTab===x[0]?'active':'')+'" data-user-tab="'+x[0]+'">'+x[1]+'</button>').join("")+'</div>';
