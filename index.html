@@ -1392,6 +1392,9 @@
     var veeAccountDb = null;
     var veeAccountSyncReady = false;
     var veeAccountSyncPromise = null;
+    var veeAccountTransferComplete = false;
+    var veeAccountKnownSessionIds = {};
+    var veeAccountGuestSessionIds = {};
 
     function veeAccountSessionData(session) {
       return {
@@ -1414,6 +1417,8 @@
       veeAccountDb = firebase.database(veeFirebaseApp);
       var snapshot = await veeAccountDb.ref("users/" + user.uid + "/sessions").once("value");
       var accountData = snapshot.val() || {};
+      veeAccountKnownSessionIds = {};
+      Object.keys(accountData).forEach(function(id) { veeAccountKnownSessionIds[id] = true; });
       var merged = {};
       veeSessions.forEach(function(session) {
         if (session && session.id) merged[session.id] = session;
@@ -1450,6 +1455,7 @@
 
     async function veePersistAccountSessionToCloud(session) {
       if (!veeAccountSyncReady || !veeCurrentUser || !veeAccountDb || !session || !/^[A-Za-z0-9_-]{1,128}$/.test(session.id || "")) return;
+      if (!veeAccountTransferComplete && veeAccountGuestSessionIds[session.id] && !veeAccountKnownSessionIds[session.id]) return;
       try {
         await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/sessions/" + session.id).set(veeAccountSessionData(session));
       } catch (error) {
@@ -1487,7 +1493,9 @@
           if (!verified) throw new Error("The cloud copy did not pass verification. Your original conversations are safe. Please retry.");
         }
         veeAccountSyncReady = true;
-        if (message) message.textContent = sessionsToCopy.length + " conversations copied and verified. Your original guest history remains محفوظ in this browser.";
+        veeAccountTransferComplete = true;
+        sessionsToCopy.forEach(function(session) { veeAccountKnownSessionIds[session.id] = true; });
+        if (message) message.textContent = sessionsToCopy.length + " conversations copied and verified. Your original guest history remains safe in this browser.";
         if (button) button.style.display = "none";
       } catch (error) {
         console.error("Vee-AI guest-history transfer failed:", error);
@@ -1520,10 +1528,15 @@
             veeAccountSyncReady = false;
             veeAccountSyncPromise = null;
             veeAccountDb = null;
+            veeAccountTransferComplete = false;
+            veeAccountKnownSessionIds = {};
+            veeAccountGuestSessionIds = {};
             if (message && message.dataset.authNotice !== "true") message.textContent = "";
             var transferButton = document.getElementById("accountTransferBtn");
             if (transferButton) transferButton.style.display = "none";
           } else if (user.emailVerified) {
+            veeAccountGuestSessionIds = {};
+            veeSessions.forEach(function(session) { if (session && session.id) veeAccountGuestSessionIds[session.id] = true; });
             veeAccountSyncPromise = veeLoadAccountSessions(user).catch(function(error) {
               veeAccountSyncReady = false;
               console.error("Vee-AI account sync initialisation failed:", error);
