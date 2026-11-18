@@ -320,140 +320,139 @@ async function requestCompletion(apiKey, model, messages) {
   return { response, data };
 }
 
-async function pickAvailableModel(apiKey) {
-  const res = await fetch("https://api.groq.com/openai/v1/models", {
-    headers: { Authorization: `Bearer ${apiKey}` },
-  });
-  const list = await res.json();
-  const chatModels = (list?.data || [])
-    .map((m) => m.id)
-    .filter(
-      (id) =>
-        id &&
-        !id.includes("whisper") &&
-        !id.includes("guard") &&
-        !id.includes("tts") &&
-        !id.includes("orpheus")
-    );
+const admin = require("firebase-admin");
+const crypto = require("crypto");
 
-  const preferred = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.8-27b", "minimaxai/minimax-m2.7", "meta-models/muse-spark-open"];
-  for (const prefix of preferred) {
-    const match = chatModels.find((id) => id.toLowerCase().includes(prefix));
-    if (match) return match;
+let rateLimitApp;
+function rateLimitDatabase() {
+  if (!rateLimitApp) {
+    const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+    if (!raw) throw new Error("Chat rate limiting is not configured.");
+    const serviceAccount = JSON.parse(raw);
+    rateLimitApp = admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: process.env.FIREBASE_DATABASE_URL || "https://vee-ai-e745e-default-rtdb.firebaseio.com"
+    }, "vee-ai-chat-rate-limit");
   }
-  return chatModels[0] || null;
+  return rateLimitApp.database();
 }
 
+async function enforceRateLimit(event) {
+  const secret = (process.env.IP_HASH_SECRET || "").trim();
+  const headers = event.headers || {};
+  const ip = headers["x-nf-client-connection-ip"] || headers["X-Nf-Client-Connection-Ip"];
+  if (secret.length < 32 || !ip) throw new Error("Chat rate limiting is not configured.");
+  const fingerprint = crypto.createHmac("sha256", secret)
+    .update(String(ip).trim())
+    .digest("hex");
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const limit = 15;
+  const ref = rateLimitDatabase().ref("rateLimits/chat/" + fingerprint);
+  const result = await ref.transaction(current => {
+    if (!current || now - Number(current.windowStartedAtMs || 0) >= windowMs) {
+      return { windowStartedAtMs: now, count: 1 };
+    }
+    return { windowStartedAtMs: Number(current.windowStartedAtMs), count: Number(current.count || 0) + 1 };
+  });
+  const value = result.snapshot.val() || {};
+  if (Number(value.count || 0) > limit) {
+    const retryAfter = Math.max(1, Math.ceil((windowMs - (now - Number(value.windowStartedAtMs || now))) / 1000));
+    return retryAfter;
+  }
+  return 0;
+}
+
+const jsonResponse = (statusCode, body, extraHeaders = {}) => ({
+  statusCode,
+  headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...extraHeaders },
+  body: JSON.stringify(body)
+});
+
 exports.handler = async function (event) {
-  if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reply: "Method not allowed" }),
-    };
+  if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed." }, { Allow: "POST" });
+
+  const rawBody = event.body || "";
+  if (Buffer.byteLength(rawBody, "utf8") > 64 * 1024) {
+    return jsonResponse(413, { error: "Request is too large." });
   }
 
-  let requestBody = {};
+  let requestBody;
   try {
-    requestBody = JSON.parse(event.body || "{}");
-  } catch (error) {
-    return {
-      statusCode: 400,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ error: "Invalid JSON body." }),
-    };
+    requestBody = JSON.parse(rawBody || "{}");
+  } catch (_) {
+    return jsonResponse(400, { error: "Invalid JSON body." });
   }
 
   if (requestBody.action === "visitor-network") {
-    const crypto = require("crypto");
     const secret = (process.env.IP_HASH_SECRET || "").trim();
-    if (!secret) {
-      return {
-        statusCode: 503,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ error: "Visitor network fingerprint is not configured." }),
-      };
-    }
-
+    if (secret.length < 32) return jsonResponse(503, { error: "Visitor network fingerprint is not configured." });
     const headers = event.headers || {};
     const rawIp = headers["x-nf-client-connection-ip"] || headers["X-Nf-Client-Connection-Ip"] || "";
-    if (!rawIp) {
-      return {
-        statusCode: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fingerprint: "network_unknown" }),
-      };
+    if (!rawIp) return jsonResponse(200, { fingerprint: "network_unknown" });
+    const fingerprint = crypto.createHmac("sha256", secret).update(String(rawIp).trim()).digest("hex").slice(0, 32);
+    return jsonResponse(200, { fingerprint });
+  }
+
+  const message = typeof requestBody.message === "string" ? requestBody.message.trim() : "";
+  const history = requestBody.history === undefined ? [] : requestBody.history;
+  if (!message || message.length > 8000) {
+    return jsonResponse(400, { error: "Message must contain between 1 and 8,000 characters." });
+  }
+  if (!Array.isArray(history) || history.length > 20) {
+    return jsonResponse(400, { error: "Conversation history is invalid or too long." });
+  }
+
+  let historyCharacters = 0;
+  const safeHistory = [];
+  for (const item of history) {
+    if (!item || !["user", "assistant"].includes(item.role) || typeof item.content !== "string") {
+      return jsonResponse(400, { error: "History contains an unsupported message." });
     }
+    if (!item.content.trim() || item.content.length > 12000) {
+      return jsonResponse(400, { error: "A conversation message is empty or too large." });
+    }
+    historyCharacters += item.content.length;
+    if (historyCharacters > 40000) {
+      return jsonResponse(413, { error: "Conversation history is too large." });
+    }
+    safeHistory.push({ role: item.role, content: item.content });
+  }
 
-    const fingerprint = crypto.createHmac("sha256", secret)
-      .update(String(rawIp).trim())
-      .digest("hex")
-      .slice(0, 32);
-
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-      },
-      body: JSON.stringify({ fingerprint }),
-    };
+  let retryAfter;
+  try {
+    retryAfter = await enforceRateLimit(event);
+  } catch (error) {
+    console.error("Vee-AI rate limiter unavailable:", error && error.message);
+    return jsonResponse(503, { error: "Chat protection is temporarily unavailable. Please try again shortly." });
+  }
+  if (retryAfter) {
+    return jsonResponse(429, { error: "Too many messages. Please wait before sending another message." }, { "Retry-After": String(retryAfter) });
   }
 
   const apiKey = (process.env.GROQ_API_KEY || "").trim();
-  if (!apiKey) {
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        reply: "Omo, my brain dey reboot small right now! Try send your message again shortly.",
-      }),
-    };
-  }
+  if (!apiKey) return jsonResponse(503, { error: "Vee-AI is temporarily unavailable. Please try again shortly." });
+
+  const model = (process.env.GROQ_MODEL || "openai/gpt-oss-20b").trim();
+  const messages = [
+    { role: "system", content: SYSTEM_PROMPT },
+    ...safeHistory,
+    { role: "user", content: message }
+  ];
 
   try {
-    const { message, history = [] } = requestBody;
-    const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
-      ...history,
-      { role: "user", content: message },
-    ];
-
-    let { response, data } = await requestCompletion(apiKey, "openai/gpt-oss-20b", messages);
-
-    if ([400, 404, 422].includes(response.status)) {
-      const detectedModel = await pickAvailableModel(apiKey);
-      if (detectedModel) {
-        ({ response, data } = await requestCompletion(apiKey, detectedModel, messages));
-      }
-    }
-
+    const { response, data } = await requestCompletion(apiKey, model, messages);
     if (!response.ok) {
-      console.error("Vee-AI chat provider error:", response.status, data?.error?.message || data);
-      return {
-        statusCode: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reply: "Chai, small network traffic jam just happen for my side! Abeg send that message again.",
-        }),
-      };
+      console.error("Vee-AI Groq error:", response.status, data && data.error && data.error.message || "Unknown provider error");
+      return jsonResponse(502, { error: "Vee-AI could not complete the response. Please try again." });
     }
-
-    const reply = data?.choices?.[0]?.message?.content || "Omo, network blink small! Ask me again abeg.";
-
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reply }),
-    };
+    const reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    if (typeof reply !== "string" || !reply.trim()) {
+      return jsonResponse(502, { error: "Vee-AI returned an empty response. Please try again." });
+    }
+    return jsonResponse(200, { reply });
   } catch (error) {
-    console.error("Vee-AI chat function error:", error);
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        reply: "Omo, small network wahala just happen! Check your connection and try again.",
-      }),
-    };
+    console.error("Vee-AI chat function error:", error && error.message || error);
+    return jsonResponse(502, { error: "A connection problem interrupted the response. Please try again." });
   }
 };
