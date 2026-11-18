@@ -1703,7 +1703,7 @@
       </div>
       <div class="settings-section"><h3>Personalisation</h3>
         <form id="settingsProfileForm" onsubmit="veeSaveSettingsProfile(event)">
-          <label for="settingsFirstName">Your first name</label><input id="settingsFirstName" maxlength="40" placeholder="First name" required>
+          <label for="settingsFirstName">Your first name</label><input id="settingsFirstName" maxlength="40" placeholder="First name" autocomplete="given-name" required oninput="veeResetProfileSaveState()">
           <label for="settingsEmail">Account email</label><input id="settingsEmail" type="email" readonly>
           <button type="submit" class="send-btn" id="settingsProfileSave">Save profile</button>
         </form>
@@ -1901,15 +1901,41 @@
       var theme=document.getElementById("modalThemeToggle");if(theme)theme.textContent=(document.documentElement.getAttribute("data-theme")||"light")==="dark"?"Dark (#0B0B0B)":"Light (70% White)";
       var particles=document.getElementById("particleToggleBtn");if(particles)particles.textContent=veeParticlesEnabled?"Enabled":"Disabled";
     }
+    function veeResetProfileSaveState(){
+      var button=document.getElementById("settingsProfileSave");
+      var status=document.getElementById("settingsStatus");
+      if(button&&!button.disabled)button.textContent="Save profile";
+      if(status)status.textContent="";
+    }
     async function veeSaveSettingsProfile(event){
-      event.preventDefault();var field=document.getElementById("settingsFirstName"),status=document.getElementById("settingsStatus"),firstName=(field.value||"").trim().replace(/\s+/g," ").slice(0,40);
+      event.preventDefault();
+      var field=document.getElementById("settingsFirstName");
+      var status=document.getElementById("settingsStatus");
+      var button=document.getElementById("settingsProfileSave");
+      var firstName=(field.value||"").trim().replace(/\s+/g," ").slice(0,40);
       if(!firstName){status.textContent="Enter your first name.";return;}
       if(!veeCurrentUser||!veeCurrentUser.emailVerified||!veeAccountDb){status.textContent="Sign in with a verified account to save your profile.";return;}
+      if(button){button.disabled=true;button.textContent="Saving...";}
+      status.style.display="block";
+      status.style.marginTop="10px";
+      status.style.padding="10px 12px";
+      status.style.borderRadius="10px";
+      status.style.background="var(--orange-soft)";
+      status.style.color="var(--orange)";
+      status.textContent="Saving your profile...";
       try{
-        await veeCurrentUser.updateProfile({displayName:firstName});
         await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/profile").update({firstName:firstName,displayName:firstName,email:veeCurrentUser.email||"",lastSeenAtMs:Date.now()});
-        veeUserFirstName=firstName;veeRenderHome();veeRefreshSettings();status.textContent="Your profile name has been updated.";
-      }catch(error){status.textContent="Profile update failed. Please try again.";}
+        await veeCurrentUser.updateProfile({displayName:firstName});
+        veeUserFirstName=firstName;
+        veeRenderHome();
+        veeRefreshSettings();
+        status.textContent="Saved successfully. Your name has been updated.";
+        if(button){button.textContent="Saved ✓";button.disabled=false;}
+      }catch(error){
+        console.error("Vee-AI profile save failed:",error);
+        status.textContent="Save failed. Check your connection and try again.";
+        if(button){button.textContent="Try again";button.disabled=false;}
+      }
     }
 
     function veeApplyTheme(theme) {
