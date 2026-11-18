@@ -965,7 +965,7 @@
     .composer-footer{letter-spacing:.01em}
     @media(max-width:560px){.welcome-screen{padding:14px 2px 18px}.welcome-card{padding:22px 15px;border-radius:25px}.welcome-bubble{margin-bottom:14px;font-size:12px}.welcome-headline{font-size:1.65rem}.welcome-sub{font-size:.9rem;margin-bottom:20px}.prompt-card{min-height:72px;padding:12px 13px}}
     @media(prefers-reduced-motion:reduce){.welcome-card{animation:none}.hero-ring,.orb,.status-pulse{animation:none}}
-  </style>
+  .planner-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}.planner-stat{padding:11px;border:1px solid var(--glass-border);border-radius:13px;background:var(--glass-surface)}.planner-stat strong{display:block;font-size:19px;color:var(--orange)}.planner-stat span{font-size:10px;color:var(--text-secondary)}.planner-form{display:grid;grid-template-columns:1fr 170px;gap:9px;margin:12px 0}.planner-form input,.planner-form textarea{width:100%;padding:11px 12px;border:1px solid var(--glass-border);border-radius:12px;background:var(--glass-surface);color:var(--text-primary);font:inherit;font-size:13px}.planner-form textarea{grid-column:1/-1;min-height:65px;resize:vertical}.planner-form button{grid-column:1/-1}.planner-filters{display:flex;gap:7px;margin:12px 0}.planner-filter{padding:7px 12px;border:1px solid var(--glass-border);border-radius:999px;background:var(--glass-surface);color:var(--text-secondary);font:600 11px inherit;cursor:pointer}.planner-filter.active{background:var(--orange-soft);border-color:rgba(241,76,21,.45);color:var(--orange)}.planner-task{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--glass-border);border-radius:14px;background:var(--glass-surface);margin:8px 0}.planner-task input{margin-top:3px;accent-color:var(--orange)}.planner-task-main{flex:1;min-width:0}.planner-task-title{font-size:12px;font-weight:800;overflow-wrap:anywhere}.planner-task-notes{font-size:11px;color:var(--text-secondary);margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere}.planner-task-meta{font-size:10px;color:var(--text-muted);margin-top:6px}.planner-task.done .planner-task-title{text-decoration:line-through;color:var(--text-muted)}.planner-task-delete{border:0;background:transparent;color:var(--orange);font:700 11px inherit;cursor:pointer;padding:4px}.planner-feature{cursor:pointer;transition:border-color .2s ease,transform .2s ease}.planner-feature:hover{border-color:rgba(241,76,21,.5);transform:translateY(-2px)}@media(max-width:560px){.planner-form{grid-template-columns:1fr}.planner-form textarea,.planner-form button{grid-column:1}.planner-summary{gap:6px}.planner-stat{padding:9px}}</style>
 </head>
 <body>
   <!-- Decorative Futuristic Background -->
@@ -1043,7 +1043,7 @@
           <div class="home-feature-grid">
             <article class="home-feature"><div class="home-feature-icon">⌕</div><h3>Explore</h3><p>Research, learn and explore useful topics.</p><em>In development</em></article>
             <article class="home-feature" role="button" tabindex="0" onclick="veeOpenMemory()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenMemory()}"><div class="home-feature-icon">◎</div><h3>My Memory</h3><p>Save details and choose what Vee-AI uses in future chats.</p><em id="memoryFeatureStatus">Open memory</em></article>
-            <article class="home-feature"><div class="home-feature-icon">▦</div><h3>Planner</h3><p>Organise tasks, reminders and plans.</p><em>In development</em></article>
+            <article class="home-feature planner-feature" role="button" tabindex="0" onclick="veeOpenPlanner()" onkeydown="veePlannerKey(event)"><div class="home-feature-icon">▦</div><h3>Planner</h3><p>Organise tasks, due dates and daily plans.</p><em id="plannerFeatureStatus">Open planner</em></article>
             <article class="home-feature"><div class="home-feature-icon">₦</div><h3>Finance</h3><p>Track budgets, spending and goals.</p><em>In development</em></article>
             <article class="home-feature"><div class="home-feature-icon">✎</div><h3>Content Studio</h3><p>Plan and create content with AI.</p><em>In development</em></article>
             <article class="home-feature"><div class="home-feature-icon">⌘</div><h3>Business</h3><p>Optional tools for business workflows.</p><em>In development</em></article>
@@ -1172,6 +1172,24 @@
         <button class="send-btn" type="submit">Save this memory</button>
       </form>
       <p class="account-copy" id="memoryStatus" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <!-- Planner -->
+  <div class="modal-backdrop" id="plannerModal" onclick="if(event.target===this) veeCloseModal('plannerModal')">
+    <div class="modal-panel glass-chrome">
+      <div class="modal-head"><h2>My Planner</h2><button type="button" class="icon-btn" onclick="veeCloseModal('plannerModal')">✕</button></div>
+      <p class="account-copy">Keep track of tasks and due dates. Signed-in tasks sync to your account. Guest tasks stay in this browser.</p>
+      <div class="planner-summary"><div class="planner-stat"><strong id="plannerTotal">0</strong><span>Total tasks</span></div><div class="planner-stat"><strong id="plannerOpen">0</strong><span>Open</span></div><div class="planner-stat"><strong id="plannerDone">0</strong><span>Completed</span></div></div>
+      <form class="planner-form" id="plannerForm" onsubmit="veeAddPlannerTask(event)">
+        <input id="plannerTitle" maxlength="120" placeholder="What do you need to do?" required>
+        <input id="plannerDue" type="date" aria-label="Due date">
+        <textarea id="plannerNotes" maxlength="500" placeholder="Add notes (optional)"></textarea>
+        <button class="send-btn" type="submit">Add task</button>
+      </form>
+      <div class="planner-filters" role="group" aria-label="Filter tasks"><button type="button" class="planner-filter active" data-planner-filter="all">All</button><button type="button" class="planner-filter" data-planner-filter="open">Open</button><button type="button" class="planner-filter" data-planner-filter="done">Completed</button></div>
+      <div id="plannerTaskList" aria-live="polite"><div class="home-empty">Your tasks will appear here.</div></div>
+      <p class="account-copy" id="plannerStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
 
@@ -1424,6 +1442,9 @@
     var veeAccountGuestSessionIds = {};
     var veeMemories = [];
     var veeMemoryUseEnabled = true;
+    var veePlannerTasks = [];
+    var veePlannerFilter = "all";
+    try { veePlannerTasks = JSON.parse(localStorage.getItem("vee_ai_planner_tasks_v1") || "[]"); if (!Array.isArray(veePlannerTasks)) veePlannerTasks = []; } catch (e) { veePlannerTasks = []; }
     try { veeMemories = JSON.parse(localStorage.getItem("vee_ai_guest_memories_v1") || "[]"); } catch (e) { veeMemories = []; }
     try { veeMemoryUseEnabled = localStorage.getItem("vee_ai_memory_use") !== "false"; } catch (e) {}
 
