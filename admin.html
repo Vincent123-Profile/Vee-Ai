@@ -54,6 +54,25 @@ button.ghost{background:var(--bg);border:1px solid var(--line);color:var(--ink)}
 .timeline{position:relative;margin:14px 0 22px;padding-left:22px}.timeline:before{content:"";position:absolute;left:6px;top:5px;bottom:8px;width:2px;background:var(--line)}.timeline-item{position:relative;padding:0 0 16px 12px}.timeline-item:before{content:"";position:absolute;left:-20px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px var(--soft)}.timeline-item strong{display:block;font-size:13px}.timeline-item small{display:block;color:var(--muted);margin-top:4px}
 @media(max-width:1000px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.wrap{padding:15px}.stats{grid-template-columns:1fr 1fr}.overview-grid{grid-template-columns:1fr}.admin-head{align-items:flex-start;flex-direction:column}.nav{display:grid;grid-template-columns:1fr 1fr}.nav button{width:100%}}
+.user-admin-layout{display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,2fr);gap:14px;align-items:start}
+.user-admin-list{max-height:70vh;overflow:auto}.user-admin-detail{min-width:0;min-height:250px}
+.user-admin-list>input{margin-bottom:12px}
+.user-admin-item{display:block;width:100%;text-align:left;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:12px;margin-bottom:8px;border-radius:12px}
+.user-admin-item.active{border-color:var(--orange);background:var(--soft)}
+.user-admin-item strong,.user-admin-item small{display:block;overflow-wrap:anywhere}.user-admin-item small{color:var(--muted);font-size:11px;margin-top:4px}
+.user-admin-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
+.user-admin-tabs button{background:var(--bg);color:var(--ink);border:1px solid var(--line);padding:8px 11px;font-size:12px}
+.user-admin-tabs button.active{background:var(--soft);color:var(--orange);border-color:#f4b39f}
+.user-data-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
+.user-data-stat{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);min-width:0}
+.user-data-stat strong{display:block;font-size:20px;overflow-wrap:anywhere}.user-data-stat small{color:var(--muted)}
+.user-data-section{border-top:1px solid var(--line);padding:15px 0}.user-data-section h3{font-size:14px;margin:0 0 9px}
+.user-data-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}
+.user-data-row-main{min-width:0;overflow-wrap:anywhere}.user-data-row-main strong{display:block;font-size:13px}.user-data-row-main small{display:block;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;margin-top:4px}
+.user-data-row button{padding:7px 10px;font-size:11px;flex-shrink:0}.danger{background:#b42318}
+.admin-privacy-note{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:12px;line-height:1.5}
+@media(max-width:760px){.user-admin-layout{grid-template-columns:1fr}.user-admin-list{max-height:30vh}.user-data-grid{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -70,7 +89,7 @@ button.ghost{background:var(--bg);border:1px solid var(--line);color:var(--ink)}
 <main id="app">
 <div class="admin-head"><div><h1>Admin overview</h1><p>Monitor visitors, conversations and network activity.</p></div><small id="lastUpdated" class="muted">Waiting for data</small></div>
 <nav class="nav" aria-label="Admin sections">
-<button class="active" data-view="overviewView">Overview</button><button data-view="visitorsView">Visitors</button><button data-view="networkView">Network</button><button data-view="chatView">Chat history</button><button data-view="analyticsView">Analytics</button><button data-view="settingsView">Settings</button>
+<button class="active" data-view="overviewView">Overview</button><button data-view="visitorsView">Visitors</button><button data-view="networkView">Network</button><button data-view="chatView">Chat history</button><button data-view="usersView">Users & data</button><button data-view="analyticsView">Analytics</button><button data-view="settingsView">Settings</button>
 </nav>
 <section id="overviewView" class="admin-view active">
 <div class="stats">
@@ -99,6 +118,11 @@ button.ghost{background:var(--bg);border:1px solid var(--line);color:var(--ink)}
 </section>
 <section id="networkView" class="admin-view panel"><div class="section-title"><h2>Network fingerprints</h2><span class="muted" id="networkSummary"></span></div><div id="networkRecords"><div class="empty">Loading network records...</div></div></section>
 <section id="chatView" class="admin-view panel"><div class="section-title"><h2>Conversation history</h2><span class="muted" id="chatSummary"></span></div><div class="toolbar"><input id="chatFrom" type="date" aria-label="Chats from date"><input id="chatTo" type="date" aria-label="Chats to date"><button id="exportChats" class="ghost">Export chats CSV</button></div><div id="chatRecords"><div class="empty">Loading conversations...</div></div></section>
+<section id="usersView" class="admin-view">
+<div class="section-title"><div><h2>Users and workspace data</h2><p class="muted">Inspect cloud data saved by registered accounts.</p></div><button id="exportUserData" class="ghost" disabled>Export account JSON</button></div>
+<div class="user-admin-layout"><aside class="panel user-admin-list"><input id="userSearch" type="search" placeholder="Search account ID"><div id="adminUserList"><div class="empty">Loading accounts...</div></div></aside><section class="panel user-admin-detail" id="adminUserDetail"><div class="empty">Select an account.</div></section></div>
+<p class="admin-privacy-note">Guest-only data stays in the visitor's browser. This page manages cloud data under registered accounts. Firebase Authentication account suspension and deletion require a separate secure Admin service.</p>
+</section>
 <section id="analyticsView" class="admin-view">
 <div class="stats"><div class="panel stat"><small>Total messages</small><strong id="analyticsMessages">0</strong></div><div class="panel stat"><small>Visitors with chats</small><strong id="analyticsChatUsers">0</strong></div><div class="panel stat"><small>Average chats per visitor</small><strong id="analyticsAverage">0</strong></div></div>
 <div class="panel" style="margin-top:14px"><h2 style="font-size:17px;margin:0 0 5px">Activity by day</h2><p class="muted">Based on timestamps stored with visitor records.</p><div id="analyticsChart" class="chart"></div></div>
@@ -143,7 +167,7 @@ $("loginForm").addEventListener("submit",async e=>{
 });
 $("logout").addEventListener("click",()=>auth.signOut());
 auth.onAuthStateChanged(async user=>{
- if(!user){if(visitorsRef&&liveListener){visitorsRef.off("value",liveListener);liveListener=null;}visitorsRef=null;$("liveStatus").textContent="Offline";$("login").style.display="block";$("app").style.display="none";$("logout").style.display="none";return;}
+ if(!user){if(visitorsRef&&liveListener){visitorsRef.off("value",liveListener);liveListener=null;}visitorsRef=null;if(adminUsersRef&&adminUsersListener){adminUsersRef.off("value",adminUsersListener);adminUsersListener=null;}adminUsersRef=null;$("liveStatus").textContent="Offline";$("login").style.display="block";$("app").style.display="none";$("logout").style.display="none";return;}
  if((user.email||"").toLowerCase()!==ADMIN_EMAIL){
   await auth.signOut();
   status("This account is not authorised for admin access.");
@@ -157,13 +181,13 @@ auth.onAuthStateChanged(async user=>{
  }
  try { await user.getIdToken(true); }
  catch(error) { await auth.signOut(); status("Administrator verification failed. Please sign in again."); return; }
- $("login").style.display="none";$("app").style.display="block";$("logout").style.display="inline-block";await loadVisitors();
+ $("login").style.display="none";$("app").style.display="block";$("logout").style.display="inline-block";await loadVisitors();loadAdminUsers();
 });
 
 function switchView(id){
  document.querySelectorAll(".admin-view").forEach(v=>v.classList.toggle("active",v.id===id));
  document.querySelectorAll(".nav [data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===id));
- const heading=({overviewView:"Admin overview",visitorsView:"Visitors",networkView:"Network activity",chatView:"Chat history",analyticsView:"Analytics",settingsView:"Settings"})[id]||"Admin overview";
+ const heading=({overviewView:"Admin overview",visitorsView:"Visitors",networkView:"Network activity",chatView:"Chat history",usersView:"Users & data",analyticsView:"Analytics",settingsView:"Settings"})[id]||"Admin overview";
  const h=document.querySelector(".admin-head h1");if(h)h.textContent=heading;
 }
 document.querySelectorAll(".nav [data-view]").forEach(b=>b.addEventListener("click",()=>switchView(b.dataset.view)));
@@ -299,6 +323,76 @@ function applyVisitorSnapshot(snapshot){
   if(!selectedUid&&rows.length)selectedUid=rows[0].uid;
   renderList();renderDetail();renderAdminInsights(rows);
 }
+
+let adminUsersData={},selectedAdminUid=null,adminUsersRef=null,adminUsersListener=null,userTab="summary";
+const validAdminKey=v=>/^[A-Za-z0-9_-]{1,128}$/.test(String(v||""));
+const adminUserList=()=>Object.entries(adminUsersData||{}).map(([uid,data])=>({uid,data:data||{}}));
+const userDataStats=d=>({chats:Object.keys(d.sessions||{}).length,memories:Object.keys(d.memories||{}).length,tasks:Object.keys(d.planner?.tasks||{}).length,transactions:Array.isArray(d.finance?.transactions)?d.finance.transactions.length:0});
+function renderAdminUserList(){
+ const q=($("userSearch")?.value||"").toLowerCase().trim();
+ const rows=adminUserList().filter(x=>x.uid.toLowerCase().includes(q));
+ $("adminUserList").innerHTML=rows.length?rows.map(x=>{const s=userDataStats(x.data);return '<button class="user-admin-item '+(x.uid===selectedAdminUid?'active':'')+'" data-admin-uid="'+esc(x.uid)+'"><strong>Account</strong><small>'+esc(x.uid)+'</small><small>'+s.chats+' chats · '+s.memories+' memories · '+s.tasks+' tasks</small></button>';}).join(""):'<div class="empty">No registered account data found.</div>';
+ $("adminUserList").querySelectorAll("[data-admin-uid]").forEach(b=>b.addEventListener("click",()=>{selectedAdminUid=b.dataset.adminUid;userTab="summary";renderAdminUserList();renderAdminUserDetail();}));
+}
+function adminRow(title,detail,action){return '<div class="user-data-row"><div class="user-data-row-main"><strong>'+esc(title)+'</strong><small>'+esc(detail)+'</small></div>'+(action?'<button class="danger" data-admin-delete="'+esc(action)+'">Delete</button>':'')+'</div>';}
+function adminSection(title,content){return '<section class="user-data-section"><h3>'+title+'</h3>'+content+'</section>';}
+function renderAdminUserDetail(){
+ const d=adminUsersData[selectedAdminUid],el=$("adminUserDetail");
+ $("exportUserData").disabled=!d;
+ if(!d){el.innerHTML='<div class="empty">Select an account.</div>';return;}
+ const s=userDataStats(d),fin=d.finance||{},planner=d.planner||{},prefs=d.settings||{};
+ let h='<h2 style="font-size:18px;margin:0">Account details</h2><p class="muted" style="overflow-wrap:anywhere;margin-top:6px">'+esc(selectedAdminUid)+'</p>';
+ h+='<div class="chips"><span class="chip">Memory use: '+(prefs.useMemory===false?'Off':'On')+'</span><span class="chip">Last seen: '+esc(date(d.profile?.lastSeenAtMs))+'</span></div>';
+ h+='<div class="user-data-grid">'+[['Chats',s.chats],['Memories',s.memories],['Tasks',s.tasks],['Transactions',s.transactions]].map(x=>'<div class="user-data-stat"><strong>'+x[1]+'</strong><small>'+x[0]+'</small></div>').join("")+'</div>';
+ h+='<div class="user-admin-tabs">'+[['summary','Summary'],['sessions','Chats'],['memories','Memory'],['planner','Planner'],['finance','Finance']].map(x=>'<button class="'+(userTab===x[0]?'active':'')+'" data-user-tab="'+x[0]+'">'+x[1]+'</button>').join("")+'</div>';
+ if(userTab==='summary'){
+  h+=adminSection('Workspace inventory','<p class="muted">'+s.chats+' conversations, '+s.memories+' memories, '+s.tasks+' planner tasks, '+s.transactions+' finance transactions, '+(fin.goals||[]).length+' savings goals and '+(fin.debts||[]).length+' debt records.</p>');
+  h+=adminSection('Planner reminders', '<p class="muted">'+(planner.reminderSettings?esc(planner.reminderSettings.time||'No time')+' · Days '+esc((planner.reminderSettings.days||[]).join(', ')):'No reminder schedule saved')+'</p>');
+ } else if(userTab==='sessions'){
+  const rows=Object.entries(d.sessions||{});
+  h+=adminSection('Saved conversations',rows.length?rows.map(([id,x])=>adminRow(x.title||'Untitled conversation',(x.messages||[]).length+' messages · '+date(x.updatedAtMs),'session:'+id)).join(''):'<p class="muted">No saved conversations.</p>');
+ } else if(userTab==='memories'){
+  const rows=Object.entries(d.memories||{});
+  h+=adminSection('Personal Memory',rows.length?rows.map(([id,x])=>adminRow(x.title||'Untitled memory',(x.category||'General')+' · '+(x.content||''),'memory:'+id)).join(''):'<p class="muted">No saved memories.</p>');
+  h+=adminSection('Memory preference','<p class="muted">Use Memory: '+(prefs.useMemory===false?'Off':'On')+'</p><button class="ghost" id="adminToggleMemory">'+(prefs.useMemory===false?'Turn on':'Turn off')+' Memory</button>');
+ } else if(userTab==='planner'){
+  const rows=Object.entries(planner.tasks||{});
+  h+=adminSection('Planner tasks',rows.length?rows.map(([id,x])=>adminRow(x.title||'Untitled task',(x.done?'Completed':'Open')+' · Due '+(x.dueDate||'No date')+' · '+(x.notes||''),'task:'+id)).join(''):'<p class="muted">No planner tasks.</p>');
+  h+=adminSection('Reminder settings','<p class="muted">'+(planner.reminderSettings?esc(planner.reminderSettings.time||'')+' · Days '+esc((planner.reminderSettings.days||[]).join(', ')):'No reminder schedule')+'</p>');
+ } else if(userTab==='finance'){
+  const tx=Array.isArray(fin.transactions)?fin.transactions:[],goals=Array.isArray(fin.goals)?fin.goals:[],debts=Array.isArray(fin.debts)?fin.debts:[];
+  const money=n=>'₦'+Number(n||0).toLocaleString('en-NG');
+  const inc=tx.filter(x=>x.type==='income').reduce((n,x)=>n+Number(x.amount||0),0),out=tx.filter(x=>x.type==='expense').reduce((n,x)=>n+Number(x.amount||0),0);
+  h+=adminSection('Personal finance totals','<div class="user-data-grid"><div class="user-data-stat"><strong>'+money(inc)+'</strong><small>Income</small></div><div class="user-data-stat"><strong>'+money(out)+'</strong><small>Expenses</small></div><div class="user-data-stat"><strong>'+money(inc-out)+'</strong><small>Net balance</small></div></div>');
+  h+=adminSection('Transactions',tx.length?tx.map(x=>adminRow((x.type||'entry').toUpperCase()+' · '+money(x.amount),(x.description||'No description')+' · '+(x.category||'Other')+' · '+(x.date||''),'transaction:'+x.id)).join(''):'<p class="muted">No transactions.</p>');
+  h+=adminSection('Budgets',Object.entries(fin.budgets||{}).map(([k,v])=>adminRow(k,money(v))).join('')||'<p class="muted">No budgets.</p>');
+  h+=adminSection('Savings goals',goals.map(x=>adminRow(x.name||'Goal','Target '+money(x.target),'goal:'+x.id)).join('')||'<p class="muted">No goals.</p>');
+  h+=adminSection('Debt records',debts.map(x=>adminRow(x.name||'Debt',money(x.amount)+' · '+(x.direction==='owed_to_me'?'Owed to user':'User owes'),'debt:'+x.id)).join('')||'<p class="muted">No debt records.</p>');
+ }
+ el.innerHTML=h;
+ el.querySelectorAll('[data-user-tab]').forEach(b=>b.addEventListener('click',()=>{userTab=b.dataset.userTab;renderAdminUserDetail();}));
+ el.querySelectorAll('[data-admin-delete]').forEach(b=>b.addEventListener('click',()=>adminDeleteUserRecord(b.dataset.adminDelete)));
+ const toggle=$('adminToggleMemory');if(toggle)toggle.addEventListener('click',async()=>{const next=prefs.useMemory===false;if(!confirm((next?'Enable':'Disable')+' saved memory use for this account?'))return;await db.ref('users/'+selectedAdminUid+'/settings/useMemory').set(next);});
+}
+async function adminDeleteUserRecord(action){
+ if(!validAdminKey(selectedAdminUid)||!auth.currentUser||(auth.currentUser.email||'').toLowerCase()!==ADMIN_EMAIL)return;
+ const [kind,id]=String(action).split(':');if(!validAdminKey(id)||!confirm('Permanently delete this '+kind+' record?'))return;
+ const pathMap={session:'sessions/'+id,memory:'memories/'+id,task:'planner/tasks/'+id};
+ if(pathMap[kind]) await db.ref('users/'+selectedAdminUid+'/'+pathMap[kind]).remove();
+ else{
+  const field={transaction:'transactions',goal:'goals',debt:'debts'}[kind];if(!field)return;
+  const ref=db.ref('users/'+selectedAdminUid+'/finance/'+field),snap=await ref.once('value');
+  await ref.set((Array.isArray(snap.val())?snap.val():[]).filter(x=>String(x.id)!==id));
+ }
+}
+function loadAdminUsers(){
+ if(adminUsersRef&&adminUsersListener)adminUsersRef.off('value',adminUsersListener);
+ adminUsersRef=db.ref('users');
+ adminUsersListener=adminUsersRef.on('value',snap=>{adminUsersData=snap.val()||{};const list=adminUserList();if(!adminUsersData[selectedAdminUid])selectedAdminUid=list.length?list[0].uid:null;renderAdminUserList();renderAdminUserDetail();},err=>{$('adminUserList').innerHTML='<div class="empty">Could not read account data. Publish the updated Firebase rules, then refresh.</div>';console.error(err);});
+}
+$('userSearch').addEventListener('input',renderAdminUserList);
+$('exportUserData').addEventListener('click',()=>{const data=adminUsersData[selectedAdminUid];if(!data)return;const blob=new Blob([JSON.stringify({uid:selectedAdminUid,data},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='vee-ai-account-'+selectedAdminUid+'.json';link.click();URL.revokeObjectURL(url);});
+
 function loadVisitors(){
  $("visitorList").innerHTML='<div class="empty">Loading visitor records...</div>';
  if(visitorsRef&&liveListener){visitorsRef.off("value",liveListener);liveListener=null;}
