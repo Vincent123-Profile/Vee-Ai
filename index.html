@@ -847,6 +847,17 @@
       scrollbar-gutter: stable;
     }
 
+    .content-studio-panel{max-width:680px;width:min(680px,calc(100% - 28px));max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    .content-studio-form{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;min-width:0}
+    .content-studio-form label{color:var(--text-secondary);font-size:12px;font-weight:700;align-self:end}
+    .content-studio-form input,.content-studio-form select,.content-studio-form textarea{width:100%;min-width:0;box-sizing:border-box;padding:11px 12px;border:1px solid var(--glass-border);border-radius:12px;background:var(--glass-surface);color:var(--text-primary);font:inherit;font-size:14px}
+    .content-studio-form label[for="contentStudioTitle"],.content-studio-form #contentStudioTitle,.content-studio-form label[for="contentStudioBody"],.content-studio-form #contentStudioBody,.content-studio-actions{grid-column:1/-1}
+    .content-studio-form textarea{resize:vertical;min-height:150px}.content-studio-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.content-studio-actions button{min-height:46px}
+    .content-draft-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:13px;border:1px solid var(--glass-border);border-radius:14px;background:var(--glass-surface)}
+    .content-draft-main{min-width:0;flex:1}.content-draft-main strong{display:block;overflow-wrap:anywhere}.content-draft-main span{display:block;margin-top:4px;color:var(--text-secondary);font-size:11px}
+    .content-draft-preview{margin-top:8px;color:var(--text-secondary);font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:90px;overflow:hidden}
+    .content-draft-actions{display:flex;flex-wrap:wrap;gap:6px}.content-draft-actions button{border:1px solid var(--glass-border);border-radius:9px;padding:7px 9px;background:var(--glass-chrome);color:var(--text-primary);font-size:11px}
+    @media(max-width:560px){.content-studio-form{grid-template-columns:1fr}.content-studio-form>*{grid-column:1/-1}.content-studio-actions{grid-template-columns:1fr}.content-draft-row{flex-direction:column}.content-draft-actions{width:100%}.content-draft-actions button{flex:1}}
     .visitor-name-input {
       width: 100%;
       padding: 14px 15px;
@@ -1444,7 +1455,7 @@
             <article class="home-feature" role="button" tabindex="0" onclick="veeOpenMemory()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenMemory()}"><div class="home-feature-icon">◎</div><h3>My Memory</h3><p>Save details and choose what Vee-AI uses in future chats.</p><em id="memoryFeatureStatus">Open memory</em></article>
             <article class="home-feature planner-feature" role="button" tabindex="0" onclick="veeOpenPlanner()" onkeydown="veePlannerKey(event)"><div class="home-feature-icon">▦</div><h3>Planner</h3><p>Organise tasks, due dates and daily plans.</p><em id="plannerFeatureStatus">Open planner</em></article>
             <article class="home-feature" role="button" tabindex="0" onclick="veeOpenFinance()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenFinance()}"><div class="home-feature-icon">₦</div><h3>Finance</h3><p>Track income, spending, budgets, savings and debts.</p><em>Open Finance</em></article>
-            <article class="home-feature"><div class="home-feature-icon">✎</div><h3>Content Studio</h3><p>Plan and create content with AI.</p><em>In development</em></article>
+            <article class="home-feature" role="button" tabindex="0" onclick="veeOpenContentStudio()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenContentStudio()}"><div class="home-feature-icon">✎</div><h3>Content Studio</h3><p>Create, save and organise your content drafts.</p><em>Open Content Studio</em></article>
             <article class="home-feature"><div class="home-feature-icon">⌘</div><h3>Business</h3><p>Optional tools for business workflows.</p><em>In development</em></article>
           </div>
           <div class="home-section-head"><h2>Recent conversations</h2><span id="homeRecentCount">0 saved</span></div>
@@ -1617,7 +1628,21 @@
  </div>
 </div>
 
-  <!-- Planner -->
+  <!-- Content Studio -->
+  <div class="modal-backdrop" id="contentStudioModal" onclick="if(event.target===this) veeCloseModal('contentStudioModal')"><div class="modal-panel glass-chrome content-studio-panel">
+    <div class="modal-head"><h2>Content Studio</h2><button type="button" class="icon-btn" onclick="veeCloseModal('contentStudioModal')">✕</button></div>
+    <p class="account-copy">Create content with Vee-AI, then save and organise your drafts. Signed-in drafts sync to your account.</p>
+    <form id="contentStudioForm" class="content-studio-form" onsubmit="veeSaveContentDraft(event)">
+      <label for="contentStudioType">Content type</label><select id="contentStudioType"><option>Social media post</option><option>Video script</option><option>Caption</option><option>Product description</option><option>Blog article</option><option>Email</option><option>Content plan</option></select>
+      <label for="contentStudioPlatform">Platform</label><select id="contentStudioPlatform"><option>Any platform</option><option>Instagram</option><option>Facebook</option><option>TikTok</option><option>YouTube</option><option>X</option><option>LinkedIn</option><option>WhatsApp</option></select>
+      <label for="contentStudioTitle">Draft title</label><input id="contentStudioTitle" maxlength="120" placeholder="Give your draft a title" required>
+      <label for="contentStudioBody">Your content</label><textarea id="contentStudioBody" maxlength="12000" rows="7" placeholder="Write or paste your content here..." required></textarea>
+      <div class="content-studio-actions"><button type="button" class="account-secondary" onclick="veeGenerateContentPrompt()">Create with Vee-AI</button><button type="submit" class="send-btn">Save draft</button></div>
+    </form>
+    <div class="home-section-head"><h3>Your drafts</h3><span id="contentStudioCount">0 saved</span></div><div id="contentStudioDraftList" class="finance-list"><div class="home-empty">Your saved drafts will appear here.</div></div><p id="contentStudioStatus" class="account-copy" role="status" aria-live="polite"></p>
+  </div></div>
+
+
   <div class="modal-backdrop" id="plannerModal" onclick="if(event.target===this) veeCloseModal('plannerModal')">
     <div class="modal-panel glass-chrome">
       <div class="modal-head"><h2>My Planner</h2><button type="button" class="icon-btn" onclick="veeCloseModal('plannerModal')">✕</button></div>
@@ -2510,6 +2535,20 @@ function veeFinanceCleanNumber(value){var n=Number(value);return Number.isFinite
 function veeFinanceSnapshot(){return {transactions:veeFinanceData.transactions.slice(0,500),budgets:veeFinanceData.budgets,goals:veeFinanceData.goals.slice(0,100),debts:veeFinanceData.debts.slice(0,100),updatedAtMs:Date.now()};}
 function veeSaveFinanceLocal(){try{localStorage.setItem("vee_ai_personal_finance_v1",JSON.stringify(veeFinanceSnapshot()));return true;}catch(e){return false;}}
 async function veePersistFinance(){if(!veeSaveFinanceLocal())return false;if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){try{await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/finance").set(veeFinanceSnapshot());}catch(e){console.error("Finance cloud save failed",e);return false;}}return true;}
+var veeContentDrafts=[];
+function veeContentDraftSnapshot(){return veeContentDrafts.slice(0,200).map(function(d){return{id:String(d.id),type:String(d.type||"Social media post"),platform:String(d.platform||"Any platform"),title:String(d.title||"").slice(0,120),body:String(d.body||"").slice(0,12000),createdAtMs:Number(d.createdAtMs||Date.now()),updatedAtMs:Number(d.updatedAtMs||Date.now())};});}
+function veeSaveContentDraftLocal(){try{localStorage.setItem("vee_ai_content_drafts_v1",JSON.stringify(veeContentDraftSnapshot()));return true;}catch(e){return false;}}
+async function veePersistContentDrafts(){if(!veeSaveContentDraftLocal())return false;if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){try{await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/contentStudio/drafts").set(veeContentDraftSnapshot());}catch(e){console.error("Content Studio cloud save failed",e);return false;}}return true;}
+function veeLoadContentDraftsLocal(){try{var d=JSON.parse(localStorage.getItem("vee_ai_content_drafts_v1")||"[]");veeContentDrafts=Array.isArray(d)?d.slice(0,200):[];}catch(e){veeContentDrafts=[];}}
+async function veeOpenContentStudio(){if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){try{var snap=await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/contentStudio/drafts").once("value");if(snap.exists()){var d=snap.val();veeContentDrafts=Array.isArray(d)?d.slice(0,200):Object.keys(d||{}).map(function(k){return d[k];}).filter(Boolean).slice(0,200);veeSaveContentDraftLocal();}else{veeLoadContentDraftsLocal();}}catch(e){console.error("Content Studio load failed",e);veeLoadContentDraftsLocal();}}else{veeLoadContentDraftsLocal();}veeRenderContentDrafts();veeOpenModal("contentStudioModal");}
+function veeRenderContentDrafts(){var list=document.getElementById("contentStudioDraftList"),count=document.getElementById("contentStudioCount");if(!list||!count)return;count.textContent=veeContentDrafts.length+" saved";var items=veeContentDrafts.slice().sort(function(a,b){return Number(b.updatedAtMs||0)-Number(a.updatedAtMs||0);});list.innerHTML=items.length?items.map(function(d){return '<div class="content-draft-row"><div class="content-draft-main"><strong>'+veeEscapeHtml(d.title)+'</strong><span>'+veeEscapeHtml(d.type)+' · '+veeEscapeHtml(d.platform)+'</span><div class="content-draft-preview">'+veeEscapeHtml(d.body)+'</div></div><div class="content-draft-actions"><button type="button" onclick="veeEditContentDraft(\''+veeEscapeHtml(d.id)+'\')">Edit</button><button type="button" onclick="veeCopyContentDraft(\''+veeEscapeHtml(d.id)+'\')">Copy</button><button type="button" onclick="veeDeleteContentDraft(\''+veeEscapeHtml(d.id)+'\')">Delete</button></div></div>';}).join(""):'<div class="home-empty">No drafts saved yet. Create your first draft above.</div>';}
+async function veeSaveContentDraft(event){event.preventDefault();var title=document.getElementById("contentStudioTitle").value.trim(),body=document.getElementById("contentStudioBody").value.trim();if(!title||!body)return;var form=document.getElementById("contentStudioForm"),editingId=form.dataset.editingId,draft={id:"draft_"+Date.now()+"_"+Math.random().toString(36).slice(2,8),type:document.getElementById("contentStudioType").value,platform:document.getElementById("contentStudioPlatform").value,title:title,body:body,createdAtMs:Date.now(),updatedAtMs:Date.now()};if(editingId){var old=veeContentDrafts.find(function(x){return x.id===editingId;});if(old){draft.id=old.id;draft.createdAtMs=old.createdAtMs||Date.now();veeContentDrafts=veeContentDrafts.filter(function(x){return x.id!==editingId;});}delete form.dataset.editingId;}veeContentDrafts.unshift(draft);veeContentDrafts=veeContentDrafts.slice(0,200);var ok=await veePersistContentDrafts();veeRenderContentDrafts();form.reset();document.getElementById("contentStudioStatus").textContent=ok?"Draft saved.":"Draft saved on this device, but cloud sync failed.";}
+function veeEditContentDraft(id){var d=veeContentDrafts.find(function(x){return x.id===id;});if(!d)return;document.getElementById("contentStudioType").value=d.type;document.getElementById("contentStudioPlatform").value=d.platform;document.getElementById("contentStudioTitle").value=d.title;document.getElementById("contentStudioBody").value=d.body;document.getElementById("contentStudioForm").dataset.editingId=id;document.getElementById("contentStudioTitle").focus();}
+async function veeDeleteContentDraft(id){if(!confirm("Delete this content draft?"))return;veeContentDrafts=veeContentDrafts.filter(function(x){return x.id!==id;});var ok=await veePersistContentDrafts();veeRenderContentDrafts();document.getElementById("contentStudioStatus").textContent=ok?"Draft deleted.":"Draft removed on this device, but cloud sync failed.";}
+async function veeCopyContentDraft(id){var d=veeContentDrafts.find(function(x){return x.id===id;});if(!d)return;try{await navigator.clipboard.writeText(d.body);document.getElementById("contentStudioStatus").textContent="Draft copied to clipboard.";}catch(e){document.getElementById("contentStudioStatus").textContent="Clipboard access was blocked by your browser.";}}
+function veeGenerateContentPrompt(){var type=document.getElementById("contentStudioType").value,platform=document.getElementById("contentStudioPlatform").value,title=document.getElementById("contentStudioTitle").value.trim(),prompt="Help me create "+type+" for "+platform+". "+(title?"The topic or working title is: "+title+". ":"")+"Ask me for any essential missing details, then produce a polished draft I can save in Content Studio.";veeCloseModal("contentStudioModal");veeSendPrompt(prompt);}
+veeLoadContentDraftsLocal();
+
 async function veeOpenFinance(){
  if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){try{var snap=await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/finance").once("value");if(snap.exists()){var d=snap.val()||{};veeFinanceData={transactions:Array.isArray(d.transactions)?d.transactions.slice(0,500):[],budgets:d.budgets&&typeof d.budgets==="object"?d.budgets:{},goals:Array.isArray(d.goals)?d.goals.slice(0,100):[],debts:Array.isArray(d.debts)?d.debts.slice(0,100):[]};veeSaveFinanceLocal();}else{veeLoadFinanceLocal();}}catch(e){console.error("Finance load failed",e);veeLoadFinanceLocal();}}else{veeLoadFinanceLocal();}
  document.getElementById("financeDate").value=new Date().toISOString().slice(0,10);veeRenderFinance();veeOpenModal("financeModal");
