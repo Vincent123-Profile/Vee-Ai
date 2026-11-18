@@ -89,21 +89,21 @@ button.ghost{background:var(--bg);border:1px solid var(--line);color:var(--ink)}
 <div class="panel stat"><small>New visitors</small><strong id="newVisitorCount">0</strong></div>
 <div class="panel stat"><small>Returning visitors</small><strong id="returningVisitorCount">0</strong></div>
 </div>
-<div class="toolbar"><input id="search" type="search" placeholder="Search visitor ID, network fingerprint or conversation title"><button id="refresh" class="secondary">Refresh</button></div>
+<div class="toolbar"><input id="search" type="search" placeholder="Search visitor ID, network fingerprint or conversation title"><input id="visitorFrom" type="date" aria-label="Visitors from date"><input id="visitorTo" type="date" aria-label="Visitors to date"><button id="exportVisitors" class="ghost">Export visitors CSV</button><button id="refresh" class="secondary">Refresh</button></div>
 <div class="layout">
 <section class="panel list" id="visitorList"><div class="empty">Loading visitors...</div></section>
 <section class="panel detail" id="visitorDetail"><div class="empty">Select a visitor to view profile and conversation history.</div></section>
 </div>
 </section>
 <section id="networkView" class="admin-view panel"><div class="section-title"><h2>Network fingerprints</h2><span class="muted" id="networkSummary"></span></div><div id="networkRecords"><div class="empty">Loading network records...</div></div></section>
-<section id="chatView" class="admin-view panel"><div class="section-title"><h2>Conversation history</h2><span class="muted" id="chatSummary"></span></div><div id="chatRecords"><div class="empty">Loading conversations...</div></div></section>
+<section id="chatView" class="admin-view panel"><div class="section-title"><h2>Conversation history</h2><span class="muted" id="chatSummary"></span></div><div class="toolbar"><input id="chatFrom" type="date" aria-label="Chats from date"><input id="chatTo" type="date" aria-label="Chats to date"><button id="exportChats" class="ghost">Export chats CSV</button></div><div id="chatRecords"><div class="empty">Loading conversations...</div></div></section>
 <section id="analyticsView" class="admin-view">
 <div class="stats"><div class="panel stat"><small>Total messages</small><strong id="analyticsMessages">0</strong></div><div class="panel stat"><small>Visitors with chats</small><strong id="analyticsChatUsers">0</strong></div><div class="panel stat"><small>Average chats per visitor</small><strong id="analyticsAverage">0</strong></div></div>
 <div class="panel" style="margin-top:14px"><h2 style="font-size:17px;margin:0 0 5px">Activity by day</h2><p class="muted">Based on timestamps stored with visitor records.</p><div id="analyticsChart" class="chart"></div></div>
 </section>
 <section id="settingsView" class="admin-view panel"><h2 style="font-size:18px;margin:0 0 5px">Dashboard settings</h2><p class="muted">Personal display preferences for this browser.</p>
 <div class="setting-row"><div><strong>Dark appearance</strong><div class="muted">Switch between light and dark dashboard themes.</div></div><button id="themeToggle" class="ghost">Enable dark mode</button></div>
-<div class="setting-row"><div><strong>Refresh data</strong><div class="muted">Reload visitor and conversation records from Firebase.</div></div><button id="settingsRefresh">Refresh now</button></div>
+<div class="setting-row"><div><strong>Refresh data</strong><div class="muted">Reload visitor and conversation records from Firebase.</div></div><button id="settingsRefresh">Refresh now</button></div><div class="setting-row"><div><strong>Live updates</strong><div class="muted">Dashboard records update automatically while you are signed in.</div></div><span class="chip" id="liveStatus">Connecting</span></div><div class="setting-row"><div><strong>Export reports</strong><div class="muted">Download visitor and conversation data as CSV files.</div></div><span class="chip">CSV export</span></div>
 <div class="setting-row"><div><strong>Administrator account</strong><div class="muted">Signed in as agboolavincent67@gmail.com</div></div><span class="chip">Verified admin</span></div>
 <div class="setting-row"><div><strong>Data handling</strong><div class="muted">This dashboard displays stored records. Network fingerprints are hashed identifiers.</div></div><span class="chip">Read-only analytics</span></div>
 </section>
@@ -126,7 +126,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(), db=firebase.database();
 const $=id=>document.getElementById(id);
-let visitorData={}, selectedUid=null;
+let visitorData={}, selectedUid=null, visitorsRef=null, liveListener=null;
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const date=value=>value?new Date(Number(value)).toLocaleString():"Unknown";
 function status(message){$("status").textContent=message||""}
@@ -141,7 +141,7 @@ $("loginForm").addEventListener("submit",async e=>{
 });
 $("logout").addEventListener("click",()=>auth.signOut());
 auth.onAuthStateChanged(async user=>{
- if(!user){$("login").style.display="block";$("app").style.display="none";$("logout").style.display="none";return;}
+ if(!user){if(visitorsRef&&liveListener){visitorsRef.off("value",liveListener);liveListener=null;}visitorsRef=null;$("liveStatus").textContent="Offline";$("login").style.display="block";$("app").style.display="none";$("logout").style.display="none";return;}
  if((user.email||"").toLowerCase()!==ADMIN_EMAIL){
   await auth.signOut();
   status("This account is not authorised for admin access.");
@@ -184,10 +184,21 @@ function renderNetworkRecords(rows){
  $("networkSummary").textContent=total+" fingerprints";
  el.innerHTML=html||'<div class="empty">No network records found.</div>';
 }
-function renderChatRecords(rows){
- const all=rows.flatMap(v=>v.sessions.map(s=>({visitor:v.uid,session:s}))).sort((a,b)=>Number(b.session.updatedAtMs||0)-Number(a.session.updatedAtMs||0));
+function inDateRange(timestamp,fromId,toId){
+ const value=Number(timestamp||0),from=$(fromId)?.value,to=$(toId)?.value;
+ if(from){const start=new Date(from+"T00:00:00").getTime();if(value<start)return false;}
+ if(to){const end=new Date(to+"T23:59:59.999").getTime();if(value>end)return false;}
+ return true;
+}
+function getChatRows(){
+ return flatten(visitorData).flatMap(v=>v.sessions.map(s=>({visitor:v.uid,session:s})))
+ .filter(x=>inDateRange(x.session.updatedAtMs,"chatFrom","chatTo"))
+ .sort((a,b)=>Number(b.session.updatedAtMs||0)-Number(a.session.updatedAtMs||0));
+}
+function renderChatRecords(){
+ const all=getChatRows();
  $("chatSummary").textContent=all.length+" conversations";
- $("chatRecords").innerHTML=all.length?all.map(({visitor,session:s})=>'<article class="session"><strong>'+esc(s.title||"Untitled conversation")+'</strong><p class="muted">Visitor '+esc(visitor)+' · '+esc(date(s.updatedAtMs))+' · '+(Array.isArray(s.messages)?s.messages.length:0)+' messages</p>'+(Array.isArray(s.messages)?s.messages.slice(-4).map(m=>'<div class="message '+(m.role==="user"?"user":"assistant")+'"><strong>'+esc(m.role==="user"?"Visitor":"Vee-AI")+'</strong><br>'+esc(m.content||"")+'</div>').join(""):"")+'</article>').join(""):'<div class="empty">No saved conversations found.</div>';
+ $("chatRecords").innerHTML=all.length?all.map(({visitor,session:s})=>'<article class="session"><strong>'+esc(s.title||"Untitled conversation")+'</strong><p class="muted">Visitor '+esc(visitor)+' · '+esc(date(s.updatedAtMs))+' · '+(Array.isArray(s.messages)?s.messages.length:0)+' messages</p>'+(Array.isArray(s.messages)?s.messages.slice(-4).map(m=>'<div class="message '+(m.role==="user"?"user":"assistant")+'"><strong>'+esc(m.role==="user"?"Visitor":"Vee-AI")+'</strong><br>'+esc(m.content||"")+'</div>').join(""):"")+'</article>').join(""):'<div class="empty">No conversations match this date range.</div>';
 }
 function renderAdminInsights(rows){
  const networks=rows.reduce((n,v)=>n+Object.keys(v.networks||{}).length,0),sessions=rows.reduce((n,v)=>n+v.sessions.length,0);
@@ -197,7 +208,7 @@ function renderAdminInsights(rows){
  $("overviewVisitors").textContent=rows.length;$("overviewNetworks").textContent=networks;$("overviewSessions").textContent=sessions;$("overviewNew").textContent=fresh;$("overviewReturning").textContent=returning;
  $("analyticsMessages").textContent=messages;$("analyticsChatUsers").textContent=chatUsers;$("analyticsAverage").textContent=rows.length?(sessions/rows.length).toFixed(1):"0";
  const days=buildDailyCounts(rows);drawChart("overviewChart",days);drawChart("analyticsChart",days);
- renderNetworkRecords(rows);renderChatRecords(rows);
+ renderNetworkRecords(rows);renderChatRecords();
  $("lastUpdated").textContent="Updated "+new Date().toLocaleTimeString();
 }
 const savedTheme=localStorage.getItem("veeAdminTheme");
@@ -223,7 +234,7 @@ function flatten(data){
 }
 function renderList(){
  const q=$("search").value.trim().toLowerCase();
- const rows=flatten(visitorData).filter(v=>(v.uid+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q));
+ const rows=flatten(visitorData).filter(v=>(v.uid+" "+Object.keys(v.networks).join(" ")+" "+v.sessions.map(s=>s.title||"").join(" ")).toLowerCase().includes(q)&&inDateRange(v.last,"visitorFrom","visitorTo"));
  $("visitorList").innerHTML=rows.length?rows.map(v=>'<button class="visitor '+(v.uid===selectedUid?"active":"")+'" data-uid="'+esc(v.uid)+'"><strong>Visitor</strong><small>'+esc(v.uid)+'</small><small>'+v.sessions.length+' conversations · '+Object.keys(v.networks).length+' networks</small><small>Last visit: '+esc(date(v.last))+'</small></button>').join(""):'<div class="empty">No matching visitors found.</div>';
  $("visitorList").querySelectorAll("[data-uid]").forEach(btn=>btn.addEventListener("click",()=>{selectedUid=btn.dataset.uid;renderList();renderDetail();}));
 }
@@ -266,11 +277,9 @@ async function deleteVisitorHistory(uid,label){
   alert("Deletion failed: "+(err.message||"Check Firebase database rules."));
  }
 }
-async function loadVisitors(){
- $("visitorList").innerHTML='<div class="empty">Loading visitor records...</div>';
- try{
-  const snap=await db.ref("visitors").once("value");visitorData=snap.val()||{};
-  const rows=flatten(visitorData);
+function applyVisitorSnapshot(snapshot){
+ visitorData=snapshot.val()||{};
+ const rows=flatten(visitorData);
   $("visitorCount").textContent=rows.length;
   $("networkCount").textContent=rows.reduce((n,v)=>n+Object.keys(v.networks).length,0);
   $("sessionCount").textContent=rows.reduce((n,v)=>n+v.sessions.length,0);
@@ -278,9 +287,41 @@ async function loadVisitors(){
   $("returningVisitorCount").textContent=rows.filter(v=>Number(v.profile.visitCount||0)>1).length;
   if(!selectedUid&&rows.length)selectedUid=rows[0].uid;
   renderList();renderDetail();renderAdminInsights(rows);
- }catch(err){$("visitorList").innerHTML='<div class="empty">Unable to load records. Check admin access and database rules.</div>';console.error(err);}
+}
+function loadVisitors(){
+ $("visitorList").innerHTML='<div class="empty">Loading visitor records...</div>';
+ if(visitorsRef&&liveListener){visitorsRef.off("value",liveListener);liveListener=null;}
+ visitorsRef=db.ref("visitors");
+ liveListener=visitorsRef.on("value",applyVisitorSnapshot,error=>{
+  $("visitorList").innerHTML='<div class="empty">Unable to load records. Check admin access and database rules.</div>';
+  $("liveStatus").textContent="Connection error";console.error(error);
+ });
+ $("liveStatus").textContent="Live";
+}
+function csvCell(value){return '"'+String(value??"").replace(/"/g,'""')+'"';}
+function downloadCsv(filename,headers,rows){
+ const csv=[headers,...rows].map(row=>row.map(csvCell).join(",")).join("\r\n");
+ const blob=new Blob(["\\uFEFF",csv],{type:"text/csv;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+function exportVisitors(){
+ const rows=flatten(visitorData).filter(v=>inDateRange(v.last,"visitorFrom","visitorTo"));
+ downloadCsv("vee-ai-visitors-"+new Date().toISOString().slice(0,10)+".csv",
+ ["Visitor ID","First activity","Last activity","Visit count","Network fingerprints","Conversations"],
+ rows.map(v=>[v.uid,date(v.first),date(v.last),v.profile.visitCount||1,Object.keys(v.networks).length,v.sessions.length]));
+}
+function exportChats(){
+ const rows=getChatRows();
+ downloadCsv("vee-ai-chat-history-"+new Date().toISOString().slice(0,10)+".csv",
+ ["Visitor ID","Conversation title","Created","Updated","Network fingerprint","Role","Message"],
+ rows.flatMap(({visitor,session})=>(Array.isArray(session.messages)?session.messages:[]).map(m=>[visitor,session.title||"Untitled conversation",date(session.createdAtMs),date(session.updatedAtMs),session.fingerprint,m.role,m.content||""])));
 }
 $("search").addEventListener("input",renderList);
+["visitorFrom","visitorTo"].forEach(id=>$(id).addEventListener("change",renderList));
+["chatFrom","chatTo"].forEach(id=>$(id).addEventListener("change",renderChatRecords));
+$("exportVisitors").addEventListener("click",exportVisitors);
+$("exportChats").addEventListener("click",exportChats);
 $("refresh").addEventListener("click",loadVisitors);
 </script>
 </body>
