@@ -1447,6 +1447,8 @@
       veeAccountSyncReady = false;
       veeAccountDb = firebase.database(veeFirebaseApp);
       var memorySnapshot = await veeAccountDb.ref("users/" + user.uid + "/memories").once("value");
+      var memorySettingsSnapshot = await veeAccountDb.ref("users/" + user.uid + "/settings/useMemory").once("value");
+      if (memorySettingsSnapshot.exists()) veeMemoryUseEnabled = memorySettingsSnapshot.val() !== false;
       var memoryData = memorySnapshot.val() || {};
       veeMemories = Object.keys(memoryData).map(function(id) {
         var item = memoryData[id];
@@ -1684,14 +1686,27 @@
         return;
       }
       list.innerHTML = veeMemories.map(function(item) {
-        return '<div class="memory-card"><strong>' + veeEscapeHtml(item.title) + '</strong><small>' + veeEscapeHtml(item.category) + '</small><p>' + veeEscapeHtml(item.content) + '</p><button type="button" class="memory-delete" onclick="veeDeleteMemory(\'' + veeEscapeHtml(item.id) + '\')">Delete memory</button></div>';
+        return '<div class="memory-card"><strong>' + veeEscapeHtml(item.title) + '</strong><small>' + veeEscapeHtml(item.category) + '</small><p>' + veeEscapeHtml(item.content) + '</p><button type="button" class="memory-delete" data-memory-id="' + veeEscapeHtml(item.id) + '">Delete memory</button></div>';
       }).join("");
+      list.querySelectorAll(".memory-delete").forEach(function(button) {
+        button.addEventListener("click", function() { veeDeleteMemory(button.getAttribute("data-memory-id")); });
+      });
     }
-    function veeSetMemoryUse(enabled) {
+    async function veeSetMemoryUse(enabled) {
       veeMemoryUseEnabled = !!enabled;
       try { localStorage.setItem("vee_ai_memory_use", String(veeMemoryUseEnabled)); } catch (e) {}
       var status = document.getElementById("memoryStatus");
-      if (status) status.textContent = veeMemoryUseEnabled ? "Saved memories will be included in future chats." : "Saved memories will not be included in future chats.";
+      if (veeCurrentUser && veeAccountDb && veeAccountSyncReady) {
+        try { await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/settings/useMemory").set(veeMemoryUseEnabled); }
+        catch (error) {
+          veeMemoryUseEnabled = !veeMemoryUseEnabled;
+          var toggle = document.getElementById("memoryUseToggle");
+          if (toggle) toggle.checked = veeMemoryUseEnabled;
+          if (status) status.textContent = "Your memory setting could not be synced. Please try again.";
+          return;
+        }
+      }
+      if (status) status.textContent = veeMemoryUseEnabled ? "Saved memories will be included in future chats on your signed-in devices." : "Saved memories will not be included in future chats.";
     }
     async function veeSaveMemory(event) {
       event.preventDefault();
@@ -1717,7 +1732,7 @@
       }
     }
     async function veeDeleteMemory(id) {
-      if (!veeCurrentUser || !veeAccountDb || !confirm("Delete this saved memory?")) return;
+      if (!/^[A-Za-z0-9_-]{1,128}$/.test(id || "") || !veeCurrentUser || !veeAccountDb || !confirm("Delete this saved memory?")) return;
       try {
         await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/memories/" + id).remove();
         veeMemories = veeMemories.filter(function(item){return item.id !== id;});
