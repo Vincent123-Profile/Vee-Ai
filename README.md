@@ -89,10 +89,10 @@ Firebase Console is not needed for routine visitor or conversation review.
 
 1. Configure the Netlify environment variables.
 2. Confirm Email/Password authentication is enabled for the administrator.
-3. Publish the database rules.
-4. Deploy the feature branch preview.
-5. Visit Vee-AI, refresh, and confirm the same visitor ID is reused.\n6. Confirm the chat endpoint accepts only user and assistant history roles and returns a rate-limit response after 15 requests in one minute from the same network fingerprint.
-6. Save an optional display name in settings.
+3. Publish the updated database rules.
+4. Deploy a preview from the feature branch.
+5. Visit Vee-AI, refresh, and confirm the same visitor ID is reused.
+6. Confirm invalid chat roles are rejected and the sixteenth request within one minute from the same network fingerprint receives a rate-limit response.
 7. Start a conversation and confirm the transcript appears in the admin dashboard.
 8. Clear browser site data to verify a fresh visitor ID is created.
 
