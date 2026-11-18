@@ -838,6 +838,14 @@
       flex-direction: column;
       gap: 14px;
     }
+    /* Keep the Planner controls reachable without pushing reminders below the task list. */
+    #plannerModal .modal-panel {
+      max-height: calc(100dvh - 32px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable;
+    }
 
     .visitor-name-input {
       width: 100%;
@@ -1621,9 +1629,7 @@
         <textarea id="plannerNotes" maxlength="500" placeholder="Add notes (optional)"></textarea>
         <button class="send-btn" type="submit">Add task</button>
       </form>
-      <div class="planner-filters" role="group" aria-label="Filter tasks"><button type="button" class="planner-filter active" data-planner-filter="all">All</button><button type="button" class="planner-filter" data-planner-filter="open">Open</button><button type="button" class="planner-filter" data-planner-filter="done">Completed</button></div>
-      <div id="plannerTaskList" aria-live="polite"><div class="home-empty">Your tasks will appear here.</div></div>
-      <div class="setting-row" style="margin-top:14px"><span>Task reminders</span><button type="button" class="toggle-pill" id="plannerReminderBtn" onclick="veeEnablePlannerReminders()">Enable reminders</button></div>
+      <div class="setting-row" style="margin-top:4px"><span>Task reminders</span><button type="button" class="toggle-pill" id="plannerReminderBtn" onclick="veeEnablePlannerReminders()">Enable reminders</button></div>
       <form class="planner-form" id="plannerReminderSettingsForm" onsubmit="veeSavePlannerReminderSettings(event)">
         <label for="plannerReminderTime" class="account-copy">Reminder time, based on this device's local time</label>
         <input id="plannerReminderTime" type="time" value="09:00" required>
@@ -1634,6 +1640,8 @@
         <button class="send-btn" type="submit">Save reminder schedule</button>
       </form>
       <p class="account-copy" id="plannerReminderStatus" role="status" aria-live="polite">Choose a time and one or more days. Reminders run while Vee-AI is open.</p>
+      <div class="planner-filters" role="group" aria-label="Filter tasks"><button type="button" class="planner-filter active" data-planner-filter="all">All</button><button type="button" class="planner-filter" data-planner-filter="open">Open</button><button type="button" class="planner-filter" data-planner-filter="done">Completed</button></div>
+      <div id="plannerTaskList" aria-live="polite"><div class="home-empty">Your tasks will appear here.</div></div>
       <p class="account-copy" id="plannerStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
