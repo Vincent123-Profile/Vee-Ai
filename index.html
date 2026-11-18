@@ -807,7 +807,7 @@
     .account-message{min-height:18px;font-size:12px;line-height:1.5;color:var(--text-secondary)}
     .account-actions{display:flex;gap:9px;flex-wrap:wrap}
     .account-actions button{flex:1;min-height:43px}
-    .account-secondary{border:1px solid var(--glass-border);border-radius:999px;background:transparent;color:var(--text-secondary);font:700 12px inherit;cursor:pointer;padding:10px}
+    .account-secondary{border:1px solid var(--glass-border);border-radius:999px;background:transparent;color:var(--text-secondary);font:700 12px "Plus Jakarta Sans",sans-serif;cursor:pointer;padding:10px}
     .account-status{font-size:10px;color:var(--text-muted);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
     /* Modals */
@@ -1014,7 +1014,7 @@
         <button type="button" class="icon-btn" onclick="veeToggleTheme()" title="Switch Light/Dark Mode">
           <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
-        <button type="button" class="icon-btn account-btn" id="accountNavBtn" onclick="veeOpenAccount()" title="Account access"><span id="accountStatus" class="account-status">Guest mode</span><span>Sign in</span></button>
+        <button type="button" class="icon-btn account-btn" id="accountNavBtn" onclick="veeOpenAccount()" title="Account access"><span id="accountStatus" class="account-status">Guest mode</span><span id="accountNavLabel">Sign in</span></button>
         <button type="button" class="icon-btn" onclick="veeShare()" title="Share on WhatsApp">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
@@ -1397,7 +1397,8 @@
           var signOut = document.getElementById("accountSignOut");
           var form = document.getElementById("accountForm");
           var message = document.getElementById("accountMessage");
-          if (button) button.textContent = user ? "Account" : "Sign in";
+          var buttonLabel = document.getElementById("accountNavLabel");
+          if (buttonLabel) buttonLabel.textContent = user ? "Account" : "Sign in";
           if (status) status.textContent = user ? (user.email || "Signed in") : "Guest mode";
           if (signOut) signOut.style.display = user ? "block" : "none";
           if (form) form.style.display = user ? "none" : "flex";
