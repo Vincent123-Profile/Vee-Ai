@@ -79,7 +79,13 @@ $("loginForm").addEventListener("submit",async e=>{
 $("logout").addEventListener("click",()=>auth.signOut());
 auth.onAuthStateChanged(async user=>{
  if(!user){$("login").style.display="block";$("app").style.display="none";$("logout").style.display="none";return;}
- if((user.email||"").toLowerCase()!==ADMIN_EMAIL){await auth.signOut();status("This account is not authorised.");return;}
+ if((user.email||"").toLowerCase()!==ADMIN_EMAIL || user.emailVerified !== true){
+  await auth.signOut();
+  status("This account is not an approved, verified administrator.");
+  return;
+ }
+ try { await user.getIdToken(true); }
+ catch(error) { await auth.signOut(); status("Administrator verification failed. Please sign in again."); return; }
  $("login").style.display="none";$("app").style.display="block";$("logout").style.display="inline-block";await loadVisitors();
 });
 function flatten(data){
