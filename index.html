@@ -911,6 +911,22 @@
       font-weight: 700;
       cursor: pointer;
     }
+
+    /* Refined welcome experience */
+    .welcome-screen{padding:22px 10px 24px}
+    .welcome-card{width:100%;max-width:760px;margin:auto;padding:clamp(22px,4vw,38px);border:1px solid var(--glass-border);border-radius:30px;background:linear-gradient(145deg,var(--glass-chrome),var(--glass-surface));box-shadow:0 24px 70px rgba(11,11,11,.08),inset 0 1px 0 rgba(255,255,255,.72);display:flex;flex-direction:column;align-items:center;animation:welcomeRise .65s var(--spring) both}
+    [data-theme="dark"] .welcome-card{box-shadow:0 24px 70px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+    @keyframes welcomeRise{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .welcome-bubble{display:inline-flex;align-items:center;gap:9px;margin:0 0 17px;padding:10px 19px;border:1px solid rgba(241,76,21,.25);border-radius:999px;background:var(--orange-soft);color:var(--orange);font-size:13px;font-weight:800;letter-spacing:.01em;box-shadow:0 8px 24px rgba(241,76,21,.09)}
+    .welcome-bubble-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 5px rgba(241,76,21,.12)}
+    .welcome-headline{max-width:610px;font-size:clamp(1.55rem,4.5vw,2.5rem);line-height:1.12;margin-bottom:12px}
+    .welcome-sub{max-width:520px;margin-bottom:26px}
+    .hero-orb-wrap{margin-bottom:19px}.hero-core{border-radius:22px}.hero-ring{border-radius:28px}
+    .prompt-grid{max-width:650px;gap:11px}.prompt-card{min-height:84px;border-radius:19px;background:var(--glass-chrome)}
+    .top-nav{border-radius:20px;padding:10px 15px}.icon-btn{height:39px}.composer-box{border-radius:23px;background:var(--glass-chrome)}
+    .composer-footer{letter-spacing:.01em}
+    @media(max-width:560px){.welcome-screen{padding:14px 2px 18px}.welcome-card{padding:22px 15px;border-radius:25px}.welcome-bubble{margin-bottom:14px;font-size:12px}.welcome-headline{font-size:1.65rem}.welcome-sub{font-size:.9rem;margin-bottom:20px}.prompt-card{min-height:72px;padding:12px 13px}}
+    @media(prefers-reduced-motion:reduce){.welcome-card{animation:none}.hero-ring,.orb,.status-pulse{animation:none}}
   </style>
 </head>
 <body>
@@ -935,7 +951,7 @@
         <div class="brand-meta">
           <div class="brand-title-row">
             <span class="brand-title">Vee-AI</span>
-            <span class="brand-badge">Liquid Glass</span>
+            
           </div>
           <div class="brand-sub">
             <span class="status-pulse"></span>
@@ -968,6 +984,7 @@
     <main class="stage">
       <!-- Welcome Screen -->
       <section class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-card">
         <div class="hero-orb-wrap">
           <div class="hero-ring"></div>
           <div class="hero-core">
@@ -978,8 +995,9 @@
           </div>
         </div>
 
-        <h1 class="welcome-headline">How far? Wetin we dey reason today?</h1>
-        <p class="welcome-sub">Your intelligent AI companion. Ready to think, create, explore and gist with you.</p>
+        <div class="welcome-bubble"><span class="welcome-bubble-dot"></span> Welcome to Vee-AI</div>
+        <h1 class="welcome-headline">Your ideas. Your questions. One intelligent companion.</h1>
+        <p class="welcome-sub">Think, create, learn and gist. Start a conversation in English, Nigerian Pidgin, Yoruba, Hausa or Igbo.</p>
 
         <div class="prompt-grid">
           <button type="button" class="prompt-card glass-surface" onclick="veeSendPrompt('Who created you and what is his story?')">
@@ -1013,6 +1031,7 @@
             </div>
             <div class="prompt-arrow">↗</div>
           </button>
+        </div>
         </div>
       </section>
 
