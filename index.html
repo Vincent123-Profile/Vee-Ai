@@ -1152,8 +1152,9 @@
         </div>
       </form>
       <button type="button" class="account-secondary" style="width:100%" onclick="veeResetAccountPassword()">Forgot password?</button>
+      <button type="button" class="account-secondary" id="accountTransferBtn" style="width:100%;display:none" onclick="veeTransferGuestHistory()">Transfer conversations to this account</button>
       <button type="button" class="account-secondary" id="accountSignOut" style="width:100%;display:none" onclick="veeSignOutAccount()">Sign out</button>
-      <p class="account-copy" style="margin-top:4px">Your existing guest conversations will remain in this browser. We will add the account sync and guest-history transfer in the next stage.</p>
+      <p class="account-copy" style="margin-top:4px">Guest conversations stay in this browser. Transfer makes a verified cloud copy and does not delete your original history.</p>
     </div>
   </div>
 
@@ -1221,7 +1222,8 @@
       apiKey: "AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",
       authDomain: "vee-ai-e745e.firebaseapp.com",
       projectId: "vee-ai-e745e",
-      appId: "1:351206567728:web:10a197b7c9752daf12e2f5"
+      appId: "1:351206567728:web:10a197b7c9752daf12e2f5",
+      databaseURL: "https://vee-ai-e745e-default-rtdb.firebaseio.com/"
     };
 
     async function veeVisitorRequest(payload) {
@@ -1239,9 +1241,12 @@
       try {
         localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions.slice(0, 50)));
       } catch (e) {}
-      if (veeCloudReady && veeCurrentSessionId) {
+      if (veeCurrentSessionId) {
         var activeSession = veeSessions.find(function (session) { return session.id === veeCurrentSessionId; });
-        if (activeSession) veePersistSessionToCloud(activeSession);
+        if (activeSession) {
+          if (veeCloudReady) veePersistSessionToCloud(activeSession);
+          if (veeAccountSyncReady) veePersistAccountSessionToCloud(activeSession);
+        }
       }
     }
 
@@ -1384,6 +1389,115 @@
     var veeFirebaseAuth = null;
     var veeAccountMode = "signup";
     var veeCurrentUser = null;
+    var veeAccountDb = null;
+    var veeAccountSyncReady = false;
+    var veeAccountSyncPromise = null;
+
+    function veeAccountSessionData(session) {
+      return {
+        id: session.id,
+        title: String(session.title || "New conversation").slice(0, 120),
+        createdAtMs: Number(session.createdAtMs || Date.now()),
+        updatedAtMs: Number(session.updatedAtMs || Date.now()),
+        messages: (Array.isArray(session.messages) ? session.messages : []).slice(-100).map(function(message) {
+          return {
+            role: message.role === "assistant" ? "assistant" : "user",
+            content: String(message.content || "").slice(0, 8000)
+          };
+        })
+      };
+    }
+
+    async function veeLoadAccountSessions(user) {
+      if (!user || !user.emailVerified || !veeFirebaseApp) return;
+      veeAccountSyncReady = false;
+      veeAccountDb = firebase.database(veeFirebaseApp);
+      var snapshot = await veeAccountDb.ref("users/" + user.uid + "/sessions").once("value");
+      var accountData = snapshot.val() || {};
+      var merged = {};
+      veeSessions.forEach(function(session) {
+        if (session && session.id) merged[session.id] = session;
+      });
+      Object.keys(accountData).forEach(function(id) {
+        var item = accountData[id];
+        if (!item || typeof item !== "object" || !Array.isArray(item.messages)) return;
+        var cloudSession = {
+          id: id,
+          title: String(item.title || "New conversation"),
+          updatedAt: new Date(Number(item.updatedAtMs || Date.now())).toLocaleDateString(),
+          createdAtMs: Number(item.createdAtMs || item.updatedAtMs || Date.now()),
+          updatedAtMs: Number(item.updatedAtMs || Date.now()),
+          messages: item.messages
+        };
+        var local = merged[id];
+        if (!local || Number(cloudSession.updatedAtMs || 0) > Number(local.updatedAtMs || 0)) merged[id] = cloudSession;
+      });
+      veeSessions = Object.keys(merged).map(function(id) { return merged[id]; })
+        .sort(function(a, b) { return Number(b.updatedAtMs || 0) - Number(a.updatedAtMs || 0); })
+        .slice(0, 50);
+      try { localStorage.setItem("vee_ai_sessions_v2", JSON.stringify(veeSessions)); } catch (e) {}
+      veeAccountSyncReady = true;
+      veeRenderHome();
+      veeRenderHistoryList();
+      var transfer = document.getElementById("accountTransferBtn");
+      if (transfer) {
+        transfer.style.display = veeSessions.length ? "block" : "none";
+        transfer.textContent = "Transfer " + veeSessions.length + " conversations to this account";
+      }
+      var message = document.getElementById("accountMessage");
+      if (message) message.textContent = "Signed in as " + user.email + ". " + Object.keys(accountData).length + " account conversations synced. Your guest history is still preserved in this browser.";
+    }
+
+    async function veePersistAccountSessionToCloud(session) {
+      if (!veeAccountSyncReady || !veeCurrentUser || !veeAccountDb || !session || !/^[A-Za-z0-9_-]{1,128}$/.test(session.id || "")) return;
+      try {
+        await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/sessions/" + session.id).set(veeAccountSessionData(session));
+      } catch (error) {
+        console.error("Vee-AI account conversation sync failed:", error);
+      }
+    }
+
+    async function veeTransferGuestHistory() {
+      var message = document.getElementById("accountMessage");
+      var button = document.getElementById("accountTransferBtn");
+      if (!veeCurrentUser || !veeCurrentUser.emailVerified || !veeAccountDb) {
+        if (message) message.textContent = "Sign in with your verified email before transferring conversations.";
+        return;
+      }
+      if (button) { button.disabled = true; button.textContent = "Transferring conversations..."; }
+      if (message) message.textContent = "Preparing your guest conversations for a secure copy...";
+      try {
+        await veeEnsureVisitorIdentity();
+        var sessionsToCopy = veeSessions.filter(function(session) {
+          return session && /^[A-Za-z0-9_-]{1,128}$/.test(session.id || "");
+        });
+        var payload = {};
+        sessionsToCopy.forEach(function(session) {
+          payload[session.id] = veeAccountSessionData(session);
+        });
+        if (sessionsToCopy.length) {
+          await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/sessions").update(payload);
+          var check = await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/sessions").once("value");
+          var saved = check.val() || {};
+          var verified = sessionsToCopy.every(function(session) {
+            var copy = saved[session.id];
+            return copy && Array.isArray(copy.messages) &&
+              copy.messages.length === (Array.isArray(session.messages) ? Math.min(session.messages.length, 100) : 0);
+          });
+          if (!verified) throw new Error("The cloud copy did not pass verification. Your original conversations are safe. Please retry.");
+        }
+        veeAccountSyncReady = true;
+        if (message) message.textContent = sessionsToCopy.length + " conversations copied and verified. Your original guest history remains محفوظ in this browser.";
+        if (button) button.style.display = "none";
+      } catch (error) {
+        console.error("Vee-AI guest-history transfer failed:", error);
+        if (message) message.textContent = error.message || "Transfer failed. Your guest history remains unchanged. Please try again.";
+        if (button) {
+          button.disabled = false;
+          button.textContent = "Retry conversation transfer";
+        }
+      }
+    }
 
     function veeInitAccountAuth() {
       try {
@@ -1402,8 +1516,22 @@
           if (status) status.textContent = user ? (user.email || "Signed in") : "Guest mode";
           if (signOut) signOut.style.display = user ? "block" : "none";
           if (form) form.style.display = user ? "none" : "flex";
-          if (user && message) message.textContent = "Signed in as " + user.email + ". Account sync will be enabled in the next stage.";
-          if (!user && message && message.dataset.authNotice !== "true") message.textContent = "";
+          if (!user) {
+            veeAccountSyncReady = false;
+            veeAccountSyncPromise = null;
+            veeAccountDb = null;
+            if (message && message.dataset.authNotice !== "true") message.textContent = "";
+            var transferButton = document.getElementById("accountTransferBtn");
+            if (transferButton) transferButton.style.display = "none";
+          } else if (user.emailVerified) {
+            veeAccountSyncPromise = veeLoadAccountSessions(user).catch(function(error) {
+              veeAccountSyncReady = false;
+              console.error("Vee-AI account sync initialisation failed:", error);
+              if (message) message.textContent = "Signed in, but account sync could not start. Your guest conversations remain safe. " + (error.message || "");
+            });
+          } else if (message) {
+            message.textContent = "Verify your email before enabling account sync.";
+          }
         });
       } catch (error) {
         console.error("Vee-AI account setup failed:", error);
