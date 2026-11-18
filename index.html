@@ -1340,6 +1340,22 @@
     .explore-intro{font-size:13px;line-height:1.6;color:var(--text-secondary)}
     @media(max-width:480px){.explore-grid{grid-template-columns:1fr;gap:9px}.explore-card{min-height:0;padding:14px}.explore-card span:last-child{font-size:12px}}
 
+  
+.finance-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0}
+.finance-stat{padding:13px;border:1px solid var(--glass-border);border-radius:13px;background:var(--glass-surface);min-width:0}
+.finance-stat strong{display:block;font-size:clamp(15px,2vw,21px);overflow-wrap:anywhere}.finance-stat span{font-size:11px;color:var(--text-secondary)}
+.finance-section{margin-top:20px}.finance-section h3{font-size:14px;margin:0 0 10px}
+.finance-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.finance-form input,.finance-form select,.finance-form textarea{width:100%;min-width:0;padding:12px;border:1px solid var(--glass-border);border-radius:11px;background:var(--glass-surface);color:var(--text-primary);font:inherit;font-size:13px}
+.finance-form textarea,.finance-form button{grid-column:1/-1}.finance-form textarea{min-height:70px;resize:vertical}
+.finance-list{display:flex;flex-direction:column;gap:8px}
+.finance-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--glass-border);border-radius:12px;background:var(--glass-surface)}
+.finance-row-main{min-width:0}.finance-row-main strong{display:block;font-size:13px;overflow-wrap:anywhere}.finance-row-main span{display:block;font-size:11px;color:var(--text-secondary);margin-top:3px}
+.finance-amount{font-size:13px;font-weight:800;white-space:nowrap}.finance-income{color:#16834b}.finance-expense{color:var(--orange)}
+.finance-row button{border:0;background:transparent;color:var(--text-secondary);cursor:pointer;padding:6px}
+.finance-note{font-size:11px;color:var(--text-secondary);line-height:1.5;margin-top:8px}
+@media(max-width:560px){.finance-summary{grid-template-columns:1fr 1fr}.finance-summary .finance-stat:last-child{grid-column:1/-1}.finance-form{grid-template-columns:1fr}.finance-form textarea,.finance-form button{grid-column:1}.finance-row{align-items:flex-start}}
+
   </style>
 </head>
 <body>
@@ -1419,7 +1435,7 @@
             <article class="home-feature" role="button" tabindex="0" onclick="veeOpenExplore()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenExplore()}"><div class="home-feature-icon">⌕</div><h3>Explore</h3><p>Meet specialist assistants for focused help across everyday life.</p><em>Open Explore</em></article>
             <article class="home-feature" role="button" tabindex="0" onclick="veeOpenMemory()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenMemory()}"><div class="home-feature-icon">◎</div><h3>My Memory</h3><p>Save details and choose what Vee-AI uses in future chats.</p><em id="memoryFeatureStatus">Open memory</em></article>
             <article class="home-feature planner-feature" role="button" tabindex="0" onclick="veeOpenPlanner()" onkeydown="veePlannerKey(event)"><div class="home-feature-icon">▦</div><h3>Planner</h3><p>Organise tasks, due dates and daily plans.</p><em id="plannerFeatureStatus">Open planner</em></article>
-            <article class="home-feature"><div class="home-feature-icon">₦</div><h3>Finance</h3><p>Track budgets, spending and goals.</p><em>In development</em></article>
+            <article class="home-feature" role="button" tabindex="0" onclick="veeOpenFinance()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenFinance()}"><div class="home-feature-icon">₦</div><h3>Finance</h3><p>Track income, spending, budgets, savings and debts.</p><em>Open Finance</em></article>
             <article class="home-feature"><div class="home-feature-icon">✎</div><h3>Content Studio</h3><p>Plan and create content with AI.</p><em>In development</em></article>
             <article class="home-feature"><div class="home-feature-icon">⌘</div><h3>Business</h3><p>Optional tools for business workflows.</p><em>In development</em></article>
           </div>
@@ -1568,6 +1584,29 @@
       <p class="account-copy" id="memoryStatus" role="status" aria-live="polite"></p>
     </div>
   </div>
+
+
+<div class="modal-backdrop" id="financeModal" onclick="if(event.target===this) veeCloseModal('financeModal')">
+ <div class="modal-panel glass-chrome" style="max-width:760px;width:min(760px,calc(100% - 28px));max-height:88vh;overflow-y:auto">
+  <div class="modal-head"><h2>My Finance</h2><button type="button" class="icon-btn" onclick="veeCloseModal('financeModal')">✕</button></div>
+  <p class="account-copy">Track your personal money records. Guest records stay in this browser. Verified accounts sync privately to Firebase. Nothing is saved until you confirm.</p>
+  <div class="finance-summary"><div class="finance-stat"><strong id="financeIncome">₦0</strong><span>Total income</span></div><div class="finance-stat"><strong id="financeExpense">₦0</strong><span>Total expenses</span></div><div class="finance-stat"><strong id="financeBalance">₦0</strong><span>Net balance</span></div></div>
+  <div class="finance-section"><h3>Add a transaction</h3>
+   <form class="finance-form" id="financeTransactionForm" onsubmit="veeAddFinanceTransaction(event)">
+    <select id="financeType"><option value="income">Income</option><option value="expense">Expense</option></select>
+    <select id="financeCategory"><option>Salary</option><option>Business</option><option>Food</option><option>Transport</option><option>Bills</option><option>Shopping</option><option>Education</option><option>Health</option><option>Savings</option><option>Other</option></select>
+    <input id="financeAmount" type="number" min="0.01" max="999999999999" step="0.01" placeholder="Amount, e.g. 25000" required>
+    <input id="financeDate" type="date" required>
+    <input id="financeDescription" maxlength="100" placeholder="Description" required>
+    <button class="send-btn" type="submit">Review and save transaction</button>
+   </form><p class="finance-note" id="financeStatus" role="status"></p>
+  </div>
+  <div class="finance-section"><h3>Monthly budget</h3><form class="finance-form" id="financeBudgetForm" onsubmit="veeSaveFinanceBudget(event)"><input id="financeBudgetAmount" type="number" min="0.01" max="999999999999" step="0.01" placeholder="Monthly spending limit" required><button class="send-btn" type="submit">Save monthly budget</button></form><p class="finance-note" id="financeBudgetStatus"></p></div>
+  <div class="finance-section"><h3>Savings goals</h3><form class="finance-form" id="financeGoalForm" onsubmit="veeAddFinanceGoal(event)"><input id="financeGoalName" maxlength="80" placeholder="Goal name" required><input id="financeGoalTarget" type="number" min="0.01" max="999999999999" step="0.01" placeholder="Target amount" required><button class="send-btn" type="submit">Add savings goal</button></form><div class="finance-list" id="financeGoalList"></div></div>
+  <div class="finance-section"><h3>Debt tracker</h3><form class="finance-form" id="financeDebtForm" onsubmit="veeAddFinanceDebt(event)"><input id="financeDebtName" maxlength="80" placeholder="Person or debt description" required><input id="financeDebtAmount" type="number" min="0.01" max="999999999999" step="0.01" placeholder="Outstanding amount" required><select id="financeDebtDirection"><option value="owed_to_me">Someone owes me</option><option value="i_owe">I owe someone</option></select><button class="send-btn" type="submit">Add debt record</button></form><div class="finance-list" id="financeDebtList"></div></div>
+  <div class="finance-section"><h3>Recent transactions</h3><div class="finance-list" id="financeTransactionList"><div class="home-empty">No transactions recorded yet.</div></div></div>
+ </div>
+</div>
 
   <!-- Planner -->
   <div class="modal-backdrop" id="plannerModal" onclick="if(event.target===this) veeCloseModal('plannerModal')">
@@ -2415,6 +2454,34 @@
       }
     });
 
+
+
+var veeFinanceData={transactions:[],budgets:{},goals:[],debts:[]};
+function veeFinanceMoney(value){return new Intl.NumberFormat("en-NG",{style:"currency",currency:"NGN",maximumFractionDigits:2}).format(Number(value)||0);}
+function veeFinanceCleanNumber(value){var n=Number(value);return Number.isFinite(n)&&n>0&&n<=999999999999?Math.round(n*100)/100:0;}
+function veeFinanceSnapshot(){return {transactions:veeFinanceData.transactions.slice(0,500),budgets:veeFinanceData.budgets,goals:veeFinanceData.goals.slice(0,100),debts:veeFinanceData.debts.slice(0,100),updatedAtMs:Date.now()};}
+function veeSaveFinanceLocal(){try{localStorage.setItem("vee_ai_personal_finance_v1",JSON.stringify(veeFinanceSnapshot()));return true;}catch(e){return false;}}
+async function veePersistFinance(){if(!veeSaveFinanceLocal())return false;if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){try{await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/finance").set(veeFinanceSnapshot());}catch(e){console.error("Finance cloud save failed",e);return false;}}return true;}
+async function veeOpenFinance(){
+ if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){try{var snap=await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/finance").once("value");if(snap.exists()){var d=snap.val()||{};veeFinanceData={transactions:Array.isArray(d.transactions)?d.transactions.slice(0,500):[],budgets:d.budgets&&typeof d.budgets==="object"?d.budgets:{},goals:Array.isArray(d.goals)?d.goals.slice(0,100):[],debts:Array.isArray(d.debts)?d.debts.slice(0,100):[]};veeSaveFinanceLocal();}else{veeLoadFinanceLocal();}}catch(e){console.error("Finance load failed",e);veeLoadFinanceLocal();}}else{veeLoadFinanceLocal();}
+ document.getElementById("financeDate").value=new Date().toISOString().slice(0,10);veeRenderFinance();veeOpenModal("financeModal");
+}
+function veeLoadFinanceLocal(){try{var d=JSON.parse(localStorage.getItem("vee_ai_personal_finance_v1")||"null");if(d)veeFinanceData={transactions:Array.isArray(d.transactions)?d.transactions:[],budgets:d.budgets||{},goals:Array.isArray(d.goals)?d.goals:[],debts:Array.isArray(d.debts)?d.debts:[]};}catch(e){}}
+function veeRenderFinance(){
+ var tx=veeFinanceData.transactions,inc=tx.filter(x=>x.type==="income").reduce((a,x)=>a+Number(x.amount||0),0),exp=tx.filter(x=>x.type==="expense").reduce((a,x)=>a+Number(x.amount||0),0);
+ document.getElementById("financeIncome").textContent=veeFinanceMoney(inc);document.getElementById("financeExpense").textContent=veeFinanceMoney(exp);document.getElementById("financeBalance").textContent=veeFinanceMoney(inc-exp);
+ var key=new Date().toISOString().slice(0,7),budget=Number(veeFinanceData.budgets[key]||0),spent=tx.filter(x=>x.type==="expense"&&String(x.date||"").slice(0,7)===key).reduce((a,x)=>a+Number(x.amount||0),0);
+ document.getElementById("financeBudgetAmount").value=budget||"";document.getElementById("financeBudgetStatus").textContent=budget?"This month: "+veeFinanceMoney(spent)+" spent of "+veeFinanceMoney(budget)+". "+veeFinanceMoney(Math.max(0,budget-spent))+" left.":"No monthly budget set yet.";
+ var recent=tx.slice().sort((a,b)=>Number(b.createdAtMs||0)-Number(a.createdAtMs||0)).slice(0,30);
+ document.getElementById("financeTransactionList").innerHTML=recent.length?recent.map(x=>'<div class="finance-row"><div class="finance-row-main"><strong>'+veeEscapeHtml(x.description)+'</strong><span>'+veeEscapeHtml(x.category)+' · '+veeEscapeHtml(x.date)+'</span></div><span class="finance-amount '+(x.type==="income"?"finance-income":"finance-expense")+'">'+(x.type==="income"?"+":"−")+veeFinanceMoney(x.amount)+'</span><button type="button" data-finance-delete="'+veeEscapeHtml(x.id)+'">✕</button></div>').join(""):'<div class="home-empty">No transactions recorded yet.</div>';
+ document.getElementById("financeGoalList").innerHTML=veeFinanceData.goals.length?veeFinanceData.goals.map(g=>'<div class="finance-row"><div class="finance-row-main"><strong>'+veeEscapeHtml(g.name)+'</strong><span>Target '+veeFinanceMoney(g.target)+'</span></div><button type="button" data-finance-goal-delete="'+veeEscapeHtml(g.id)+'">Delete</button></div>').join(""):'<p class="finance-note">No savings goals yet.</p>';
+ document.getElementById("financeDebtList").innerHTML=veeFinanceData.debts.length?veeFinanceData.debts.map(d=>'<div class="finance-row"><div class="finance-row-main"><strong>'+veeEscapeHtml(d.name)+'</strong><span>'+(d.direction==="owed_to_me"?"Owed to me":"I owe")+'</span></div><span class="finance-amount">'+veeFinanceMoney(d.amount)+'</span><button type="button" data-finance-debt-delete="'+veeEscapeHtml(d.id)+'">Delete</button></div>').join(""):'<p class="finance-note">No debt records yet.</p>';
+}
+async function veeAddFinanceTransaction(e){e.preventDefault();var type=document.getElementById("financeType").value,amount=veeFinanceCleanNumber(document.getElementById("financeAmount").value),date=document.getElementById("financeDate").value,desc=document.getElementById("financeDescription").value.trim(),cat=document.getElementById("financeCategory").value;if(!amount||date.length!==10||!desc)return;if(!confirm("Save this "+type+" of "+veeFinanceMoney(amount)+" dated "+date+"?"))return;veeFinanceData.transactions.unshift({id:"fin_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),type:type,amount:amount,date:date,description:desc.slice(0,100),category:cat,createdAtMs:Date.now()});var ok=await veePersistFinance();document.getElementById("financeStatus").textContent=ok?"Transaction saved.":"Save failed. Check your connection.";veeRenderFinance();if(ok){document.getElementById("financeTransactionForm").reset();document.getElementById("financeDate").value=new Date().toISOString().slice(0,10);}}
+async function veeSaveFinanceBudget(e){e.preventDefault();var n=veeFinanceCleanNumber(document.getElementById("financeBudgetAmount").value);if(!n||!confirm("Set your monthly spending budget to "+veeFinanceMoney(n)+"?"))return;veeFinanceData.budgets[new Date().toISOString().slice(0,7)]=n;var ok=await veePersistFinance();document.getElementById("financeBudgetStatus").textContent=ok?"Monthly budget saved.":"Budget save failed.";veeRenderFinance();}
+async function veeAddFinanceGoal(e){e.preventDefault();var name=document.getElementById("financeGoalName").value.trim(),target=veeFinanceCleanNumber(document.getElementById("financeGoalTarget").value);if(!name||!target||!confirm("Add savings goal '"+name+"' with target "+veeFinanceMoney(target)+"?"))return;veeFinanceData.goals.push({id:"goal_"+Date.now(),name:name.slice(0,80),target:target});var ok=await veePersistFinance();if(ok)document.getElementById("financeGoalForm").reset();veeRenderFinance();}
+async function veeAddFinanceDebt(e){e.preventDefault();var name=document.getElementById("financeDebtName").value.trim(),amount=veeFinanceCleanNumber(document.getElementById("financeDebtAmount").value),direction=document.getElementById("financeDebtDirection").value;if(!name||!amount||!confirm("Save debt record for "+name+" at "+veeFinanceMoney(amount)+"?"))return;veeFinanceData.debts.push({id:"debt_"+Date.now(),name:name.slice(0,80),amount:amount,direction:direction});var ok=await veePersistFinance();if(ok)document.getElementById("financeDebtForm").reset();veeRenderFinance();}
+document.addEventListener("click",async function(e){var el=e.target.closest("[data-finance-delete],[data-finance-goal-delete],[data-finance-debt-delete]");if(!el)return;if(!confirm("Delete this finance record?"))return;var a=el.getAttribute("data-finance-delete"),b=el.getAttribute("data-finance-goal-delete"),c=el.getAttribute("data-finance-debt-delete");if(a)veeFinanceData.transactions=veeFinanceData.transactions.filter(x=>x.id!==a);if(b)veeFinanceData.goals=veeFinanceData.goals.filter(x=>x.id!==b);if(c)veeFinanceData.debts=veeFinanceData.debts.filter(x=>x.id!==c);var ok=await veePersistFinance();if(!ok)alert("The change did not sync. Check your connection.");veeRenderFinance();});
 
     function veeOpenExplore() {
       veeOpenModal("exploreModal");
