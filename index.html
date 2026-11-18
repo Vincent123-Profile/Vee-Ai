@@ -1811,10 +1811,10 @@
     }
     async function veePersistPlannerTask(task) {
       try {
-        localStorage.setItem("vee_ai_planner_tasks_v1", JSON.stringify(veePlannerTasks.slice(0,200)));
         if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
           await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/planner/tasks/" + task.id).set(veePlannerTaskData(task));
         }
+        localStorage.setItem("vee_ai_planner_tasks_v1", JSON.stringify(veePlannerTasks.slice(0,200)));
         return true;
       } catch (error) {
         console.error("Vee-AI planner sync failed:", error);
