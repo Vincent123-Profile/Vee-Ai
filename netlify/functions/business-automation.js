@@ -114,7 +114,7 @@ async function createTestDraft(profile) {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method:"POST", signal:controller.signal,
       headers:{Authorization:"Bearer "+apiKey,"Content-Type":"application/json"},
-      body:JSON.stringify({model:(process.env.GROQ_MODEL||"openai/gpt-oss-20b").trim(),temperature:0.7,max_tokens:900,messages:[
+      body:JSON.stringify({model:(process.env.GROQ_MODEL||"openai/gpt-oss-20b").trim(),temperature:0.4,max_tokens:1400,response_format:{type:"json_object"},messages:[
         {role:"system",content:"You are Vee-AI, a practical business content strategist. Create one useful short-form video idea tailored to the supplied business. Do not invent prices, stock, guarantees, awards or results. Return valid JSON only with keys topic, hook, talkingPoints (array), script, caption, platform, callToAction. Script should fit 30 to 60 seconds."},
         {role:"user",content:"Create one original business content idea from this approved profile. "+JSON.stringify(context)}
       ]})
@@ -123,7 +123,12 @@ async function createTestDraft(profile) {
     if(!response.ok)throw new Error("Groq request failed with status "+response.status+".");
     const raw=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
     if(typeof raw!=="string"||!raw.trim())throw new Error("Groq returned an empty draft.");
-    const draft=JSON.parse(raw.trim().replace(/^\x60{3}(?:json)?\s*/i,"").replace(/\s*\x60{3}$/,""));
+    let draft;
+    try {
+      draft=JSON.parse(raw.trim().replace(/^\x60{3}(?:json)?\s*/i,"").replace(/\s*\x60{3}$/,""));
+    } catch (_) {
+      throw new Error("The AI returned an incomplete content draft. Please tap the test button again.");
+    }
     if(typeof draft.topic!=="string"||typeof draft.script!=="string"||!Array.isArray(draft.talkingPoints))throw new Error("Groq returned an invalid draft.");
     return {topic:safeText(draft.topic,240),hook:safeText(draft.hook,500),talkingPoints:draft.talkingPoints.slice(0,5).map(x=>safeText(x,350)),script:safeText(draft.script,1800),caption:safeText(draft.caption,700),platform:safeText(draft.platform,100),callToAction:safeText(draft.callToAction,300)};
   } finally { clearTimeout(timeout); }
