@@ -1999,6 +1999,94 @@
       var layer=document.querySelector(".ambient-layer");if(layer)layer.style.display=veeParticlesEnabled?"":"none";
       var button=document.getElementById("particleToggleBtn");if(button)button.textContent=veeParticlesEnabled?"Enabled":"Disabled";
     }
+    var veeGmailCurrentFilter = "all";
+    async function veeGmailRequest(action){
+      if(!veeCurrentUser||!veeCurrentUser.emailVerified)throw new Error("Sign in with a verified Vee-AI account first.");
+      var token=await veeCurrentUser.getIdToken(true);
+      var response=await fetch("/.netlify/functions/gmail",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({action:action})});
+      var data=await response.json().catch(function(){return {};});
+      if(!response.ok)throw new Error(data.error||"Gmail request failed.");
+      return data;
+    }
+    function veeOpenGmailIntelligence(){
+      veeOpenModal("gmailIntelligenceModal");
+      veeRefreshGmailStatus();
+    }
+    async function veeRefreshGmailStatus(){
+      var status=document.getElementById("gmailIntelligenceStatus");
+      if(!veeCurrentUser||!veeCurrentUser.emailVerified){if(status)status.textContent="Sign in with a verified Vee-AI account to connect Gmail.";return;}
+      try{
+        var data=await veeGmailRequest("status");
+        var connected=document.getElementById("gmailConnectionStatus");
+        var last=document.getElementById("gmailLastSync");
+        var alerts=document.getElementById("gmailSecurityCount");
+        if(connected)connected.textContent=data.connected?(data.gmailAddress||"Connected"):"Not connected";
+        if(last)last.textContent=data.lastSyncAtMs?new Date(data.lastSyncAtMs).toLocaleString():"Not synced";
+        if(alerts)alerts.textContent=String(data.securityAlertCount||0);
+        if(status)status.textContent=data.connected?"Gmail is connected with read-only access.":"Connect a Gmail account to begin.";
+        if(data.connected)veeLoadGmailEmails(veeGmailCurrentFilter);
+      }catch(error){if(status)status.textContent=error.message||"Unable to check Gmail connection.";}
+    }
+    async function veeGmailConnect(){
+      var status=document.getElementById("gmailIntelligenceStatus");
+      try{
+        if(status)status.textContent="Preparing secure Google sign-in...";
+        var data=await veeGmailRequest("connect");
+        if(!data.authorizationUrl)throw new Error("Google sign-in URL was not returned.");
+        window.location.assign(data.authorizationUrl);
+      }catch(error){if(status)status.textContent=error.message||"Unable to start Gmail connection.";}
+    }
+    async function veeGmailSync(){
+      var status=document.getElementById("gmailIntelligenceStatus");
+      var button=document.getElementById("gmailSyncBtn");
+      try{
+        if(button){button.disabled=true;button.textContent="Scanning...";}
+        if(status)status.textContent="Reading up to 30 recent messages and checking their categories and links...";
+        var data=await veeGmailRequest("sync");
+        if(status)status.textContent="Scan complete. "+data.synced+" messages analysed, "+data.securityAlerts+" flagged for review.";
+        await veeRefreshGmailStatus();
+        await veeLoadGmailEmails(veeGmailCurrentFilter);
+      }catch(error){if(status)status.textContent=error.message||"Gmail scan failed.";}
+      finally{if(button){button.disabled=false;button.textContent="Scan latest emails";}}
+    }
+    async function veeGmailDisconnect(){
+      var status=document.getElementById("gmailIntelligenceStatus");
+      if(!window.confirm("Disconnect Gmail and delete the stored connection and scanned email records from Vee-AI?"))return;
+      try{
+        await veeGmailRequest("disconnect");
+        var list=document.getElementById("gmailEmailList");
+        if(list)list.textContent="Gmail disconnected. Stored email analysis has been deleted.";
+        await veeRefreshGmailStatus();
+      }catch(error){if(status)status.textContent=error.message||"Unable to disconnect Gmail.";}
+    }
+    async function veeLoadGmailEmails(filter){
+      veeGmailCurrentFilter=filter||"all";
+      var list=document.getElementById("gmailEmailList");
+      if(!list)return;
+      list.textContent="Loading email analysis...";
+      try{
+        var data=await veeGmailRequest("list");
+        var emails=Array.isArray(data.emails)?data.emails:[];
+        if(veeGmailCurrentFilter!=="all")emails=emails.filter(function(item){return Array.isArray(item.categories)&&item.categories.indexOf(veeGmailCurrentFilter)!==-1;});
+        list.textContent="";
+        if(!emails.length){list.textContent="No messages in this category yet. Scan your Gmail inbox first.";return;}
+        emails.slice(0,60).forEach(function(item){
+          var row=document.createElement("div");row.className="finance-row";
+          var main=document.createElement("div");main.className="finance-row-main";
+          var title=document.createElement("strong");title.textContent=item.subject||"(No subject)";
+          var from=document.createElement("span");from.textContent=(item.from||"Unknown sender")+" · "+(item.date||"");
+          var snippet=document.createElement("span");snippet.textContent=item.snippet||"";
+          var tags=document.createElement("span");tags.textContent=(item.categories||[]).join(" · ")+(item.riskLevel&&item.riskLevel!=="none"?" · SECURITY REVIEW: "+item.riskLevel.toUpperCase():"");
+          main.appendChild(title);main.appendChild(from);main.appendChild(snippet);main.appendChild(tags);
+          if(item.securityFindings&&item.securityFindings.length){
+            var findings=document.createElement("span");
+            findings.textContent=item.securityFindings.map(function(finding){return finding.reason;}).join(" · ");
+            main.appendChild(findings);
+          }
+          row.appendChild(main);list.appendChild(row);
+        });
+      }catch(error){list.textContent=error.message||"Unable to load email analysis.";}
+    }
     var veeTelegramLinkCommand = "";
     async function veeCreateTelegramLinkCode(){
       var button=document.getElementById("settingsTelegramLinkBtn");
