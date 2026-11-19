@@ -70,6 +70,22 @@ Publish the rules from `database.rules.json`. Direct database access requires th
 
 Administrator email: `agboolavincent67@gmail.com`.
 
+## Private Business Workspace
+
+The development branch includes a user-owned business profile vault.
+
+- Business profile fields are encrypted in the browser with AES-256-GCM before Firebase storage.
+- A passphrase is used to derive the encryption key with PBKDF2-SHA256.
+- The passphrase and derived key are not sent to Firebase or the Netlify chat function.
+- Encrypted profile records are stored at `privateBusiness/{uid}/vault`.
+- Realtime Database rules permit only the matching authenticated UID to read or write this path. The admin dashboard does not query this path.
+- The vault is separate from the existing `users/{uid}` data, which retains its existing administrator access rules.
+- Losing the vault passphrase means the encrypted profile cannot be recovered. Unlock an existing vault before replacing its contents.
+- The user may explicitly send the decrypted profile to Vee-AI for content generation. The selected text is then processed by the configured AI provider.
+- Business text import currently supports TXT, Markdown and CSV files, up to 20 KB per file and 50 KB total. Imported text is included in the encrypted profile. PDF and Word extraction are not implemented yet.
+
+This is client-side encrypted storage, not end-to-end encryption for AI processing. Server-side AI generation requires the user to explicitly provide the selected plaintext context. Telegram reminders, automated content delivery and email/document integrations are not implemented by this stage.
+
 ## Admin dashboard
 
 Open `/admin.html` on the deployed site and sign in with the authorised administrator account.
