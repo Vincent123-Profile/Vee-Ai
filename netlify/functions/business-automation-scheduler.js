@@ -73,10 +73,10 @@ async function generateContent(profile) {
       headers:{ Authorization:"Bearer " + apiKey, "Content-Type":"application/json" },
       body:JSON.stringify({
         model:(process.env.GROQ_MODEL || "openai/gpt-oss-20b").trim(),
-        temperature:0.7, max_tokens:900,
+        temperature:0.2, max_tokens:1200, response_format:{ type:"json_object" },
         messages:[
-          { role:"system", content:"You are Vee-AI, a practical business content strategist. Create one useful short-form video idea for the business profile. Make the idea specific to the supplied products, services, customers, market and goals. Do not invent prices, stock, guarantees, awards, customer results or claims. Use only supplied facts. Return valid JSON only with keys: topic, hook, talkingPoints (array of 3 to 5 strings), script, caption, platform (one string), callToAction. Keep the script suitable for a 30 to 60 second video. Do not include markdown fences." },
-          { role:"user", content:"Create one original content idea from this approved business profile.\n" + JSON.stringify(approvedContext) }
+          { role:"system", content:"You are Vee-AI, a careful business content strategist. Create one useful short-form video idea using only explicit facts in the supplied business profile. Never invent or guess a website, URL, address, branch, location, stock, price, offer, product specification, award, guarantee, customer result, delivery service, or business capability. Mention a location or service only when explicitly stated. Never create a website or URL. If a detail is absent, omit it. Use correct spelling and natural English. Return valid JSON only with keys: topic, hook, talkingPoints (array of 3 to 5 strings), script, caption, platform (one string), callToAction. Keep the script suitable for a 30 to 60 second video. Do not include markdown fences." },
+          { role:"user", content:"Create one original content idea. Treat this profile as the only source of truth. Do not fill gaps with assumptions.\n" + JSON.stringify(approvedContext) }
         ]
       })
     });
