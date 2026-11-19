@@ -62,13 +62,39 @@ async function linkTelegramAccount(token, chat, code, db) {
   const codeHash = crypto.createHash("sha256").update(normalisedCode).digest("hex");
   const codeRef = db.ref("telegram/linkCodes/" + codeHash);
   const now = Date.now();
+  let lookupState = "unknown";
   const claim = await codeRef.transaction(current => {
-    if (!current || Number(current.expiresAtMs || 0) <= now || current.usedAtMs) return;
+    if (!current) {
+      lookupState = "missing";
+      return;
+    }
+    if (Number(current.expiresAtMs || 0) <= now) {
+      lookupState = "expired";
+      return;
+    }
+    if (current.usedAtMs) {
+      lookupState = "already_used";
+      return;
+    }
+    if (!current.uid) {
+      lookupState = "missing_uid";
+      return;
+    }
+    lookupState = "valid";
     return Object.assign({}, current, { usedAtMs: now });
   });
   const link = claim.snapshot && claim.snapshot.val();
   if (!claim.committed || !link || !link.uid) {
-    await sendMessage(token, chat.id, "This link code is invalid, expired or already used. Generate a new code in Vee-AI Settings.");
+    console.error("Vee-AI Telegram link lookup failed:", JSON.stringify({
+      state: lookupState,
+      committed: Boolean(claim.committed),
+      hasRecord: Boolean(link),
+      hasUid: Boolean(link && link.uid),
+      databaseHost: (() => { try { return new URL(process.env.FIREBASE_DATABASE_URL || "https://vee-ai-e745e-default-rtdb.firebaseio.com").host; } catch (_) { return "invalid"; } })(),
+      netlifyContext: process.env.CONTEXT || "unknown",
+      branch: process.env.BRANCH || "unknown"
+    }));
+    await sendMessage(token, chat.id, "I could not find this code in the connected Vee-AI database. Generate a fresh code in Vee-AI Settings and try again.");
     return;
   }
   try {
