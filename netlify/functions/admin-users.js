@@ -144,6 +144,15 @@ exports.handler = async event => {
       return json(200, { success: true, disabled: body.disabled });
     }
 
+    if (body.action === "reset-password") {
+      const uid = String(body.uid || "");
+      if (!/^[A-Za-z0-9_-]{1,128}$/.test(uid)) return json(400, { error: "Invalid account ID." });
+      if (uid === adminUser.uid) return json(400, { error: "Use the account recovery option for the active administrator account." });
+      const target = await auth.getUser(uid);
+      if (!target.email || target.disabled) return json(400, { error: "This account has no available email address or is disabled." });
+      return json(200, { success: true, email: target.email });
+    }
+
     if (body.action === "delete-account") {
       const uid = String(body.uid || "");
       const confirmEmail = String(body.confirmEmail || "").trim().toLowerCase();
