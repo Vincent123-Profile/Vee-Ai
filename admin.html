@@ -101,11 +101,13 @@ function renderAccounts(){
   const gmail=a.gmail&&a.gmail.connected?'<span class="pill good">Connected</span><span class="account-email">'+esc(a.gmail.gmailAddress||"Gmail linked")+'</span>':'<span class="pill">Not connected</span>';
   const statusPill=a.disabled?'<span class="pill bad">Disabled</span>':a.emailVerified?'<span class="pill good">Active</span>':'<span class="pill warn">Unverified</span>';
   const action=a.disabled?'<button data-enable="'+esc(a.uid)+'">Enable</button>':'<button class="ghost" data-disable="'+esc(a.uid)+'">Disable</button>';
+  const resetButton='<button class="ghost" data-reset="'+esc(a.uid)+'">Reset password</button>';
   const deleteButton='<button class="danger" data-delete="'+esc(a.uid)+'">Delete</button>';
-  return '<tr><td><span class="account-name">'+esc(a.displayName||"Name not set")+'</span><span class="account-email">'+esc(a.email||"No email")+'</span><small>'+esc(a.uid)+'</small></td><td>'+esc(date(a.createdAt))+'<span class="account-email">Last sign in: '+esc(date(a.lastSignInAt))+'</span></td><td>'+tg+'</td><td>'+gmail+'</td><td>'+statusPill+'<span class="account-email">'+(a.emailVerified?"Email verified":"Email not verified")+'</span></td><td><div class="actions">'+(a.uid===currentAdmin?.uid?'<span class="pill">You</span>':action+deleteButton)+'</div></td></tr>';
+  return '<tr><td><span class="account-name">'+esc(a.displayName||"Name not set")+'</span><span class="account-email">'+esc(a.email||"No email")+'</span><small>'+esc(a.uid)+'</small></td><td>'+esc(date(a.createdAt))+'<span class="account-email">Last sign in: '+esc(date(a.lastSignInAt))+'</span></td><td>'+tg+'</td><td>'+gmail+'</td><td>'+statusPill+'<span class="account-email">'+(a.emailVerified?"Email verified":"Email not verified")+'</span></td><td><div class="actions">'+(a.uid===currentAdmin?.uid?'<span class="pill">You</span>':resetButton+action+deleteButton)+'</div></td></tr>';
  }).join(""):'<tr><td colspan="6" class="empty">No matching registered accounts.</td></tr>';
  $("accountRows").querySelectorAll("[data-disable]").forEach(b=>b.addEventListener("click",()=>setDisabled(b.dataset.disable,true)));
  $("accountRows").querySelectorAll("[data-enable]").forEach(b=>b.addEventListener("click",()=>setDisabled(b.dataset.enable,false)));
+ $("accountRows").querySelectorAll("[data-reset]").forEach(b=>b.addEventListener("click",()=>resetPassword(b.dataset.reset)));
  $("accountRows").querySelectorAll("[data-delete]").forEach(b=>b.addEventListener("click",()=>deleteAccount(b.dataset.delete)));
 }
 async function setDisabled(uid,disabled){
@@ -113,6 +115,16 @@ async function setDisabled(uid,disabled){
  const verb=disabled?"disable":"enable";
  if(!confirm("Are you sure you want to "+verb+" "+account.email+"?"))return;
  try{await api("set-disabled",{uid,disabled});await loadAccounts();}catch(error){alert(error.message);}
+}
+async function resetPassword(uid){
+ const account=accounts.find(x=>x.uid===uid);if(!account)return;
+ if(!account.email){alert("This account has no registered email address.");return;}
+ if(!confirm("Send a password reset email to "+account.email+"?"))return;
+ try{
+  const result=await api("reset-password",{uid});
+  await auth.sendPasswordResetEmail(result.email);
+  alert("Password reset email sent to "+result.email+". The user must open the email and choose a new password.");
+ }catch(error){alert(error.message||"Unable to send the password reset email.");}
 }
 async function deleteAccount(uid){
  const account=accounts.find(x=>x.uid===uid);if(!account)return;
