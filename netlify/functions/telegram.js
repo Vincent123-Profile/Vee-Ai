@@ -53,6 +53,41 @@ async function sendMessage(token, chatId, text) {
   });
 }
 
+async function linkTelegramAccount(token, chat, code, db) {
+  const normalisedCode = String(code || "").trim().toUpperCase();
+  if (!/^[A-F0-9]{10}$/.test(normalisedCode)) {
+    await sendMessage(token, chat.id, "Your link code is invalid. Generate a fresh code from Vee-AI Settings.");
+    return;
+  }
+  const codeHash = crypto.createHash("sha256").update(normalisedCode).digest("hex");
+  const codeRef = db.ref("telegram/linkCodes/" + codeHash);
+  const now = Date.now();
+  const claim = await codeRef.transaction(current => {
+    if (!current || Number(current.expiresAtMs || 0) <= now || current.usedAtMs) return;
+    return Object.assign({}, current, { usedAtMs: now });
+  });
+  const link = claim.snapshot && claim.snapshot.val();
+  if (!claim.committed || !link || !link.uid) {
+    await sendMessage(token, chat.id, "This link code is invalid, expired or already used. Generate a new code in Vee-AI Settings.");
+    return;
+  }
+  try {
+    await db.ref("telegram/accountsByChat/" + String(chat.id)).set({
+      uid: String(link.uid),
+      email: String(link.email || ""),
+      linkedAtMs: now,
+      telegramUserId: String(chat.id),
+      username: String(chat.username || "").slice(0, 64),
+      firstName: String(chat.first_name || "").slice(0, 64)
+    });
+    await codeRef.remove();
+    await sendMessage(token, chat.id, "Your Telegram account is now linked to Vee-AI. Your account connection is verified. Shared memories and workspace data are the next integration stage.");
+  } catch (error) {
+    console.error("Vee-AI Telegram account linking failed:", error && error.message || error);
+    await sendMessage(token, chat.id, "I could not finish linking your account. Generate a fresh code in Vee-AI Settings and try again.");
+  }
+}
+
 async function generateReply(chatId, messageText, db) {
   const apiKey = (process.env.GROQ_API_KEY || "").trim();
   if (!apiKey) throw new Error("AI service is not configured.");
@@ -145,6 +180,15 @@ exports.handler = async event => {
 
     if (/^\/start(?:@\w+)?(?:\s|$)/i.test(text)) {
       await sendMessage(token, chat.id, "Welcome to Vee-AI. 👋\n\nI'm your personal AI assistant. Send me a message to get started.\n\nYour Telegram chat is being set up. Account linking and shared website memory will be added in the next connection step.");
+      return json(200, { ok: true });
+    }
+    if (/^\/link(?:@\\w+)?(?:\\s|$)/i.test(text)) {
+      const match = text.match(/^\/link(?:@\\w+)?\\s+([A-Fa-f0-9]{10})$/i);
+      if (!match) {
+        await sendMessage(token, chat.id, "To link your account, open Vee-AI Settings, generate a Telegram link code, then send /link followed by the code.");
+      } else {
+        await linkTelegramAccount(token, chat, match[1], db);
+      }
       return json(200, { ok: true });
     }
     if (/^\/help(?:@\w+)?$/i.test(text)) {
