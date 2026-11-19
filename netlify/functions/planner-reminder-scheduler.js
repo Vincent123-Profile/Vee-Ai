@@ -58,7 +58,8 @@ function cleanText(value, max) {
 
 async function sendTaskReminder(db, token, chatId, uid, date, taskId, task, now) {
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(taskId)) return false;
-  const deliveryRef = db.ref("telegram/reminderDeliveries/" + uid + "/" + date + "/" + taskId);
+  const deliveryDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(String(task.dueDate || "")) ? String(task.dueDate) : date;
+  const deliveryRef = db.ref("telegram/reminderDeliveries/" + uid + "/" + deliveryDate + "/" + taskId);
   const claimId = crypto.randomBytes(12).toString("hex");
   const claim = await deliveryRef.transaction(current => {
     if (current && (current.status === "sent" || (current.status === "sending" && now - Number(current.claimedAtMs || 0) < 10 * 60 * 1000))) return;
@@ -111,15 +112,21 @@ exports.handler = async () => {
       ]);
       const settings = settingsSnapshot.val() || {};
       if (settings.enabled !== true) continue;
-      const timeZone = validTimeZone(settings.timeZone) ? settings.timeZone : "UTC";
-      const clock = localClock(timeZone, new Date(now));
-      const time = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(settings.time || "")) ? settings.time : "";
-      const days = Array.isArray(settings.days) ? settings.days.filter(day => Number.isInteger(day) && day >= 0 && day <= 6) : [];
-      if (!time || clock.time !== time || !days.includes(clock.day)) continue;
-
       const tasks = tasksSnapshot.val() || {};
+      const fallbackTime = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(settings.time || "")) ? settings.time : "";
+      const fallbackDays = Array.isArray(settings.days) ? settings.days.filter(day => Number.isInteger(day) && day >= 0 && day <= 6) : [];
       for (const [taskId, task] of Object.entries(tasks).slice(0, 100)) {
-        if (!task || task.done === true || !/^\d{4}-\d{2}-\d{2}$/.test(String(task.dueDate || "")) || task.dueDate > clock.date) continue;
+        if (!task || task.done === true || !/^\d{4}-\d{2}-\d{2}$/.test(String(task.dueDate || ""))) continue;
+        const hasTaskTime = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(task.dueTime || ""));
+        const timeZone = validTimeZone(hasTaskTime ? task.timeZone : settings.timeZone) ? (hasTaskTime ? task.timeZone : settings.timeZone) : "UTC";
+        const clock = localClock(timeZone, new Date(now));
+        let dueNow = false;
+        if (hasTaskTime) {
+          dueNow = task.dueDate < clock.date || (task.dueDate === clock.date && task.dueTime <= clock.time);
+        } else {
+          dueNow = !!fallbackTime && clock.time === fallbackTime && fallbackDays.includes(clock.day) && task.dueDate <= clock.date;
+        }
+        if (!dueNow) continue;
         checked++;
         if (sent >= 100) break;
         if (await sendTaskReminder(db, token, chatId, uid, clock.date, taskId, task, now)) sent++;
