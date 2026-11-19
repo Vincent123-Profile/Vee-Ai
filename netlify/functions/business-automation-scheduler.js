@@ -157,9 +157,12 @@ exports.handler = async () => {
       const startMinute = startParts[0] * 60 + startParts[1];
       const elapsedMinutes = currentMinute - startMinute;
       const intervalMinutes = intervalHours * 60;
-      if (elapsedMinutes < 0 || elapsedMinutes % intervalMinutes !== 0 || !days.includes(clock.day)) continue;
-
-      const runKey = "content_" + clock.date.replace(/-/g,"") + "_" + clock.time.replace(":","");
+      if (elapsedMinutes < 0 || !days.includes(clock.day)) continue;
+      const minutesPastSlot = elapsedMinutes % intervalMinutes;
+      if (minutesPastSlot > 2) continue;
+      const dueMinuteOfDay = currentMinute - minutesPastSlot;
+      const dueTime = String(Math.floor(dueMinuteOfDay / 60)).padStart(2,"0") + ":" + String(dueMinuteOfDay % 60).padStart(2,"0");
+      const runKey = "content_" + clock.date.replace(/-/g,"") + "_" + dueTime.replace(":","");
       const userRef = db.ref("privateBusinessAutomation/" + uid);
       const runRef = userRef.child("runs/" + runKey);
       const prior = await runRef.once("value");
@@ -190,7 +193,7 @@ exports.handler = async () => {
         const savedAtMs = Date.now();
         const commit = await runRef.transaction(current => {
           if (current) return;
-          return { status:"ready", createdAtMs:savedAtMs, scheduledForLocal:clock.date + " " + clock.time, timeZone:schedule.timeZone, draft };
+          return { status:"ready", createdAtMs:savedAtMs, scheduledForLocal:clock.date + " " + dueTime, timeZone:schedule.timeZone, draft };
         }, undefined, false);
         if (!commit.committed) continue;
         await userRef.update({ lastGeneratedAtMs:savedAtMs, lastRunKey:runKey });
