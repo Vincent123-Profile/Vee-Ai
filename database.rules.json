@@ -26,6 +26,14 @@
           ".validate": "newData.hasChildren(['version','salt','iv','ciphertext','updatedAtMs'])"
         }
       }
+    },
+    "privateBusinessAutomation": {
+      ".read": false,
+      ".write": false
+    },
+    "privateBusinessAutomationRate": {
+      ".read": false,
+      ".write": false
     }
   }
 }
