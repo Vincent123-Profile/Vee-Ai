@@ -247,7 +247,7 @@ exports.handler = async event => {
     }
 
     if (/^\/start(?:@\w+)?(?:\s|$)/i.test(text)) {
-      await sendMessage(token, chat.id, "Welcome to Vee-AI. 👋\n\nI'm your personal AI assistant. Send me a message to get started.\n\nYour Telegram chat is being set up. Account linking and shared website memory will be added in the next connection step.");
+      await sendMessage(token, chat.id, "Welcome to Vee-AI. 👋\n\nI'm your personal AI assistant. Link your verified Vee-AI account in Settings to use shared memory, Planner tasks and scheduled business content.\n\nUse /help to see Telegram commands.");
       return json(200, { ok: true });
     }
     if (/^\/link(?:@\w+)?(?:\s|$)/i.test(text)) {
