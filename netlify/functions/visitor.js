@@ -44,8 +44,11 @@ function verifyVisitor(token) {
 function networkFingerprint(event) {
   const ip = event.headers && (event.headers["x-nf-client-connection-ip"] || event.headers["X-Nf-Client-Connection-Ip"]);
   const key = (process.env.IP_HASH_SECRET || "").trim();
-  if (!ip || !key) return "network_unknown";
-  return crypto.createHmac("sha256", key).update(String(ip).trim()).digest("hex").slice(0, 32);
+  if (!ip) return "network_unknown";
+  const value = String(ip).trim();
+  return (key
+    ? crypto.createHmac("sha256", key).update(value).digest("hex")
+    : crypto.createHash("sha256").update(value).digest("hex")).slice(0, 32);
 }
 async function enforceVisitorLimit(database, event, action, now, visitorId) {
   const limits = {
@@ -179,7 +182,8 @@ exports.handler = async event => {
     return json(400, { error: "Unknown visitor action." });
   } catch (error) {
     const message = error && error.message || "Visitor service error.";
-    const status = /Invalid visitor token|expired|identity mismatch/i.test(message) ? 403 : 500;
-    return json(status, { error: message });
+    const status = /Invalid visitor token|expired|identity mismatch|Visitor token is required/i.test(message) ? 403 : 500;
+    console.error("Vee-AI visitor service error:", message);
+    return json(status, { error: status === 403 ? "Visitor session is invalid or expired." : "Visitor service is temporarily unavailable." });
   }
 };
