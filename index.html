@@ -683,6 +683,13 @@
       border-color: rgba(241, 76, 21, 0.5);
     }
 
+    .ai-mode-bar{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:9px;padding:7px 2px 9px}
+    .ai-mode-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+    .ai-mode-field label{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);padding-left:7px}
+    .ai-mode-field select{width:100%;min-width:0;height:42px;padding:0 12px;border:1px solid var(--glass-border);border-radius:13px;background:var(--glass-surface);color:var(--text-primary);font:600 12px "Plus Jakarta Sans",sans-serif;outline:none}
+    .ai-mode-field select:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+    .ai-mode-caption{grid-column:1/-1;padding-left:7px;color:var(--text-muted);font-size:10px;line-height:1.4}
+    @media(max-width:420px){.ai-mode-bar{gap:7px}.ai-mode-field select{font-size:11px;padding:0 8px}.ai-mode-field label{font-size:9px}}
     /* Floating Composer */
     .composer-wrap {
       position: relative;
@@ -1689,6 +1696,31 @@
         <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Kedu, nwanne m?')">Igbo</button>
       </div>
 
+      <div class="ai-mode-bar" aria-label="AI model and language settings">
+        <div class="ai-mode-field">
+          <label for="veeModelSelect">AI brain</label>
+          <select id="veeModelSelect" onchange="veeSetModel(this.value)" aria-label="Choose AI brain">
+            <option value="Vee Brain">✦ Vee Brain · Flagship</option>
+            <option value="Fabzi">Fabzi · Creative</option>
+            <option value="Hassign">Hassign · Analytical</option>
+            <option value="Kurah">Kurah · Problem solving</option>
+            <option value="Portable">Portable · Casual</option>
+            <option value="Claude Style">Claude Style · Thoughtful</option>
+          </select>
+        </div>
+        <div class="ai-mode-field">
+          <label for="veeLanguageSelect">Response language</label>
+          <select id="veeLanguageSelect" onchange="veeSetLanguage(this.value)" aria-label="Choose response language">
+            <option value="Auto">Auto detect</option>
+            <option value="Queen's English">Queen's English</option>
+            <option value="Nigerian Pidgin">Nigerian Pidgin</option>
+            <option value="Yoruba">Yoruba</option>
+            <option value="Igbo">Igbo</option>
+            <option value="Hausa">Hausa</option>
+          </select>
+        </div>
+        <div class="ai-mode-caption" id="veeModeCaption">Vee Brain is your flagship AI. Your selected brain and language apply to each new reply.</div>
+      </div>
       <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
         <textarea id="userInput" rows="1" placeholder="Yarn with Vee-AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
         <div class="composer-controls">
@@ -1950,6 +1982,15 @@
     var veeCurrentSessionId = null;
     var veeHistory = [];
     var veeIsGenerating = false;
+    var veeSelectedModel = "Vee Brain";
+    var veeSelectedLanguage = "Auto";
+    try {
+      var storedModel = localStorage.getItem("vee_ai_selected_model");
+      var storedLanguage = localStorage.getItem("vee_ai_selected_language");
+      if (["Vee Brain","Fabzi","Hassign","Kurah","Portable","Claude Style"].includes(storedModel)) veeSelectedModel = storedModel;
+      if (["Auto","Queen's English","Nigerian Pidgin","Yoruba","Igbo","Hausa"].includes(storedLanguage)) veeSelectedLanguage = storedLanguage;
+    } catch (e) {}
+
     var veeParticlesEnabled = true;
 
     try {
@@ -3411,6 +3452,38 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       el.style.height = Math.min(el.scrollHeight, 128) + "px";
     }
 
+    function veeSetModel(value) {
+      var allowed = ["Vee Brain","Fabzi","Hassign","Kurah","Portable","Claude Style"];
+      if (!allowed.includes(value)) value = "Vee Brain";
+      veeSelectedModel = value;
+      try { localStorage.setItem("vee_ai_selected_model", value); } catch (e) {}
+      var caption = document.getElementById("veeModeCaption");
+      var descriptions = {
+        "Vee Brain":"Flagship brain with the highest reasoning priority available in Vee-AI.",
+        "Fabzi":"Creative, expressive and friendly responses.",
+        "Hassign":"Analytical, technical and evidence focused responses.",
+        "Kurah":"Calm, structured planning and problem solving.",
+        "Portable":"Energetic, informal and culturally aware conversation.",
+        "Claude Style":"Thoughtful, careful and balanced communication style."
+      };
+      if (caption) caption.textContent = descriptions[value] + " Your saved memory stays available across brains.";
+    }
+
+    function veeSetLanguage(value) {
+      var allowed = ["Auto","Queen's English","Nigerian Pidgin","Yoruba","Igbo","Hausa"];
+      if (!allowed.includes(value)) value = "Auto";
+      veeSelectedLanguage = value;
+      try { localStorage.setItem("vee_ai_selected_language", value); } catch (e) {}
+    }
+
+    function veeRestoreAiPreferences() {
+      var model = document.getElementById("veeModelSelect");
+      var language = document.getElementById("veeLanguageSelect");
+      if (model) model.value = veeSelectedModel;
+      if (language) language.value = veeSelectedLanguage;
+      veeSetModel(veeSelectedModel);
+    }
+
     function veeHandleKey(e) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -3470,6 +3543,8 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
           body: JSON.stringify({
             message: message,
             history: contextHistory,
+            selectedModel: veeSelectedModel,
+            selectedLanguage: veeSelectedLanguage,
             memory: veeMemoryUseEnabled ? veeMemories.slice(0, 20).map(function(item) {
               return { title:item.title, content:item.content, category:item.category };
             }) : []
@@ -3501,6 +3576,8 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
     /* =========================================================
        ISOLATED VISUAL EFFECTS & VIEWPORT SYNC
        ========================================================= */
+    veeRestoreAiPreferences();
+
     (function initVisualEffects() {
       try {
         var savedTheme = "light";
