@@ -63,7 +63,7 @@ Configure these under Netlify environment variables. Never commit their values t
 | `BUSINESS_AUTOMATION_ENCRYPTION_KEY` | Base64-encoded 32-byte key for encrypting opted-in background business profiles. Keep only in Netlify environment variables. |
 | `GMAIL_CLIENT_ID` | Google OAuth web application client ID. |
 | `GMAIL_CLIENT_SECRET` | Google OAuth web application client secret. Keep only in Netlify environment variables. |
-| `GMAIL_REDIRECT_URI` | Exact Google OAuth callback URL, for example `https://YOUR-SITE.netlify.app/.netlify/functions/gmail?action=callback`. |
+| `GMAIL_REDIRECT_URI` | Exact Google OAuth callback URL, for example `https://YOUR-SITE.netlify.app/.netlify/functions/gmail`. |
 | `GMAIL_APP_REDIRECT_URL` | Vee-AI site URL users return to after Google authorisation, for example `https://YOUR-SITE.netlify.app/`. |
 | `GMAIL_TOKEN_ENCRYPTION_KEY` | Base64-encoded random 32-byte key used to encrypt Gmail OAuth tokens at rest. Keep only in Netlify environment variables. |
 
