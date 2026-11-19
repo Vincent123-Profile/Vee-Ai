@@ -202,13 +202,19 @@ exports.handler = async event => {
         console.error("Vee-AI Gmail OAuth state check: state_already_used");
         return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=state_used" }, body:"" };
       }
-      const claim = await stateRef.transaction(current => {
-        if (!current || Number(current.expiresAtMs || 0) < Date.now() || current.usedAtMs) return;
-        return Object.assign({},current,{usedAtMs:Date.now()});
-      });
-      const stateRecord = claim.snapshot && claim.snapshot.val();
-      if (!claim.committed || !stateRecord || !stateRecord.uid) {
-        console.error("Vee-AI Gmail OAuth state check: transaction_not_committed", JSON.stringify({committed:claim.committed,hasSnapshot:!!stateRecord,hasUid:!!(stateRecord&&stateRecord.uid)}));
+      const claimAtMs = Date.now();
+      const claim = await stateRef.child("usedAtMs").transaction(current => {
+        if (current !== null && typeof current !== "undefined") return;
+        return claimAtMs;
+      }, undefined, false);
+      if (!claim.committed || !claim.snapshot || !claim.snapshot.exists()) {
+        console.error("Vee-AI Gmail OAuth state check: transaction_not_committed", JSON.stringify({committed:claim.committed,hasSnapshot:!!claim.snapshot,hasValue:!!(claim.snapshot&&claim.snapshot.exists())}));
+        return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=state_claim_failed" }, body:"" };
+      }
+      const claimedState = await stateRef.once("value");
+      const stateRecord = claimedState.val();
+      if (!stateRecord || !stateRecord.uid || Number(stateRecord.expiresAtMs || 0) < Date.now()) {
+        console.error("Vee-AI Gmail OAuth state check: claimed_record_invalid", JSON.stringify({hasRecord:!!stateRecord,hasUid:!!(stateRecord&&stateRecord.uid),notExpired:!!(stateRecord&&Number(stateRecord.expiresAtMs||0)>=Date.now())}));
         return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=state_claim_failed" }, body:"" };
       }
       const tokens = await tokenRequest({
