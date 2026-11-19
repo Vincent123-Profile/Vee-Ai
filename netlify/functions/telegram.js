@@ -260,7 +260,51 @@ exports.handler = async event => {
       return json(200, { ok: true });
     }
     if (/^\/help(?:@\w+)?$/i.test(text)) {
-      await sendMessage(token, chat.id, "Send me a message and I'll help with questions, planning, learning and everyday tasks. Account linking and shared Vee-AI features are coming next.");
+      await sendMessage(token, chat.id, "Send me a message for everyday help. Available account commands:\n/tasks - view your open Planner tasks\n/content - retrieve your latest scheduled business content ideas\n/help - show this help.");
+      return json(200, { ok: true });
+    }
+
+    if (/^\\/tasks(?:@\\w+)?$/i.test(text)) {
+      const linkedSnapshot = await db.ref("telegram/accountsByChat/" + chatId).once("value");
+      const linkedAccount = linkedSnapshot.val();
+      if (!linkedAccount || typeof linkedAccount.uid !== "string") {
+        await sendMessage(token, chat.id, "Link your verified Vee-AI account first. Open Vee-AI Settings and generate a Telegram link code.");
+      } else {
+        const tasksSnapshot = await db.ref("users/" + linkedAccount.uid + "/planner/tasks").once("value");
+        const tasks = tasksSnapshot.val() || {};
+        const openTasks = Object.entries(tasks).filter(([, task]) => task && task.done !== true)
+          .sort((a,b) => String(a[1].dueDate || "9999").localeCompare(String(b[1].dueDate || "9999"))).slice(0,12);
+        const reply = openTasks.length
+          ? "Your open Vee-AI Planner tasks:\\n\\n" + openTasks.map(([id,task],index) => (index+1) + ". " + String(task.title || "Untitled task").slice(0,120) + (task.dueDate ? "\\n   Due: " + String(task.dueDate) : "")).join("\\n\\n")
+          : "You have no open Planner tasks.";
+        await sendMessage(token, chat.id, reply);
+      }
+      return json(200, { ok: true });
+    }
+
+    if (/^\\/content(?:@\\w+)?$/i.test(text)) {
+      const linkedSnapshot = await db.ref("telegram/accountsByChat/" + chatId).once("value");
+      const linkedAccount = linkedSnapshot.val();
+      if (!linkedAccount || typeof linkedAccount.uid !== "string") {
+        await sendMessage(token, chat.id, "Link your verified Vee-AI account first. Open Vee-AI Settings and generate a Telegram link code.");
+      } else {
+        const runsSnapshot = await db.ref("privateBusinessAutomation/" + linkedAccount.uid + "/runs").once("value");
+        const runs = runsSnapshot.val() || {};
+        const recent = Object.entries(runs).filter(([,run]) => run && run.status === "ready" && run.draft)
+          .sort((a,b) => Number(b[1].createdAtMs || 0) - Number(a[1].createdAtMs || 0)).slice(0,4);
+        if (!recent.length) {
+          await sendMessage(token, chat.id, "No scheduled business content ideas are saved yet. Enable background processing and set a content schedule in Business Workspace.");
+        } else {
+          const reply = "Your latest Vee-AI business content ideas:\\n\\n" + recent.map(([,run],index) => {
+            const draft = run.draft || {};
+            return (index+1) + ". " + String(draft.topic || "Content idea").slice(0,180) +
+              "\\nHook: " + String(draft.hook || "").slice(0,250) +
+              "\\nScript: " + String(draft.script || "").slice(0,650) +
+              "\\nCaption: " + String(draft.caption || "").slice(0,250);
+          }).join("\\n\\n--------------------\\n\\n");
+          await sendMessage(token, chat.id, reply);
+        }
+      }
       return json(200, { ok: true });
     }
 
