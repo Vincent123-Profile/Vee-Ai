@@ -115,7 +115,7 @@ exports.handler = async event => {
         encryptedProfile,
         consent: { enabled: true, consentGrantedAtMs: now, consentVersion: 1, userUid: user.uid }
       });
-      return json(200, { enabled: true, message: "Background processing permission saved. Content preparation is scheduled every three hours on published deployments." });
+      return json(200, { enabled: true, message: "Background processing permission saved. Content is prepared at the local time and days you select in your Content Workspace schedule." });
     }
     if (body.action === "disable") {
       const revokedAtMs = Date.now();
