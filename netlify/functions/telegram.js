@@ -78,7 +78,17 @@ async function generateReply(chatId, messageText, db) {
     body: JSON.stringify({ model, messages, temperature: 0.85, max_tokens: 750 })
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error("AI response request failed.");
+  if (!response.ok) {
+    const providerError = data && data.error ? data.error : {};
+    console.error("Vee-AI Telegram Groq request failed:", JSON.stringify({
+      status: response.status,
+      error: typeof providerError.message === "string" ? providerError.message.slice(0, 500) : "No provider message",
+      code: providerError.code || null,
+      type: providerError.type || null,
+      model
+    }));
+    throw new Error("AI response request failed (HTTP " + response.status + ").");
+  }
   const reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
   if (typeof reply !== "string" || !reply.trim()) throw new Error("AI returned an empty response.");
   const updated = history.concat([
