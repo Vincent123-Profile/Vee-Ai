@@ -61,6 +61,11 @@ Configure these under Netlify environment variables. Never commit their values t
 | `GROQ_API_KEY` | Existing chat service credential |
 | `GROQ_MODEL` | Optional single Groq model ID. Defaults to `openai/gpt-oss-20b`. No automatic model fallback is used. |
 | `BUSINESS_AUTOMATION_ENCRYPTION_KEY` | Base64-encoded 32-byte key for encrypting opted-in background business profiles. Keep only in Netlify environment variables. |
+| `GMAIL_CLIENT_ID` | Google OAuth web application client ID. |
+| `GMAIL_CLIENT_SECRET` | Google OAuth web application client secret. Keep only in Netlify environment variables. |
+| `GMAIL_REDIRECT_URI` | Exact Google OAuth callback URL, for example `https://YOUR-SITE.netlify.app/.netlify/functions/gmail?action=callback`. |
+| `GMAIL_APP_REDIRECT_URL` | Vee-AI site URL users return to after Google authorisation, for example `https://YOUR-SITE.netlify.app/`. |
+| `GMAIL_TOKEN_ENCRYPTION_KEY` | Base64-encoded random 32-byte key used to encrypt Gmail OAuth tokens at rest. Keep only in Netlify environment variables. |
 
 Keep the service-account JSON only in Netlify environment variables.
 
@@ -106,6 +111,26 @@ The feature branch adds an explicit opt-in endpoint for scheduled business conte
 - Users can retrieve the latest 12 generated drafts through the authenticated function and view them in Business Workspace. Disabling background processing deletes the encrypted automation profile and generated drafts.
 - Automatic content delivery uses the user's chosen local schedule. Planner reminders and scheduled content delivery are separate settings. Email intelligence and bank-email analysis are not implemented yet.
 - The recurring schedule only becomes active on a published Netlify deployment. Do not merge this feature branch into production until the preview and scheduled function have been tested and the production deployment is approved.
+
+## Gmail Email Intelligence (first implementation)
+
+The development branch adds a Gmail read-only OAuth integration.
+
+- Users sign in to Vee-AI with a verified account before connecting Gmail.
+- Google OAuth requests only `https://www.googleapis.com/auth/gmail.readonly`. Vee-AI does not request permission to send, delete, or modify emails.
+- OAuth state is random, expires after 10 minutes, and is consumed once.
+- Access and refresh tokens are encrypted with AES-256-GCM using `GMAIL_TOKEN_ENCRYPTION_KEY` before Firebase storage. Client database rules deny direct access to Gmail token and OAuth state paths.
+- The first scan reads up to 30 recent Gmail messages. It stores selected metadata, snippets and rule-based categories for the user's dashboard. It does not yet create Finance transactions automatically.
+- Initial categories include bank alerts, flights, job-related messages, promotions and general mail. Suspicious link indicators include known URL shorteners, raw IP links, internationalised domains and credential-pressure language.
+- The initial security checks are heuristic triage, not a malware sandbox or a guarantee that a link is safe. Vee-AI does not open extracted links.
+- Dashboard actions include connect, scan, filter, and disconnect. Disconnect deletes the stored token and scanned message records from Vee-AI. It does not delete messages from Gmail.
+- Linked Telegram users can use `/emails` for recent email intelligence and `/security` for flagged findings.
+- Email content is not sent to the AI model in this first implementation. Classification is performed with local deterministic rules in the Netlify function.
+- Gmail API must be enabled in Google Cloud. Configure an OAuth consent screen and a Web application OAuth client. Add the exact callback URL from `GMAIL_REDIRECT_URI` to the authorised redirect URIs. Add the deployed Vee-AI domain to authorised JavaScript origins only if Google Console requests it.
+- Generate `GMAIL_TOKEN_ENCRYPTION_KEY` locally with `openssl rand -base64 32`. Never paste the key into chat or commit it to GitHub.
+- Configure all Gmail environment variables for the Netlify Deploy Preview context before testing. Google OAuth may require the account to be listed as a test user while the consent screen is in Testing. Public release may require Google's verification process for Gmail restricted scopes.
+
+This first stage does not yet include Outlook, full attachment scanning, automatic bank transaction posting, continuous Gmail push notifications, or advanced malware detonation.
 
 ## Admin dashboard
 
