@@ -91,6 +91,28 @@ exports.handler = async event => {
     const user = await verifyUser(event);
     const db = firebase().database();
     const root = db.ref("privateBusinessAutomation/" + user.uid);
+    if (body.action === "account-profile-get") {
+      const snapshot = await db.ref("privateBusinessAccount/" + user.uid + "/profile").once("value");
+      const legacy = await db.ref("privateBusiness/" + user.uid + "/vault").once("value");
+      const record = snapshot.val();
+      let profile = null;
+      if (record) {
+        if (!record.encryptedProfile) throw new Error("Saved account profile format is not recognised.");
+        profile = decryptProfile(user.uid, record.encryptedProfile);
+      }
+      return json(200, { profile, legacyEncryptedProfileFound: legacy.exists() });
+    }
+    if (body.action === "account-profile-save") {
+      const profile = validateProfile(body.profile);
+      await enforceUserRateLimit(db, user.uid);
+      const encryptedProfile = encryptProfile(user.uid, profile);
+      await db.ref("privateBusinessAccount/" + user.uid + "/profile").set({
+        encryptedProfile,
+        updatedAtMs: Date.now(),
+        userUid: user.uid
+      });
+      return json(200, { saved: true, message: "Business profile saved securely to your account." });
+    }
     if (body.action === "status") {
       const snapshot = await root.child("consent").once("value");
       const consent = snapshot.val() || {};
