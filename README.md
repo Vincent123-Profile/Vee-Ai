@@ -58,7 +58,8 @@ Configure these under Netlify environment variables. Never commit their values t
 | `FIREBASE_DATABASE_URL` | `https://vee-ai-e745e-default-rtdb.firebaseio.com` |
 | `VISITOR_TOKEN_SECRET` | Random secret of at least 32 characters for signed visitor tokens |
 | `IP_HASH_SECRET` | Existing secret used to create network fingerprints |
-| `GROQ_API_KEY` | Existing chat service credential |\n| `GROQ_MODEL` | Optional single Groq model ID. Defaults to `openai/gpt-oss-20b`. No automatic model fallback is used. |
+| `GROQ_API_KEY` | Existing chat service credential |
+| `GROQ_MODEL` | Optional single Groq model ID. Defaults to `openai/gpt-oss-20b`. No automatic model fallback is used. |
 | `BUSINESS_AUTOMATION_ENCRYPTION_KEY` | Base64-encoded 32-byte key for encrypting opted-in background business profiles. Keep only in Netlify environment variables. |
 
 Keep the service-account JSON only in Netlify environment variables.
