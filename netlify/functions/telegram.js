@@ -283,7 +283,7 @@ exports.handler = async event => {
           const reply = title + "\n\n" + selected.map((item,index) => {
             const categories = Array.isArray(item.categories) ? item.categories.join(", ") : "general";
             const risk = item.riskLevel && item.riskLevel !== "none" ? "\nRisk: " + String(item.riskLevel).toUpperCase() : "";
-            const findings = Array.isArray(item.securityFindings) ? item.securityFindings.slice(0,3).map(f => f.reason).join("; ") : "";
+            const findings = Array.isArray(item.securityFindings) ? item.securityFindings.slice(0,3).map(f => f.reason + (f.url ? " | Link: " + String(f.url).slice(0,180) : "")).join("; ") : "";
             return (index+1) + ". " + String(item.subject || "(No subject)").slice(0,150) +
               "\nFrom: " + String(item.from || "Unknown").slice(0,150) +
               "\nCategory: " + categories + risk + (findings ? "\nFindings: " + findings : "");
