@@ -2089,7 +2089,7 @@
           main.appendChild(title);main.appendChild(from);main.appendChild(snippet);main.appendChild(tags);
           if(item.securityFindings&&item.securityFindings.length){
             var findings=document.createElement("span");
-            findings.textContent=item.securityFindings.map(function(finding){return finding.reason;}).join(" · ");
+            findings.textContent=item.securityFindings.map(function(finding){return finding.reason+(finding.url?" | Link: "+finding.url:"");}).join(" · ");
             main.appendChild(findings);
           }
           row.appendChild(main);list.appendChild(row);
