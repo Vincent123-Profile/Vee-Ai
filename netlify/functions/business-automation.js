@@ -123,7 +123,7 @@ async function createTestDraft(profile) {
     if(!response.ok)throw new Error("Groq request failed with status "+response.status+".");
     const raw=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
     if(typeof raw!=="string"||!raw.trim())throw new Error("Groq returned an empty draft.");
-    const draft=JSON.parse(raw.trim().replace(/^\`\`\`(?:json)?\\s*/i,"").replace(/\\s*\`\`\`$/,""));
+    const draft=JSON.parse(raw.trim().replace(/^\x60{3}(?:json)?\s*/i,"").replace(/\s*\x60{3}$/,""));
     if(typeof draft.topic!=="string"||typeof draft.script!=="string"||!Array.isArray(draft.talkingPoints))throw new Error("Groq returned an invalid draft.");
     return {topic:safeText(draft.topic,240),hook:safeText(draft.hook,500),talkingPoints:draft.talkingPoints.slice(0,5).map(x=>safeText(x,350)),script:safeText(draft.script,1800),caption:safeText(draft.caption,700),platform:safeText(draft.platform,100),callToAction:safeText(draft.callToAction,300)};
   } finally { clearTimeout(timeout); }
@@ -152,7 +152,7 @@ async function sendTestTelegram(db, uid, draft) {
     "Caption: "+draft.caption,
     "Platform: "+draft.platform,
     "Call to action: "+draft.callToAction
-  ].join("\\n").slice(0,3900);
+  ].join("\n").slice(0,3900);
   const response=await fetch("https://api.telegram.org/bot"+token+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:match[0],text:message,link_preview_options:{is_disabled:true}})});
   const result=await response.json().catch(()=>({}));
   if(!response.ok||result.ok!==true)throw new Error("Telegram rejected the test message.");
