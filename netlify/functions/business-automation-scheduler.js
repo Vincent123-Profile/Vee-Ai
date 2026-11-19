@@ -48,7 +48,7 @@ function localClock(timeZone, now) {
 function clean(value, max) {
   return String(value || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max);
 }
-async function generateContent(profile) {
+async function generateContent(profile, recentIdeas) {
   const apiKey = (process.env.GROQ_API_KEY || "").trim();
   if (!apiKey) throw new Error("Groq is not configured.");
   const controller = new AbortController();
@@ -73,10 +73,10 @@ async function generateContent(profile) {
       headers:{ Authorization:"Bearer " + apiKey, "Content-Type":"application/json" },
       body:JSON.stringify({
         model:(process.env.GROQ_MODEL || "openai/gpt-oss-20b").trim(),
-        temperature:0.2, max_tokens:1200, response_format:{ type:"json_object" },
+        temperature:0.85, max_tokens:1400, response_format:{ type:"json_object" },
         messages:[
-          { role:"system", content:"You are Vee-AI, a careful business content strategist. Create one useful short-form video idea using only explicit facts in the supplied business profile. Never invent or guess a website, URL, address, branch, location, stock, price, offer, product specification, award, guarantee, customer result, delivery service, or business capability. Mention a location or service only when explicitly stated. Never create a website or URL. If a detail is absent, omit it. Use correct spelling and natural English. Return valid JSON only with keys: topic, hook, talkingPoints (array of 3 to 5 strings), script, caption, platform (one string), callToAction. Keep the script suitable for a 30 to 60 second video. Do not include markdown fences." },
-          { role:"user", content:"Create one original content idea. Treat this profile as the only source of truth. Do not fill gaps with assumptions.\n" + JSON.stringify(approvedContext) }
+          { role:"system", content:"You are Vee-AI, a careful business content strategist. Create one useful short-form video idea using only explicit facts in the supplied business profile. Never invent or guess a website, URL, address, branch, location, stock, price, offer, product specification, award, guarantee, customer result, delivery service, or business capability. Mention a location or service only when explicitly stated. Never create a website or URL. If a detail is absent, omit it. Use correct spelling and natural English. Return valid JSON only with keys: topic, style, format, hook, talkingPoints (array of 3 to 5 strings), script, caption, platform (one string), callToAction. Keep the script suitable for a 30 to 60 second video. Do not include markdown fences. Each delivery must have a distinct topic, angle, hook, structure and style. Rotate styles such as product demonstration, myth-versus-fact, buyer education, comparison, FAQ, storytelling, behind-the-scenes, checklist, problem-solution, customer objection handling, trend commentary and sales announcement. Rotate formats and opening hooks. Never repeat or closely paraphrase any recent idea listed by the user. Avoid the same style used in the latest few deliveries when other suitable styles exist." },
+          { role:"user", content:"Create a fresh idea for this delivery. Treat this profile as the only source of truth. Do not fill gaps with assumptions. Recent ideas to avoid repeating, including their styles and topics: " + JSON.stringify((recentIdeas || []).slice(0,30)) + "\nBusiness profile: " + JSON.stringify(approvedContext) }
         ]
       })
     });
@@ -88,7 +88,7 @@ async function generateContent(profile) {
     const draft = JSON.parse(cleaned);
     if (typeof draft.topic !== "string" || typeof draft.script !== "string" || !Array.isArray(draft.talkingPoints)) throw new Error("Groq returned an invalid content draft.");
     return {
-      topic:draft.topic.slice(0,240), hook:clean(draft.hook,500),
+      topic:draft.topic.slice(0,240), style:clean(draft.style,100), format:clean(draft.format,100), hook:clean(draft.hook,500),
       talkingPoints:draft.talkingPoints.slice(0,5).map(value => clean(value,500)),
       script:draft.script.slice(0,5000), caption:clean(draft.caption,2000),
       platform:clean(draft.platform || "Choose a suitable platform",100),
@@ -101,6 +101,8 @@ async function sendTelegram(token, chatId, draft) {
     "💡 Your scheduled Vee-AI business content idea",
     "",
     "Topic: " + clean(draft.topic,240),
+    "Style: " + clean(draft.style,100),
+    "Format: " + clean(draft.format,100),
     "",
     "Hook: " + clean(draft.hook,500),
     "",
@@ -183,7 +185,10 @@ exports.handler = async () => {
       if (!consentNow.val() || consentNow.val().enabled !== true) continue;
       try {
         const profile = decryptProfile(uid, record.encryptedProfile);
-        const draft = await generateContent(profile);
+        const historySnapshot = await userRef.child("runs").orderByChild("createdAtMs").limitToLast(30).once("value");
+        const historyRecords = historySnapshot.val() || {};
+        const recentIdeas = Object.values(historyRecords).filter(item => item && item.draft).sort((a,b) => Number(b.createdAtMs||0)-Number(a.createdAtMs||0)).map(item => ({ topic:item.draft.topic, style:item.draft.style, format:item.draft.format, hook:item.draft.hook }));
+        const draft = await generateContent(profile, recentIdeas);
         const consentLatest = await userRef.child("consent").once("value");
         const scheduleLatest = await db.ref("users/" + uid + "/contentStudio/reminderSettings").once("value");
         if (!consentLatest.val() || consentLatest.val().enabled !== true || !scheduleLatest.val() || scheduleLatest.val().enabled !== true) {
