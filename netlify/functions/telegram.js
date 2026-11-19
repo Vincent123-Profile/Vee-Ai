@@ -40,6 +40,10 @@ async function telegramRequest(token, method, payload) {
   return data.result;
 }
 
+async function sendChatAction(token, chatId, action) {
+  return telegramRequest(token, "sendChatAction", { chat_id: chatId, action });
+}
+
 async function sendMessage(token, chatId, text) {
   const safeText = String(text || "I could not prepare a reply. Please try again.").slice(0, 4000);
   return telegramRequest(token, "sendMessage", {
@@ -124,7 +128,7 @@ exports.handler = async event => {
       if (!current || now - Number(current.startedAt || 0) >= 60000) return { startedAt: now, count: 1 };
       return { startedAt: Number(current.startedAt), count: Number(current.count || 0) + 1 };
     });
-    if (Number(rate.snapshot.val() && rate.snapshot.val().count || 0) > 12) {
+    if (Number(rate.snapshot.val() && rate.snapshot.val().count || 0) > 30) {
       await sendMessage(token, chat.id, "You are sending messages too quickly. Please wait a minute and try again.");
       return json(200, { ok: true });
     }
@@ -138,6 +142,9 @@ exports.handler = async event => {
       return json(200, { ok: true });
     }
 
+    try { await sendChatAction(token, chat.id, "typing"); } catch (error) {
+      console.error("Telegram typing indicator failed:", error && error.message || error);
+    }
     const reply = await generateReply(chatId, text, db);
     await sendMessage(token, chat.id, reply);
     return json(200, { ok: true });
