@@ -149,7 +149,15 @@ exports.handler = async () => {
       if (schedule.enabled !== true || !/^([01]\d|2[0-3]):[0-5]\d$/.test(String(schedule.time || "")) || !validTimeZone(schedule.timeZone)) continue;
       const clock = localClock(schedule.timeZone, now);
       const days = Array.isArray(schedule.days) ? schedule.days.filter(day => Number.isInteger(day) && day >= 0 && day <= 6) : [];
-      if (clock.time !== schedule.time || !days.includes(clock.day)) continue;
+      const intervalHours = Number(schedule.intervalHours || 3);
+      if (!Number.isInteger(intervalHours) || intervalHours < 1 || intervalHours > 12) continue;
+      const currentParts = clock.time.split(":").map(Number);
+      const startParts = String(schedule.time).split(":").map(Number);
+      const currentMinute = currentParts[0] * 60 + currentParts[1];
+      const startMinute = startParts[0] * 60 + startParts[1];
+      const elapsedMinutes = (currentMinute - startMinute + 1440) % 1440;
+      const intervalMinutes = intervalHours * 60;
+      if (elapsedMinutes % intervalMinutes !== 0 || !days.includes(clock.day)) continue;
 
       const runKey = "content_" + clock.date.replace(/-/g,"") + "_" + clock.time.replace(":","");
       const userRef = db.ref("privateBusinessAutomation/" + uid);
