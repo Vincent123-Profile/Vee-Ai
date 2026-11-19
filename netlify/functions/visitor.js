@@ -95,7 +95,7 @@ exports.handler = async event => {
       const fp = networkFingerprint(event);
       const createdAtRef = ref.child("profile/createdAtMs");
       await createdAtRef.transaction(current => current || now);
-      const countedRef = database.ref("visitorStats/guestCounted/" + visitorId);
+      const countedRef = ref.child("profile/analyticsCounted");
       const countedTx = await countedRef.transaction(current => current ? undefined : true);
       if (countedTx.committed) {
         await database.ref("visitorStats/totalGuests").transaction(current => (Number(current) || 0) + 1);
@@ -106,6 +106,10 @@ exports.handler = async event => {
       if (activeTx.committed) {
         await database.ref("visitorStats/dailyActiveCounts/" + dayKey).transaction(current => (Number(current) || 0) + 1);
       }
+      const pruneDate = new Date(now);
+      pruneDate.setUTCDate(pruneDate.getUTCDate() - 7);
+      const pruneKey = pruneDate.toISOString().slice(0, 10);
+      await database.ref("visitorStats/dailyActive/" + pruneKey).remove();
       await database.ref("visitorStats/dailyVisits/" + dayKey).transaction(current => (Number(current) || 0) + 1);
       await ref.update({
         "profile/lastSeenAtMs": now,
