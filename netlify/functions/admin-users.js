@@ -88,7 +88,11 @@ exports.handler = async event => {
       const [users, telegramSnap, visitorStatsSnap] = await Promise.all([
         listAllUsers(auth),
         db.ref("telegram/accountsByChat").once("value"),
-        db.ref("visitorStats").once("value")
+        Promise.all([
+          db.ref("visitorStats/totalGuests").once("value"),
+          db.ref("visitorStats/dailyActiveCounts").once("value"),
+          db.ref("visitorStats/dailyVisits").once("value")
+        ])
       ]);
       const telegramByUid = {};
       Object.values(telegramSnap.val() || {}).forEach(item => {
@@ -102,9 +106,10 @@ exports.handler = async event => {
         accounts.push(...batch);
       }
       accounts.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
-      const visitorStats = visitorStatsSnap.val() || {};
-      const dailyActiveCounts = visitorStats.dailyActiveCounts || {};
-      const dailyVisits = visitorStats.dailyVisits || {};
+      const visitorStats = visitorStatsSnap || [];
+      const totalGuests = Number(visitorStats[0] && visitorStats[0].val() || 0);
+      const dailyActiveCounts = visitorStats[1] && visitorStats[1].val() || {};
+      const dailyVisits = visitorStats[2] && visitorStats[2].val() || {};
       const today = new Date();
       const todayKey = today.toISOString().slice(0, 10);
       let activeLast7Days = 0;
@@ -121,7 +126,7 @@ exports.handler = async event => {
           disabled: accounts.filter(x => x.disabled).length,
           telegramConnected: accounts.filter(x => x.telegram.length).length,
           gmailConnected: accounts.filter(x => x.gmail.connected).length,
-          guests: Number(visitorStats.totalGuests || 0),
+          guests: totalGuests,
           activeGuestsToday: Number(dailyActiveCounts[todayKey] || 0),
           activeGuestsLast7Days: activeLast7Days,
           guestVisitsToday: Number(dailyVisits[todayKey] || 0)
