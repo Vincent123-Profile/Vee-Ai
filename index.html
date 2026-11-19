@@ -1711,6 +1711,12 @@
           <button type="button" class="account-secondary" onclick="veeLoadGmailEmails('security')">Security</button>
           <button type="button" class="account-secondary" onclick="veeLoadGmailEmails('promotions')">Promotions</button><button type="button" class="account-secondary" onclick="veeLoadGmailEmails('spam')">Spam</button>
         </div>
+        <div class="finance-summary" id="gmailFinanceSummary" style="margin-top:12px">
+          <div class="finance-stat"><strong id="gmailMoneyIn">Awaiting scan</strong><span>Verified money in</span></div>
+          <div class="finance-stat"><strong id="gmailMoneyOut">Awaiting scan</strong><span>Verified money out</span></div>
+          <div class="finance-stat"><strong id="gmailNeedsReview">0</strong><span>Transactions needing review</span></div>
+        </div>
+        <p class="finance-note">Totals include only emails with a clear transaction direction, amount and financial context. Transfers between your own accounts need separate review to avoid double counting. Nothing is saved to Finance automatically.</p>
         <div class="finance-list" id="gmailEmailList" style="margin-top:12px"><div class="home-empty">Connect Gmail and scan your latest messages.</div></div>
       </div>
       <p class="finance-note">Security findings use initial rule-based indicators. A flagged email needs review. A clean result is not proof a message or link is safe. Links are analysed as text and are never opened automatically.</p>
@@ -2075,8 +2081,34 @@
       list.textContent="Loading email analysis...";
       try{
         var data=await veeGmailRequest("list");
-        var emails=Array.isArray(data.emails)?data.emails:[];
-        if(veeGmailCurrentFilter!=="all")emails=emails.filter(function(item){return Array.isArray(item.categories)&&item.categories.indexOf(veeGmailCurrentFilter)!==-1;});
+        var allEmails=Array.isArray(data.emails)?data.emails:[];
+        var totals={};
+        var reviewCount=0;
+        allEmails.forEach(function(item){
+          var tx=item.transaction;
+          if(item.categories&&item.categories.indexOf("bank")!==-1&&item.needsReview)reviewCount++;
+          if(tx&&item.classificationConfidence==="high"&&!item.needsReview&&tx.amount>0&&tx.currency&&(tx.direction==="in"||tx.direction==="out")){
+            var key=tx.currency;
+            if(!totals[key])totals[key]={in:0,out:0};
+            totals[key][tx.direction]+=Number(tx.amount);
+          }
+        });
+        function moneyText(values){
+          var keys=Object.keys(values);
+          if(!keys.length)return "₦0.00";
+          return keys.map(function(key){return key+" "+values[key].toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}).join(" · ");
+        }
+        var moneyIn={},moneyOut={};
+        Object.keys(totals).forEach(function(key){moneyIn[key]=totals[key].in;moneyOut[key]=totals[key].out;});
+        var inNode=document.getElementById("gmailMoneyIn");
+        var outNode=document.getElementById("gmailMoneyOut");
+        var reviewNode=document.getElementById("gmailNeedsReview");
+        if(inNode)inNode.textContent=moneyText(moneyIn);
+        if(outNode)outNode.textContent=moneyText(moneyOut);
+        if(reviewNode)reviewNode.textContent=String(reviewCount);
+        var emails=allEmails;
+        if(veeGmailCurrentFilter==="needs_review")emails=emails.filter(function(item){return item.needsReview;});
+        else if(veeGmailCurrentFilter!=="all")emails=emails.filter(function(item){return Array.isArray(item.categories)&&item.categories.indexOf(veeGmailCurrentFilter)!==-1;});
         list.textContent="";
         if(!emails.length){list.textContent="No messages in this category yet. Scan your Gmail inbox first.";return;}
         emails.slice(0,60).forEach(function(item){
@@ -2087,6 +2119,24 @@
           var snippet=document.createElement("span");snippet.textContent=item.snippet||"";
           var tags=document.createElement("span");tags.textContent=(item.categories||[]).join(" · ")+(item.riskLevel&&item.riskLevel!=="none"?" · SECURITY REVIEW: "+item.riskLevel.toUpperCase():"");
           main.appendChild(title);main.appendChild(from);main.appendChild(snippet);main.appendChild(tags);
+          if(item.transaction){
+            var tx=item.transaction;
+            var txLine=document.createElement("span");
+            txLine.textContent="Transaction: "+(tx.amount&&tx.currency?tx.currency+" "+Number(tx.amount).toLocaleString():"Amount not confirmed")+" · "+(tx.direction==="in"?"Money in":tx.direction==="out"?"Money out":"Direction unclear")+" · "+(item.classificationConfidence==="high"&&!item.needsReview?"High confidence":"Needs your review");
+            main.appendChild(txLine);
+          }
+          if(item.flightDetails){
+            var fl=item.flightDetails;
+            var flightLine=document.createElement("span");
+            flightLine.textContent="Flight details: "+[fl.airline,fl.flightNumber,fl.origin&&fl.destination?fl.origin+" to "+fl.destination:"",fl.travelDate?"Date "+fl.travelDate:"",fl.bookingReference?"Booking ref "+fl.bookingReference:""].filter(Boolean).join(" · ");
+            main.appendChild(flightLine);
+          }
+          if(item.evidence&&item.evidence.length){
+            var evidence=document.createElement("span");evidence.textContent="Why Vee-AI classified this: "+item.evidence.join(" · ");main.appendChild(evidence);
+          }
+          if(item.needsReview){
+            var review=document.createElement("span");review.textContent="Review required. Vee-AI will not add this transaction to Finance.";main.appendChild(review);
+          }
           if(item.securityFindings&&item.securityFindings.length){
             var findings=document.createElement("span");
             findings.textContent=item.securityFindings.map(function(finding){return finding.reason+(finding.url?" | Link: "+finding.url:"");}).join(" · ");
