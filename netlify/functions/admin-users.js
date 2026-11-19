@@ -85,9 +85,10 @@ exports.handler = async event => {
     const db = firebase.database();
 
     if (body.action === "list") {
-      const [users, telegramSnap] = await Promise.all([
+      const [users, telegramSnap, visitorStatsSnap] = await Promise.all([
         listAllUsers(auth),
-        db.ref("telegram/accountsByChat").once("value")
+        db.ref("telegram/accountsByChat").once("value"),
+        db.ref("visitorStats").once("value")
       ]);
       const telegramByUid = {};
       Object.values(telegramSnap.val() || {}).forEach(item => {
@@ -101,6 +102,17 @@ exports.handler = async event => {
         accounts.push(...batch);
       }
       accounts.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+      const visitorStats = visitorStatsSnap.val() || {};
+      const dailyActiveCounts = visitorStats.dailyActiveCounts || {};
+      const dailyVisits = visitorStats.dailyVisits || {};
+      const today = new Date();
+      const todayKey = today.toISOString().slice(0, 10);
+      let activeLast7Days = 0;
+      for (let offset = 0; offset < 7; offset++) {
+        const day = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - offset));
+        const key = day.toISOString().slice(0, 10);
+        activeLast7Days += Number(dailyActiveCounts[key] || 0);
+      }
       return json(200, {
         accounts,
         totals: {
@@ -108,7 +120,11 @@ exports.handler = async event => {
           verified: accounts.filter(x => x.emailVerified).length,
           disabled: accounts.filter(x => x.disabled).length,
           telegramConnected: accounts.filter(x => x.telegram.length).length,
-          gmailConnected: accounts.filter(x => x.gmail.connected).length
+          gmailConnected: accounts.filter(x => x.gmail.connected).length,
+          guests: Number(visitorStats.totalGuests || 0),
+          activeGuestsToday: Number(dailyActiveCounts[todayKey] || 0),
+          activeGuestsLast7Days: activeLast7Days,
+          guestVisitsToday: Number(dailyVisits[todayKey] || 0)
         }
       });
     }
