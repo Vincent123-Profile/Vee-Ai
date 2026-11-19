@@ -35,6 +35,20 @@ async function generateContent(profile) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 22000);
   try {
+    const approvedContext = {
+      businessName: String(profile.businessName || "").slice(0, 120),
+      businessIndustry: String(profile.businessIndustry || "").slice(0, 120),
+      businessModel: String(profile.businessModel || "").slice(0, 1200),
+      businessProducts: String(profile.businessProducts || "").slice(0, 2200),
+      businessCustomers: String(profile.businessCustomers || "").slice(0, 1200),
+      businessLocation: String(profile.businessLocation || "").slice(0, 300),
+      businessOffers: String(profile.businessOffers || "").slice(0, 1200),
+      businessDifference: String(profile.businessDifference || "").slice(0, 1200),
+      businessVoice: String(profile.businessVoice || "").slice(0, 100),
+      businessGoals: String(profile.businessGoals || "").slice(0, 1200),
+      businessPlatforms: String(profile.businessPlatforms || "").slice(0, 1000),
+      businessCompetitors: String(profile.businessCompetitors || "").slice(0, 1000)
+    };
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       signal: controller.signal,
@@ -106,13 +120,16 @@ exports.handler = async event => {
       const latestConsent = await userRef.child("consent").once("value");
       if (!latestConsent.val() || latestConsent.val().enabled !== true) return { uid, status: "revoked_during_generation" };
       const now = Date.now();
-      await userRef.child("runs/" + runKey).set({
-        status: "ready",
-        createdAtMs: now,
-        nextRunAt: body.next_run || null,
-        draft
+      const commit = await userRef.transaction(current => {
+        if (!current || !current.consent || current.consent.enabled !== true) return;
+        current.runs = current.runs || {};
+        if (current.runs[runKey]) return;
+        current.runs[runKey] = { status: "ready", createdAtMs: now, nextRunAt: body.next_run || null, draft };
+        current.lastGeneratedAtMs = now;
+        current.lastRunKey = runKey;
+        return current;
       });
-      await userRef.update({ lastGeneratedAtMs: now, lastRunKey: runKey });
+      if (!commit.committed) return { uid, status: "revoked_or_already_processed" };
       return { uid, status: "generated" };
     }));
     const results = outcomes.map(item => item.status === "fulfilled" ? item.value : { status: "failed", error: String(item.reason && item.reason.message || item.reason).slice(0, 240) });
