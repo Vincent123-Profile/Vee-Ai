@@ -2008,9 +2008,18 @@
       if(!response.ok)throw new Error(data.error||"Gmail request failed.");
       return data;
     }
-    function veeOpenGmailIntelligence(){
+    async function veeOpenGmailIntelligence(){
       veeOpenModal("gmailIntelligenceModal");
-      veeRefreshGmailStatus();
+      await veeRefreshGmailStatus();
+      var params=new URLSearchParams(window.location.search);
+      var outcome=params.get("gmail");
+      var status=document.getElementById("gmailIntelligenceStatus");
+      if(outcome&&status){
+        status.textContent=outcome==="connected"?"Gmail connected successfully. Run your first scan when ready.":outcome==="denied"?"Google access was cancelled. No Gmail connection was created.":"Gmail connection could not be verified. Please try again.";
+        params.delete("gmail");
+        var query=params.toString();
+        window.history.replaceState({},document.title,window.location.pathname+(query?"?"+query:"")+window.location.hash);
+      }
     }
     async function veeRefreshGmailStatus(){
       var status=document.getElementById("gmailIntelligenceStatus");
