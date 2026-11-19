@@ -47,13 +47,40 @@ function networkFingerprint(event) {
   if (!ip || !key) return "network_unknown";
   return crypto.createHmac("sha256", key).update(String(ip).trim()).digest("hex").slice(0, 32);
 }
+async function enforceVisitorLimit(database, event, action, now, visitorId) {
+  const limits = {
+    identify: { count: 30, windowMs: 600000 },
+    "save-session": { count: 90, windowMs: 60000 },
+    "load-sessions": { count: 30, windowMs: 60000 },
+    "clear-history": { count: 5, windowMs: 60000 }
+  };
+  const rule = limits[action];
+  if (!rule) return false;
+  const fingerprint = networkFingerprint(event);
+  const identity = action === "identify" ? fingerprint : fingerprint + ":" + String(visitorId || "unknown");
+  const key = crypto.createHash("sha256").update(action + ":" + identity).digest("hex");
+  const windowKey = String(Math.floor(now / rule.windowMs));
+  const ref = database.ref("visitorRateLimits/" + key);
+  const result = await ref.transaction(current => {
+    const record = current && current.window === windowKey ? current : { window: windowKey, count: 0 };
+    if (Number(record.count || 0) >= rule.count) return;
+    return { window: windowKey, count: Number(record.count || 0) + 1, updatedAtMs: now };
+  });
+  return !result.committed;
+}
 exports.handler = async event => {
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed." });
+  const rawBody = event.body || "";
+  if (Buffer.byteLength(rawBody, "utf8") > 1500 * 1024) return json(413, { error: "Request is too large." });
   let body;
-  try { body = JSON.parse(event.body || "{}"); } catch (_) { return json(400, { error: "Invalid JSON." }); }
+  try { body = JSON.parse(rawBody || "{}"); } catch (_) { return json(400, { error: "Invalid JSON." }); }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return json(400, { error: "Invalid request." });
   try {
     const database = db();
     const now = Date.now();
+    const action = String(body.action || "");
+    const rateLimited = await enforceVisitorLimit(database, event, action, now, body.visitorId);
+    if (rateLimited) return json(429, { error: "Too many requests. Please wait and try again." });
 
     if (body.action === "identify") {
       let visitorId = null;
