@@ -27,6 +27,10 @@
         }
       }
     },
+    "privateBusinessAccount": {
+      ".read": false,
+      ".write": false
+    },
     "privateBusinessAutomation": {
       ".read": false,
       ".write": false
