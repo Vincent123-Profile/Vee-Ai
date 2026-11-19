@@ -96,6 +96,16 @@ exports.handler = async event => {
       const consent = snapshot.val() || {};
       return json(200, { enabled: consent.enabled === true, consentGrantedAtMs: consent.consentGrantedAtMs || null, revokedAtMs: consent.revokedAtMs || null });
     }
+    if (body.action === "list-drafts") {
+      const snapshot = await root.child("runs").orderByChild("createdAtMs").limitToLast(12).once("value");
+      const runs = snapshot.val() || {};
+      const drafts = Object.entries(runs).map(([id, value]) => ({
+        id,
+        createdAtMs: Number(value && value.createdAtMs || 0),
+        draft: value && value.draft || null
+      })).filter(item => item.draft).sort((a, b) => b.createdAtMs - a.createdAtMs);
+      return json(200, { drafts });
+    }
     await enforceUserRateLimit(db, user.uid);
     if (body.action === "enable") {
       const profile = validateProfile(body.profile);
@@ -108,7 +118,7 @@ exports.handler = async event => {
       return json(200, { enabled: true, message: "Background processing permission saved. Scheduled delivery still needs to be configured." });
     }
     if (body.action === "disable") {
-      await root.child("encryptedProfile").remove();
+      await Promise.all([root.child("encryptedProfile").remove(), root.child("runs").remove()]);
       await root.child("consent").set({ enabled: false, revokedAtMs: Date.now(), consentVersion: 1, userUid: user.uid });
       return json(200, { enabled: false, message: "Background processing disabled. The automation copy was deleted." });
     }
