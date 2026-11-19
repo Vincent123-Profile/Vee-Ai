@@ -3,18 +3,13 @@
     ".read": false,
     ".write": false,
     "visitors": {
-      ".read": "auth != null && auth.token.email === 'agboolavincent67@gmail.com' && auth.token.email_verified === true",
-      "$visitorId": {
-        ".read": "auth != null && auth.token.email === 'agboolavincent67@gmail.com' && auth.token.email_verified === true",
-        ".write": "auth != null && auth.token.email === 'agboolavincent67@gmail.com' && auth.token.email_verified === true"
-      }
+      ".read": false,
+      ".write": false
     },
     "users": {
-      ".read": "auth != null && auth.token.email === 'agboolavincent67@gmail.com' && auth.token.email_verified === true",
-      ".write": "auth != null && auth.token.email === 'agboolavincent67@gmail.com' && auth.token.email_verified === true",
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || (auth.token.email === 'agboolavincent67@gmail.com' && auth.token.email_verified === true))",
-        ".write": "auth != null && (auth.uid === $uid || (auth.token.email === 'agboolavincent67@gmail.com' && auth.token.email_verified === true))"
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
       }
     },
     "privateBusiness": {
