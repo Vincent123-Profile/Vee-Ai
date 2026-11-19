@@ -64,7 +64,7 @@ async function generateContent(profile) {
           },
           {
             role: "user",
-            content: "Create one original content idea from this approved business profile.\n" + JSON.stringify(profile)
+            content: "Create one original content idea from this approved business profile.\n" + JSON.stringify(approvedContext)
           }
         ]
       })
