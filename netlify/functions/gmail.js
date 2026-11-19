@@ -174,7 +174,7 @@ exports.handler = async event => {
   const params = event.queryStringParameters || {};
   const db = firebase().database();
   try {
-    if (method === "GET" && params.action === "callback") {
+    if (method === "GET") {
       const state = String(params.state || "");
       if (!/^[a-f0-9]{64}$/.test(state)) return { statusCode:400, body:"Invalid Gmail connection state." };
       if (params.error) return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=denied" }, body:"" };
