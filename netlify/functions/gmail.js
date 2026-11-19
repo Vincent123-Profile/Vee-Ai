@@ -133,35 +133,39 @@ async function syncMessages(uid, db, token) {
   const list = await gmailFetch(token.accessToken,"messages?maxResults=30&includeSpamTrash=true");
   const messages = Array.isArray(list.messages) ? list.messages : [];
   const saved = [];
-  for (const item of messages) {
-    const message = await gmailFetch(token.accessToken,"messages/" + encodeURIComponent(item.id) + "?format=full");
-    const payload = message.payload || {};
-    const headers = payload.headers || [];
-    if ((message.labelIds || []).includes("TRASH")) continue;
-    const textParts = [];
-    collectText(payload,textParts);
-    const email = {
-      id:String(message.id),
-      threadId:String(message.threadId || ""),
-      from:header(headers,"From").slice(0,300),
-      subject:header(headers,"Subject").slice(0,300) || "(No subject)",
-      date:header(headers,"Date").slice(0,120),
-      internalDate:Number(message.internalDate || 0),
-      snippet:String(message.snippet || "").slice(0,1000),
-      bodyText:textParts.join("\n").replace(/<[^>]*>/g," ").replace(/\s+/g," ").slice(0,12000),
-      unread:(message.labelIds || []).includes("UNREAD"),
-      labels:(message.labelIds || []).filter(label => ["INBOX","UNREAD","IMPORTANT","STARRED","SPAM"].includes(label))
-    };
-    const analysis = classifyEmail(email);
-    const record = {
-      id:email.id, threadId:email.threadId, from:email.from, subject:email.subject,
-      date:email.date, internalDate:email.internalDate, snippet:email.snippet,
-      unread:email.unread, labels:email.labels, categories:analysis.categories,
-      linkCount:analysis.linkCount, securityFindings:analysis.securityFindings,
-      riskLevel:analysis.riskLevel, analysedAtMs:Date.now()
-    };
-    await db.ref("gmailConnections/" + uid + "/emails/" + email.id).set(record);
-    saved.push(record);
+  for (let offset=0; offset<messages.length; offset+=5) {
+    const batch = await Promise.all(messages.slice(offset,offset+5).map(async item => {
+      const message = await gmailFetch(token.accessToken,"messages/" + encodeURIComponent(item.id) + "?format=full");
+      if ((message.labelIds || []).includes("TRASH")) return null;
+      const payload = message.payload || {};
+      const headers = payload.headers || [];
+      const textParts = [];
+      collectText(payload,textParts);
+      const email = {
+        id:String(message.id),
+        threadId:String(message.threadId || ""),
+        from:header(headers,"From").slice(0,300),
+        subject:header(headers,"Subject").slice(0,300) || "(No subject)",
+        date:header(headers,"Date").slice(0,120),
+        internalDate:Number(message.internalDate || 0),
+        snippet:String(message.snippet || "").slice(0,1000),
+        bodyText:textParts.join("\\n").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").slice(0,12000),
+        unread:(message.labelIds || []).includes("UNREAD"),
+        labels:(message.labelIds || []).filter(label => ["INBOX","UNREAD","IMPORTANT","STARRED","SPAM"].includes(label))
+      };
+      const analysis = classifyEmail(email);
+      return {
+        id:email.id, threadId:email.threadId, from:email.from, subject:email.subject,
+        date:email.date, internalDate:email.internalDate, snippet:email.snippet,
+        unread:email.unread, labels:email.labels, categories:analysis.categories,
+        linkCount:analysis.linkCount, securityFindings:analysis.securityFindings,
+        riskLevel:analysis.riskLevel, analysedAtMs:Date.now()
+      };
+    }));
+    for (const record of batch.filter(Boolean)) {
+      await db.ref("gmailConnections/" + uid + "/emails/" + record.id).set(record);
+      saved.push(record);
+    }
   }
   await db.ref("gmailConnections/" + uid + "/status").update({
     connected:true, lastSyncAtMs:Date.now(), lastSyncCount:saved.length,
