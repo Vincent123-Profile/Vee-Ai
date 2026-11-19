@@ -119,6 +119,7 @@ exports.handler = async event => {
       if (uid === adminUser.uid) return json(400, { error: "You cannot disable the active administrator account." });
       if (typeof body.disabled !== "boolean") return json(400, { error: "A valid account status is required." });
       await auth.updateUser(uid, { disabled: body.disabled });
+      if (body.disabled) await auth.revokeRefreshTokens(uid);
       return json(200, { success: true, disabled: body.disabled });
     }
 
