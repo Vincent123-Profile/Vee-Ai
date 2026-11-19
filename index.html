@@ -1985,7 +1985,8 @@
         <div class="settings-account-actions"><button type="button" class="account-secondary" onclick="veeOpenModal('accountModal')">Account access</button><button type="button" class="account-secondary" onclick="veeSignOutAccount()">Sign out</button></div>
         <div style="display:grid;gap:8px">
           <button type="button" class="account-secondary" id="settingsTelegramLinkBtn" onclick="veeCreateTelegramLinkCode()">Generate Telegram link code</button>
-          <p id="settingsTelegramLinkStatus" class="account-copy" role="status" aria-live="polite">Generate a one-time code, copy the command, then paste it into the official Vee-AI Telegram bot. Telegram bot chats are not end-to-end encrypted. Never send your Vee-AI password or banking codes to the bot. <button type="button" class="act-btn" onclick="veeOpenModal('privacyModal')">Privacy details</button></p>
+          <p id="settingsTelegramLinkStatus" class="account-copy" role="status" aria-live="polite">Generate a one-time code, copy the command, then paste it into the official Vee-AI Telegram bot.</p>
+          <p class="account-copy">Telegram bot chats are not end-to-end encrypted. Linking uses a one-time code and does not require your Vee-AI password. Never send passwords, bank PINs or verification codes to the bot. <button type="button" class="act-btn" onclick="veeOpenModal('privacyModal')">Privacy details</button></p>
           <a href="https://t.me/VeeAi1_bot" target="_blank" rel="noopener noreferrer" class="account-secondary" style="display:inline-flex;text-decoration:none;justify-content:center">Open Vee-AI Telegram bot</a>
           <button type="button" class="account-secondary" id="settingsTelegramCopyBtn" style="display:none" onclick="veeCopyTelegramLinkCommand()">Copy Telegram link command</button>
         </div>
