@@ -48,6 +48,14 @@ function encryptProfile(uid, profile) {
     updatedAtMs: Date.now()
   };
 }
+function decryptProfile(uid, record) {
+  if (!record || record.version !== 1 || record.algorithm !== "AES-256-GCM") throw new Error("Saved business profile format is not recognised.");
+  const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey(), Buffer.from(record.iv, "base64"));
+  decipher.setAAD(Buffer.from("vee-ai-business-automation:v1:" + uid));
+  decipher.setAuthTag(Buffer.from(record.tag, "base64"));
+  const plaintext = Buffer.concat([decipher.update(Buffer.from(record.ciphertext, "base64")), decipher.final()]);
+  return JSON.parse(plaintext.toString("utf8"));
+}
 function validateProfile(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Business profile is missing.");
   const allowed = {
