@@ -2811,34 +2811,34 @@
       if (message) samples.push(String(message));
       samples = samples.slice(-25);
       var joined = samples.join(" ");
-      var words = joined.trim().split(/\\s+/).filter(Boolean);
       var avg = samples.length ? Math.round(samples.reduce(function(total,item){return total+item.length;},0)/samples.length) : 0;
       var lower = joined.toLowerCase();
-      var pidgin = /\\b(na|dey|abi|wetin|wahala|abeg|oya|sha|sef|una|make i|no be)\\b/.test(lower);
-      var yoruba = /\\b(bawo ni|ẹ ṣe|se daadaa|mo fẹ|ẹ jọ|ọ̀rọ̀)\\b/.test(lower);
-      var igbo = /\\b(kedu|biko|ndewo|ọ dị|anyị|daalu)\\b/.test(lower);
-      var hausa = /\\b(sannu|yaya|lafiya|na gode|don Allah|ina kwana)\\b/.test(lower);
-      var signals = [];
-      if(pidgin)signals.push("Nigerian Pidgin");
-      if(yoruba)signals.push("Yoruba");
-      if(igbo)signals.push("Igbo");
-      if(hausa)signals.push("Hausa");
-      if(/[a-z]/i.test(joined))signals.push("English");
-      var casualCount=(lower.match(/\\b(lol|lmao|bro|guy|omo|chai|lolz|😂|😭)\\b/g)||[]).length;
-      var formalCount=(lower.match(/\\b(please|kindly|regarding|therefore|request|professional)\\b/g)||[]).length;
-      var emojiCount=(joined.match(/[\\u{1F300}-\\u{1FAFF}]/gu)||[]).length;
-      var paragraphCount=(joined.match(/\\n/g)||[]).length;
-      var listCount=(joined.match(/(^|\\n)\\s*(?:[-*•]|\\d+[.)])\\s/gm)||[]).length;
-      var profile={
-        messageCount:samples.length,
-        averageLength:avg<70?"short":avg<240?"medium":"long",
-        tone:casualCount>formalCount+1?"casual":formalCount>casualCount+1?"formal":"mixed",
+      var previous = veeSanitizeCommunicationProfile(veeCommunicationProfile);
+      var pidgin = /\b(na|dey|abi|wetin|wahala|abeg|oya|sha|sef|una|make i|no be)\b/.test(lower);
+      var yoruba = /\b(bawo ni|ẹ ṣe|se daadaa|mo fẹ|ẹ jọ|ọ̀rọ̀)\b/.test(lower);
+      var igbo = /\b(kedu|biko|ndewo|ọ dị|anyị|daalu)\b/.test(lower);
+      var hausa = /\b(sannu|yaya|lafiya|na gode|don Allah|ina kwana)\b/.test(lower);
+      var signals = previous.languageSignals.slice();
+      if(pidgin && !signals.includes("Nigerian Pidgin"))signals.push("Nigerian Pidgin");
+      if(yoruba && !signals.includes("Yoruba"))signals.push("Yoruba");
+      if(igbo && !signals.includes("Igbo"))signals.push("Igbo");
+      if(hausa && !signals.includes("Hausa"))signals.push("Hausa");
+      if(/[a-z]/i.test(joined) && !signals.includes("English"))signals.push("English");
+      var casualCount=(lower.match(/\b(lol|lmao|bro|guy|omo|chai|lolz)\b/g)||[]).length;
+      var formalCount=(lower.match(/\b(please|kindly|regarding|therefore|request|professional)\b/g)||[]).length;
+      var emojiCount=(joined.match(/[\u{1F300}-\u{1FAFF}]/gu)||[]).length;
+      var paragraphCount=(joined.match(/\n/g)||[]).length;
+      var listCount=(joined.match(/(^|\n)\s*(?:[-*•]|\d+[.)])\s/gm)||[]).length;
+      var enoughSamples = samples.length >= 3;
+      return veeSanitizeCommunicationProfile({
+        messageCount:Math.min(10000,previous.messageCount+1),
+        averageLength:enoughSamples?(avg<70?"short":avg<240?"medium":"long"):previous.averageLength,
+        tone:enoughSamples?(casualCount>formalCount+1?"casual":formalCount>casualCount+1?"formal":"mixed"):previous.tone,
         languageSignals:signals,
-        formatting:listCount>=3?"lists often":paragraphCount>samples.length?"detailed paragraphs":"mixed",
-        emojiUse:emojiCount>=5?"frequent":emojiCount>=1?"occasional":"rare",
+        formatting:enoughSamples?(listCount>=3?"lists often":paragraphCount>samples.length?"detailed paragraphs":"mixed"):previous.formatting,
+        emojiUse:enoughSamples?(emojiCount>=5?"frequent":emojiCount>=1?"occasional":"rare"):previous.emojiUse,
         updatedAtMs:Date.now()
-      };
-      return veeSanitizeCommunicationProfile(profile);
+      });
     }
 
     function veeSaveCommunicationProfile(profile) {
