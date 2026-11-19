@@ -98,8 +98,11 @@ The feature branch adds an explicit opt-in endpoint for scheduled business conte
 - Firebase client rules deny direct reads and writes to both `privateBusinessAutomation` and its rate-limit path. The function uses Firebase Admin SDK.
 - The admin dashboard does not query this path. Firebase project owners and anyone with access to the Netlify service credentials and encryption secret remain trusted infrastructure administrators.
 - Disable removes the encrypted automation profile and records revocation. The normal passphrase-encrypted vault is unchanged.
-- The endpoint saves permission and encrypted profile data only. It does not yet run a scheduler, generate content in the background, or send Telegram reminders. Those require a separate scheduled worker and a working Telegram account link.
-- When the worker is added, it must check current consent before every run, decrypt only for the task, send the minimum required context to Groq, and stop immediately after revocation.
+- The scheduled worker runs on a three-hour UTC cron (`0 */3 * * *`) on published Netlify deployments. Netlify scheduled functions do not run automatically on Deploy Previews or branch deploys. Use the Netlify Functions page Run now control to test a preview.
+- The worker checks consent before and after generation, decrypts only for the task, sends the approved profile to Groq, and stores generated drafts under the private automation record. The worker handles up to three eligible accounts per run, prioritising accounts with the oldest generation timestamp.
+- Users can retrieve the latest 12 generated drafts through the authenticated function and view them in Business Workspace. Disabling background processing deletes the encrypted automation profile and generated drafts.
+- The worker prepares content drafts only. Telegram reminders and delivery are not implemented yet. They require the account-link flow to be restored and a separate delivery step.
+- The recurring schedule only becomes active on a published Netlify deployment. Do not merge this feature branch into production until the preview and scheduled function have been tested and the production deployment is approved.
 
 ## Admin dashboard
 
