@@ -99,10 +99,12 @@ The feature branch adds an explicit opt-in endpoint for scheduled business conte
 - Firebase client rules deny direct reads and writes to both `privateBusinessAutomation` and its rate-limit path. The function uses Firebase Admin SDK.
 - The admin dashboard does not query this path. Firebase project owners and anyone with access to the Netlify service credentials and encryption secret remain trusted infrastructure administrators.
 - Disable removes the encrypted automation profile and records revocation. The normal passphrase-encrypted vault is unchanged.
-- The scheduled worker runs on a three-hour UTC cron (`0 */3 * * *`) on published Netlify deployments. Netlify scheduled functions do not run automatically on Deploy Previews or branch deploys. Use the Netlify Functions page Run now control to test a preview.
-- The worker checks consent before and after generation, decrypts only for the task, sends the approved profile to Groq, and stores generated drafts under the private automation record. The worker handles up to three eligible accounts per run, prioritising accounts with the oldest generation timestamp.
+- The scheduled worker checks each user's saved content schedule every minute on published Netlify deployments. The user chooses the delivery time, days, and IANA time zone from the device's local settings. Generation requires both background-processing consent and an enabled content schedule.
+- The planner reminder worker also checks every minute. It sends due and overdue task reminders to a linked private Telegram chat at the user's selected local time. Each task is deduplicated per user and local date. Users can pause reminders without deleting their schedule.
+- Netlify scheduled functions do not run automatically on Deploy Previews or branch deploys. Use the Netlify Functions page Run now control to test each scheduler in a preview.
+- The content worker checks consent and the saved schedule before and after generation, decrypts only for the task, sends the approved profile to Groq, and stores generated drafts under the private automation record. If a linked Telegram account exists, the generated idea is also delivered to that private chat. Users can review generated drafts in Business Workspace.
 - Users can retrieve the latest 12 generated drafts through the authenticated function and view them in Business Workspace. Disabling background processing deletes the encrypted automation profile and generated drafts.
-- The worker prepares content drafts only. Telegram reminders and delivery are not implemented yet. They require the account-link flow to be restored and a separate delivery step.
+- Automatic content delivery uses the user's chosen local schedule. Planner reminders and scheduled content delivery are separate settings. Email intelligence and bank-email analysis are not implemented yet.
 - The recurring schedule only becomes active on a published Netlify deployment. Do not merge this feature branch into production until the preview and scheduled function have been tested and the production deployment is approved.
 
 ## Admin dashboard
