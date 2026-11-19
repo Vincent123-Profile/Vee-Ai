@@ -64,8 +64,10 @@ exports.handler = async event => {
       const ref = database.ref("visitors/" + visitorId);
       const fp = networkFingerprint(event);
       const createdAtRef = ref.child("profile/createdAtMs");
-      const createdTx = await createdAtRef.transaction(current => current ? undefined : now);
-      if (createdTx.committed && Number(createdTx.snapshot.val()) === now) {
+      await createdAtRef.transaction(current => current || now);
+      const countedRef = database.ref("visitorStats/guestCounted/" + visitorId);
+      const countedTx = await countedRef.transaction(current => current ? undefined : true);
+      if (countedTx.committed) {
         await database.ref("visitorStats/totalGuests").transaction(current => (Number(current) || 0) + 1);
       }
       const dayKey = new Date(now).toISOString().slice(0, 10);
