@@ -90,7 +90,7 @@ async function enforceUserRateLimit(db, uid) {
   if (!result.committed) throw new Error("Too many background processing changes. Try again in 10 minutes.");
 }
 function safeText(value, max) {
-  return String(value || "").replace(/[\\u0000-\\u001f\\u007f]/g, " ").trim().slice(0, max);
+  return String(value || "").replace(/[\x00-\x1F\x7F]/g, " ").trim().slice(0, max);
 }
 async function createTestDraft(profile) {
   const apiKey = (process.env.GROQ_API_KEY || "").trim();
@@ -109,14 +109,16 @@ async function createTestDraft(profile) {
       businessDifference: safeText(profile.businessDifference,1200),
       businessVoice: safeText(profile.businessVoice,100),
       businessGoals: safeText(profile.businessGoals,1200),
-      businessPlatforms: safeText(profile.businessPlatforms,1000)
+      businessPlatforms: safeText(profile.businessPlatforms,1000),
+      businessCompetitors: safeText(profile.businessCompetitors,1000),
+      businessExtra: safeText(profile.businessExtra,1500)
     };
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method:"POST", signal:controller.signal,
       headers:{Authorization:"Bearer "+apiKey,"Content-Type":"application/json"},
-      body:JSON.stringify({model:(process.env.GROQ_MODEL||"openai/gpt-oss-20b").trim(),temperature:0.4,max_tokens:1400,response_format:{type:"json_object"},messages:[
-        {role:"system",content:"You are Vee-AI, a practical business content strategist. Create one useful short-form video idea tailored to the supplied business. Do not invent prices, stock, guarantees, awards or results. Return valid JSON only with keys topic, hook, talkingPoints (array), script, caption, platform, callToAction. Script should fit 30 to 60 seconds."},
-        {role:"user",content:"Create one original business content idea from this approved profile. "+JSON.stringify(context)}
+      body:JSON.stringify({model:(process.env.GROQ_MODEL||"openai/gpt-oss-20b").trim(),temperature:0.2,max_tokens:1400,response_format:{type:"json_object"},messages:[
+        {role:"system",content:"You are Vee-AI, a practical business content strategist. Create one accurate short-form video idea using only explicit facts in the supplied profile. Never invent or guess a website, URL, address, branch, location, stock, price, offer, product specification, award, guarantee, customer result, delivery service, or business capability. Mention a location or service only when explicitly stated. Never create a website or URL. If a detail is absent, omit it. Use correct spelling and natural English. Return valid JSON only with keys topic, hook, talkingPoints (array), script, caption, platform, callToAction. Script should fit 30 to 60 seconds."},
+        {role:"user",content:"Create one original business content idea. Treat the profile as the only source of truth. Do not fill gaps with assumptions. "+JSON.stringify(context)}
       ]})
     });
     const data=await response.json().catch(()=>({}));
