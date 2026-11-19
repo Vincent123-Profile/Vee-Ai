@@ -62,16 +62,24 @@ exports.handler = async event => {
       }
       if (!visitorId) visitorId = "v_" + crypto.randomUUID();
       const ref = database.ref("visitors/" + visitorId);
-      const snapshot = await ref.once("value");
-      const current = snapshot.val() || {};
       const fp = networkFingerprint(event);
-      const updates = {
-        "profile/createdAtMs": current.profile && current.profile.createdAtMs || now,
+      const createdAtRef = ref.child("profile/createdAtMs");
+      const createdTx = await createdAtRef.transaction(current => current || now);
+      if (createdTx.committed && Number(createdTx.snapshot.val()) === now) {
+        await database.ref("visitorStats/totalGuests").transaction(current => (Number(current) || 0) + 1);
+      }
+      const dayKey = new Date(now).toISOString().slice(0, 10);
+      const activeRef = database.ref("visitorStats/dailyActive/" + dayKey + "/" + visitorId);
+      const activeTx = await activeRef.transaction(current => current ? undefined : true);
+      if (activeTx.committed) {
+        await database.ref("visitorStats/dailyActiveCounts/" + dayKey).transaction(current => (Number(current) || 0) + 1);
+      }
+      await database.ref("visitorStats/dailyVisits/" + dayKey).transaction(current => (Number(current) || 0) + 1);
+      await ref.update({
         "profile/lastSeenAtMs": now,
         "profile/visitCount": admin.database.ServerValue.increment(1),
         ["networks/" + fp + "/lastSeenAtMs"]: now
-      };
-      await ref.update(updates);
+      });
       return json(200, { visitorId, visitorToken: signVisitor(visitorId), networkFingerprint: fp });
     }
 
