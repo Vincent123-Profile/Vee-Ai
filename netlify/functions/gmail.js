@@ -104,17 +104,92 @@ function collectText(payload, output) {
   if (payload.mimeType === "text/plain" && payload.body && payload.body.data) output.push(decodeBody(payload.body.data));
   (payload.parts || []).forEach(part => collectText(part,output));
 }
+function extractTransaction(email, text) {
+  const source = (email.subject + " " + email.snippet + " " + email.bodyText).replace(/\s+/g," ");
+  const amountPatterns = [
+    /(?:NGN|₦|N)\s?([\d,]+(?:\.\d{2})?)/i,
+    /([\d,]+(?:\.\d{2})?)\s?(?:NGN|₦)\b/i,
+    /(?:USD|\$)\s?([\d,]+(?:\.\d{2})?)/i,
+    /(?:GBP|£)\s?([\d,]+(?:\.\d{2})?)/i,
+    /(?:EUR|€)\s?([\d,]+(?:\.\d{2})?)/i
+  ];
+  let amount = null;
+  let currency = null;
+  for (const pattern of amountPatterns) {
+    const match = source.match(pattern);
+    if (match) {
+      amount = Number(String(match[1]).replace(/,/g,""));
+      const token = match[0];
+      currency = /NGN|₦|^N/i.test(token) ? "NGN" : /USD|\$/.test(token) ? "USD" : /GBP|£/.test(token) ? "GBP" : /EUR|€/.test(token) ? "EUR" : null;
+      if (Number.isFinite(amount) && amount > 0) break;
+      amount = null;
+    }
+  }
+  const debit = /\b(debited|debit alert|withdrawn|withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|paid to)\b/i.test(source);
+  const credit = /\b(credited|credit alert|received from|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?)\b/i.test(source);
+  const hasTransactionLanguage = debit || credit;
+  const direction = debit && !credit ? "out" : credit && !debit ? "in" : null;
+  const reference = (source.match(/\b(?:transaction|trans(?:action)?|session|reference|ref)(?:\s*(?:id|no|number))?\s*[:#-]?\s*([A-Z0-9-]{6,})/i) || [])[1] || "";
+  return {
+    amount, currency, direction,
+    transactionType: direction === "in" ? "income" : direction === "out" ? "expense" : null,
+    reference:reference.slice(0,80),
+    hasTransactionLanguage,
+    ambiguousDirection:debit && credit
+  };
+}
 function classifyEmail(email) {
-  const text = (email.subject + " " + email.from + " " + email.snippet + " " + email.bodyText).toLowerCase();
+  const subject = String(email.subject || "");
+  const from = String(email.from || "");
+  const body = String(email.bodyText || "");
+  const snippet = String(email.snippet || "");
+  const text = (subject + " " + from + " " + snippet + " " + body).toLowerCase();
   const categories = [];
-  if ((email.labels || []).includes("SPAM")) categories.push("spam");
-  if (/bank|statement|transaction|credited|debited|transfer|withdrawal|deposit|balance alert|card payment|pos payment|account alert/.test(text)) categories.push("bank");
-  if (/flight|boarding pass|itinerary|booking confirmation|airline|check-in|check in|departure|arrival|ticket number/.test(text)) categories.push("flight");
-  if (/job application|application received|interview|recruiter|career opportunity|vacancy|employment|shortlisted|job offer/.test(text)) categories.push("job");
-  if (/unsubscribe|promotion|newsletter|sale ends|marketing email/.test(text)) categories.push("promotions");
-  if (!categories.length) categories.push("general");
+  const evidence = [];
+  const transaction = extractTransaction(email,text);
+  const senderAddress = (from.match(/<([^>]+)>/) || [])[1] || from;
+  const senderDomain = (senderAddress.split("@").pop() || "").replace(/[>]/g,"").toLowerCase();
+  const knownBankNames = /\b(access bank|first bank|gtbank|guaranty trust|uba|united bank for africa|zenith bank|moniepoint|opay|palmpay|kuda|wema|sterling bank|fidelity bank|fcmb|union bank|providus|stanbic|polaris bank|ecobank|jaiz bank|citibank|chase|barclays|hsbc|natwest|lloyds|revolut|wise)\b/i;
+  const senderLooksFinancial = knownBankNames.test(from) || /\b(bank|banking|alerts?|transaction|payments?)\b/i.test(senderDomain);
+  const transactionSubject = /\b(debit|credit|transaction|transfer|withdrawal|deposit|payment|pos alert|card alert|account alert|statement)\b/i.test(subject);
+  const strongTransaction = transaction.hasTransactionLanguage && transaction.amount !== null && !!transaction.direction;
+  const financialContext = senderLooksFinancial && (transactionSubject || strongTransaction);
+  if ((email.labels || []).includes("SPAM")) {
+    categories.push("spam");
+    evidence.push("Gmail marked this message as spam");
+  }
+  if (strongTransaction && financialContext) {
+    categories.push("bank");
+    evidence.push("Financial sender/context, transaction amount and clear money-in or money-out wording");
+  } else if (senderLooksFinancial && transactionSubject) {
+    categories.push("bank");
+    evidence.push("Financial sender and transaction-related subject, but transaction details need review");
+  }
 
-  const urls = Array.from(new Set((email.bodyText + " " + email.snippet).match(/https?:\/\/[^\s<>"')]+/gi) || [])).slice(0,30);
+  const flightSender = /\b(airline|airways|aviation|travel|booking|trip|flight)\b/i.test(from);
+  const flightSubject = /\b(e-ticket|e ticket|flight booking|booking confirmation|itinerary|boarding pass|flight change|flight cancelled|flight cancellation|check.?in|flight schedule)\b/i.test(subject);
+  const flightEvidence = /\b(flight number|flight no\.?|departure|arrival|boarding pass|e-ticket|booking reference|pnr|terminal|gate)\b/i.test(body + " " + snippet);
+  if ((flightSubject && (flightSender || flightEvidence)) || (flightSender && flightEvidence && /\b(confirmed|ticketed|booked|cancelled|rescheduled|delayed)\b/i.test(text))) {
+    categories.push("flight");
+    evidence.push("Flight-specific booking or travel details found");
+  }
+
+  const jobSubject = /\b(application received|job application|interview invitation|interview scheduled|assessment invitation|job offer|offer letter|application update|application status|recruitment process)\b/i.test(subject);
+  const jobContext = /\b(position|role|vacancy|recruitment|recruiter|hiring team|interview|shortlisted|employment offer|job application|career portal)\b/i.test(text);
+  if (jobSubject && jobContext) {
+    categories.push("job");
+    evidence.push("Job-related subject and recruitment context found");
+  } else if (/\b(job alert|new jobs for you|career newsletter)\b/i.test(subject)) {
+    categories.push("job");
+    evidence.push("Job-alert or career-news subject found");
+  }
+
+  if (/\b(unsubscribe|newsletter|sale ends|special offer|limited time offer|promotional offer)\b/i.test(text) && !categories.includes("bank") && !categories.includes("flight") && !categories.includes("job")) {
+    categories.push("promotions");
+    evidence.push("Marketing or newsletter indicators found");
+  }
+
+  const urls = Array.from(new Set((body + " " + snippet).match(/https?:\/\/[^\s<>"')]+/gi) || [])).slice(0,30);
   const suspicious = [];
   const riskyHosts = ["bit.ly","tinyurl.com","t.co","cutt.ly","is.gd","rb.gy","ow.ly"];
   for (const value of urls) {
@@ -127,11 +202,25 @@ function classifyEmail(email) {
       if (/login|verify|password|wallet|secure|account|bank/i.test(parsed.pathname) && /urgent|suspend|locked|verify|password|bank/i.test(text)) suspicious.push({ url:value.slice(0,500), reason:"Account-verification language combined with a login-related link" });
     } catch (_) { suspicious.push({ url:value.slice(0,500), reason:"Malformed link" }); }
   }
-  if (/urgent action|required immediately|account suspended|verify your password|confirm your bank|send your otp|one.time password|share your pin/i.test(text)) {
+  if (/\b(urgent action|required immediately|account suspended|verify your password|confirm your bank|send your otp|one.time password|share your pin|send your password)\b/i.test(text)) {
     suspicious.push({ url:"", reason:"Urgent credential or account-pressure language" });
   }
-  if (suspicious.length) categories.push("security");
-  return { categories:Array.from(new Set(categories)), linkCount:urls.length, securityFindings:suspicious.slice(0,12), riskLevel:suspicious.length >= 2 ? "high" : suspicious.length ? "review" : "none" };
+  if (suspicious.length) {
+    categories.push("security");
+    evidence.push("Suspicious link or credential-pressure indicators found");
+  }
+  if (!categories.length) categories.push("general");
+  const needsReview = categories.includes("bank") && (!transaction.amount || !transaction.direction || transaction.ambiguousDirection);
+  return {
+    categories:Array.from(new Set(categories)),
+    linkCount:urls.length,
+    securityFindings:suspicious.slice(0,12),
+    riskLevel:suspicious.length >= 2 ? "high" : suspicious.length ? "review" : "none",
+    evidence:evidence.slice(0,8),
+    transaction:categories.includes("bank") ? transaction : null,
+    classificationConfidence:categories.includes("bank") ? (strongTransaction && financialContext ? "high" : "review") : categories.includes("flight") || categories.includes("job") ? "medium" : "low",
+    needsReview
+  };
 }
 async function syncMessages(uid, db, token) {
   const list = await gmailFetch(token.accessToken,"messages?maxResults=30&includeSpamTrash=true");
@@ -163,7 +252,9 @@ async function syncMessages(uid, db, token) {
         date:email.date, internalDate:email.internalDate, snippet:email.snippet,
         unread:email.unread, labels:email.labels, categories:analysis.categories,
         linkCount:analysis.linkCount, securityFindings:analysis.securityFindings,
-        riskLevel:analysis.riskLevel, analysedAtMs:Date.now()
+        riskLevel:analysis.riskLevel, evidence:analysis.evidence,
+        transaction:analysis.transaction, classificationConfidence:analysis.classificationConfidence,
+        needsReview:analysis.needsReview, analysedAtMs:Date.now()
       };
     }));
     for (const record of batch.filter(Boolean)) {
