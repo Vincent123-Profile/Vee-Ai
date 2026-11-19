@@ -1967,7 +1967,8 @@
         <div class="settings-account-actions"><button type="button" class="account-secondary" onclick="veeOpenModal('accountModal')">Account access</button><button type="button" class="account-secondary" onclick="veeSignOutAccount()">Sign out</button></div>
         <div style="display:grid;gap:8px">
           <button type="button" class="account-secondary" id="settingsTelegramLinkBtn" onclick="veeCreateTelegramLinkCode()">Generate Telegram link code</button>
-          <p id="settingsTelegramLinkStatus" class="account-copy" role="status" aria-live="polite">Link your verified Vee-AI account to your private Telegram chat.</p>
+          <p id="settingsTelegramLinkStatus" class="account-copy" role="status" aria-live="polite">Generate a one-time code, copy the command, then paste it into the official Vee-AI Telegram bot.</p>
+          <a href="https://t.me/VeeAi1_bot" target="_blank" rel="noopener noreferrer" class="account-secondary" style="display:inline-flex;text-decoration:none;justify-content:center">Open Vee-AI Telegram bot</a>
           <button type="button" class="account-secondary" id="settingsTelegramCopyBtn" style="display:none" onclick="veeCopyTelegramLinkCommand()">Copy Telegram link command</button>
         </div>
       </div>
@@ -2314,7 +2315,7 @@
         var data=await response.json().catch(function(){return {};});
         if(!response.ok||!data.success)throw new Error(data.error||"A link code could not be created.");
         veeTelegramLinkCommand="/link "+data.code;
-        if(status)status.textContent="Your one-time code: "+data.code+"\nOpen your private Telegram chat with Vee-AI and send: "+veeTelegramLinkCommand+"\nThe code expires in 10 minutes."; 
+        if(status)status.textContent="Your one-time code: "+data.code+"\nCopy the command below, open https://t.me/VeeAi1_bot, then paste the command into the bot's private chat.\nThis code expires in 10 minutes and works once."; 
         if(copyButton)copyButton.style.display="block";
       }catch(error){if(status)status.textContent=error&&error.message?error.message:"Unable to create a Telegram link code. Please try again.";}
       finally{if(button){button.disabled=!(veeCurrentUser&&veeCurrentUser.emailVerified);button.textContent="Generate Telegram link code";}}
