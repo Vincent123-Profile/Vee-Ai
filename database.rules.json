@@ -34,6 +34,14 @@
     "privateBusinessAutomationRate": {
       ".read": false,
       ".write": false
+    },
+    "gmailConnections": {
+      ".read": false,
+      ".write": false
+    },
+    "gmailOAuthStates": {
+      ".read": false,
+      ".write": false
     }
   }
 }
