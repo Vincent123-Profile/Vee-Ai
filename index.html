@@ -2145,7 +2145,7 @@
         var cloudReminderSettings = reminderSettingsSnapshot.val() || {};
         if (/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(cloudReminderSettings.time || "")) && Array.isArray(cloudReminderSettings.days)) {
           veePlannerReminderSettings = { time:cloudReminderSettings.time, days:cloudReminderSettings.days.filter(function(day){return Number.isInteger(day) && day >= 0 && day <= 6;}), timeZone:typeof cloudReminderSettings.timeZone === "string" && cloudReminderSettings.timeZone.length <= 80 ? cloudReminderSettings.timeZone : veeLocalTimeZone() };
-          if (cloudReminderSettings.enabled === true) veePlannerRemindersEnabled = true;
+          if (typeof cloudReminderSettings.enabled === "boolean") veePlannerRemindersEnabled = cloudReminderSettings.enabled;
         }
       }
       try { localStorage.setItem("vee_ai_planner_reminder_settings", JSON.stringify(veePlannerReminderSettings)); } catch (e) {}
@@ -2644,6 +2644,24 @@
       }
     }
     async function veeEnablePlannerReminders() {
+      if (veePlannerRemindersEnabled) {
+        try {
+          veePlannerRemindersEnabled = false;
+          veePlannerReminderSettings.enabled = false;
+          try {
+            localStorage.setItem("vee_ai_planner_reminders", "false");
+            localStorage.setItem("vee_ai_planner_reminder_settings", JSON.stringify(veePlannerReminderSettings));
+          } catch (e) {}
+          if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
+            await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/planner/reminderSettings").update({ enabled:false, updatedAtMs:Date.now() });
+          }
+          veePlannerReminderStatus("Scheduled reminders are paused. Your saved time and days are unchanged.");
+        } catch (error) {
+          console.error("Vee-AI planner reminder pause failed:", error);
+          veePlannerReminderStatus("Could not pause reminders. Please try again.");
+        }
+        return;
+      }
       try {
         var browserPermission = "unsupported";
         if ("Notification" in window) {
