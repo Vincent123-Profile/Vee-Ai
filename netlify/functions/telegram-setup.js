@@ -29,7 +29,16 @@ exports.handler = async event => {
 
   const token = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
   const baseUrl = (process.env.DEPLOY_PRIME_URL || process.env.URL || "").replace(/\/$/, "");
-  if (!token || secret.length < 32 || !baseUrl) return json(503, { error: "Telegram setup configuration is incomplete." });
+  if (!token || secret.length < 32 || !baseUrl) return json(503, {
+    error: "Telegram setup configuration is incomplete.",
+    diagnostic: {
+      botTokenPresent: Boolean(token),
+      webhookSecretLengthValid: secret.length >= 32,
+      deploymentUrlPresent: Boolean(baseUrl),
+      deployContext: process.env.CONTEXT || "unknown",
+      branch: process.env.BRANCH || "unknown"
+    }
+  });
 
   const webhookUrl = baseUrl + "/.netlify/functions/telegram";
   try {
