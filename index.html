@@ -1712,7 +1712,8 @@
       </div>
       <div class="settings-section"><h3>Account</h3>
         <p id="settingsAccountStatus" class="account-copy">You are using Vee-AI as a guest.</p>
-        <div class="settings-account-actions"><button type="button" class="account-secondary" onclick="veeOpenModal('accountModal')">Account access</button><button type="button" class="account-secondary" onclick="veeSignOutAccount()">Sign out</button></div>        <div style="display:grid;gap:8px">
+        <div class="settings-account-actions"><button type="button" class="account-secondary" onclick="veeOpenModal('accountModal')">Account access</button><button type="button" class="account-secondary" onclick="veeSignOutAccount()">Sign out</button></div>
+        <div style="display:grid;gap:8px">
           <button type="button" class="account-secondary" id="settingsTelegramLinkBtn" onclick="veeCreateTelegramLinkCode()">Generate Telegram link code</button>
           <p id="settingsTelegramLinkStatus" class="account-copy" role="status" aria-live="polite">Link your verified Vee-AI account to your private Telegram chat.</p>
           <button type="button" class="account-secondary" id="settingsTelegramCopyBtn" style="display:none" onclick="veeCopyTelegramLinkCommand()">Copy Telegram link command</button>
@@ -1928,7 +1929,8 @@
       if(email)email.value=veeCurrentUser&&veeCurrentUser.email?veeCurrentUser.email:"Guest access";
       if(memory)memory.checked=veeMemoryUseEnabled;
       if(status)status.textContent=veeCurrentUser&&veeCurrentUser.emailVerified?"Signed in as "+(veeUserFirstName||veeCurrentUser.email)+". Your account data syncs across devices.":"You are using Vee-AI as a guest. Your guest data stays in this browser.";
-      if(signout)signout.style.display=veeCurrentUser?"inline-flex":"none";      var telegramLinkButton=document.getElementById("settingsTelegramLinkBtn");
+      if(signout)signout.style.display=veeCurrentUser?"inline-flex":"none";
+      var telegramLinkButton=document.getElementById("settingsTelegramLinkBtn");
       if(telegramLinkButton){telegramLinkButton.disabled=!(veeCurrentUser&&veeCurrentUser.emailVerified);telegramLinkButton.textContent=veeCurrentUser&&veeCurrentUser.emailVerified?"Generate Telegram link code":"Sign in with a verified account to link Telegram";}
       if(!veeCurrentUser||!veeCurrentUser.emailVerified){var telegramStatus=document.getElementById("settingsTelegramLinkStatus");if(telegramStatus)telegramStatus.textContent="Link your verified Vee-AI account to your private Telegram chat.";var telegramCopy=document.getElementById("settingsTelegramCopyBtn");if(telegramCopy)telegramCopy.style.display="none";}
       var theme=document.getElementById("modalThemeToggle");if(theme)theme.textContent=(document.documentElement.getAttribute("data-theme")||"light")==="dark"?"Dark (#0B0B0B)":"Light (70% White)";
