@@ -138,6 +138,21 @@ function extractTransaction(email, text) {
     ambiguousDirection:debit && credit
   };
 }
+function extractFlightDetails(email) {
+  const source = email.subject + " " + email.snippet + " " + email.bodyText;
+  const flightNumber = (source.match(/\b([A-Z]{1,3}\s?\d{1,4})\b/) || [])[1] || "";
+  const bookingReference = (source.match(/\b(?:booking reference|booking ref|pnr|record locator|reservation code)\s*[:#-]?\s*([A-Z0-9]{5,8})\b/i) || [])[1] || "";
+  const route = (source.match(/\b([A-Z]{3})\s*(?:to|→|-)\s*([A-Z]{3})\b/i) || []);
+  const date = (source.match(/\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/) || [])[0] || "";
+  return {
+    airline:(email.from.match(/([^<,]+?)(?:\s*<|$)/) || [])[1] || "",
+    flightNumber:flightNumber.replace(/\s+/g," ").trim(),
+    origin:route[1] || "",
+    destination:route[2] || "",
+    travelDate:date,
+    bookingReference:bookingReference
+  };
+}
 function classifyEmail(email) {
   const subject = String(email.subject || "");
   const from = String(email.from || "");
@@ -254,7 +269,8 @@ async function syncMessages(uid, db, token) {
         linkCount:analysis.linkCount, securityFindings:analysis.securityFindings,
         riskLevel:analysis.riskLevel, evidence:analysis.evidence,
         transaction:analysis.transaction, classificationConfidence:analysis.classificationConfidence,
-        needsReview:analysis.needsReview, analysedAtMs:Date.now()
+        needsReview:analysis.needsReview, flightDetails:analysis.categories.includes("flight") ? extractFlightDetails(email) : null,
+        analysedAtMs:Date.now()
       };
     }));
     for (const record of batch.filter(Boolean)) {
