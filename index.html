@@ -2100,12 +2100,13 @@
     var veePlannerTasks = [];
     var veePlannerFilter = "all";
     var veePlannerRemindersEnabled = false;
-    var veePlannerReminderSettings = { time:"09:00", days:[0,1,2,3,4,5,6] };
+    function veeLocalTimeZone() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch (e) { return "UTC"; } }
+    var veePlannerReminderSettings = { time:"09:00", days:[0,1,2,3,4,5,6], timeZone:veeLocalTimeZone() };
     try {
       veePlannerRemindersEnabled = localStorage.getItem("vee_ai_planner_reminders") === "true";
       var savedReminderSettings = JSON.parse(localStorage.getItem("vee_ai_planner_reminder_settings") || "null");
       if (savedReminderSettings && /^([01]\\d|2[0-3]):[0-5]\\d$/.test(savedReminderSettings.time) && Array.isArray(savedReminderSettings.days)) {
-        veePlannerReminderSettings = { time:savedReminderSettings.time, days:savedReminderSettings.days.filter(function(day){return Number.isInteger(day) && day >= 0 && day <= 6;}) };
+        veePlannerReminderSettings = { time:savedReminderSettings.time, days:savedReminderSettings.days.filter(function(day){return Number.isInteger(day) && day >= 0 && day <= 6;}), timeZone:typeof savedReminderSettings.timeZone === "string" && savedReminderSettings.timeZone.length <= 80 ? savedReminderSettings.timeZone : veeLocalTimeZone() };
       }
     } catch (e) {}
     try { veePlannerTasks = JSON.parse(localStorage.getItem("vee_ai_planner_tasks_v1") || "[]"); if (!Array.isArray(veePlannerTasks)) veePlannerTasks = []; } catch (e) { veePlannerTasks = []; }
@@ -2143,7 +2144,7 @@
       if (reminderSettingsSnapshot.exists()) {
         var cloudReminderSettings = reminderSettingsSnapshot.val() || {};
         if (/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(cloudReminderSettings.time || "")) && Array.isArray(cloudReminderSettings.days)) {
-          veePlannerReminderSettings = { time:cloudReminderSettings.time, days:cloudReminderSettings.days.filter(function(day){return Number.isInteger(day) && day >= 0 && day <= 6;}) };
+          veePlannerReminderSettings = { time:cloudReminderSettings.time, days:cloudReminderSettings.days.filter(function(day){return Number.isInteger(day) && day >= 0 && day <= 6;}), timeZone:typeof cloudReminderSettings.timeZone === "string" && cloudReminderSettings.timeZone.length <= 80 ? cloudReminderSettings.timeZone : veeLocalTimeZone() };
         }
       }
       try { localStorage.setItem("vee_ai_planner_reminder_settings", JSON.stringify(veePlannerReminderSettings)); } catch (e) {}
@@ -2627,14 +2628,14 @@
         veePlannerReminderStatus("Choose a valid time and at least one day.");
         return;
       }
-      var settings = { time:timeInput.value, days:selectedDays };
+      var settings = { time:timeInput.value, days:selectedDays, timeZone:veeLocalTimeZone() };
       try {
         if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
           await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/planner/reminderSettings").set(settings);
         }
         localStorage.setItem("vee_ai_planner_reminder_settings", JSON.stringify(settings));
         veePlannerReminderSettings = settings;
-        veePlannerReminderStatus("Saved. Reminders are scheduled for " + settings.time + " on your selected days, using this device's local time.");
+        veePlannerReminderStatus("Saved. Reminders are scheduled for " + settings.time + " on your selected days in " + settings.timeZone + " local time.");
         veeCheckPlannerReminders();
       } catch (error) {
         console.error("Vee-AI reminder settings save failed:", error);
