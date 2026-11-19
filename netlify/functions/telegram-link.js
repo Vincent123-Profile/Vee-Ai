@@ -68,6 +68,19 @@ exports.handler = async event => {
       };
     });
     if (!stored.committed) throw new Error("Unable to reserve a unique link code.");
+    const verifySnapshot = await codeRef.once("value");
+    const verifyRecord = verifySnapshot.val();
+    console.log("Vee-AI Telegram link code created:", JSON.stringify({
+      hashPrefix: codeHash.slice(0, 12),
+      committed: Boolean(stored.committed),
+      readBack: Boolean(verifyRecord && verifyRecord.uid === user.uid),
+      databaseHost: (() => { try { return new URL(process.env.FIREBASE_DATABASE_URL || "https://vee-ai-e745e-default-rtdb.firebaseio.com").host; } catch (_) { return "invalid"; } })(),
+      netlifyContext: process.env.CONTEXT || "unknown",
+      branch: process.env.BRANCH || "unknown"
+    }));
+    if (!verifyRecord || verifyRecord.uid !== user.uid) {
+      throw new Error("Link code write could not be verified.");
+    }
 
     return json(200, { success: true, code, expiresAtMs, expiresInSeconds: 600 });
   } catch (error) {
