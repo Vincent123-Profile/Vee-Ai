@@ -260,7 +260,37 @@ exports.handler = async event => {
       return json(200, { ok: true });
     }
     if (/^\/help(?:@\w+)?$/i.test(text)) {
-      await sendMessage(token, chat.id, "Send me a message for everyday help. Available account commands:\n/tasks - view your open Planner tasks\n/content - retrieve your latest scheduled business content ideas\n/help - show this help.");
+      await sendMessage(token, chat.id, "Send me a message for everyday help. Available account commands:\n/tasks - view your open Planner tasks\n/content - retrieve your latest scheduled business content ideas\n/emails - retrieve your latest Gmail intelligence summary\n/security - retrieve flagged email security findings\n/help - show this help.");
+      return json(200, { ok: true });
+    }
+
+    if (/^\\/(?:emails|security)(?:@\\w+)?$/i.test(text)) {
+      const linkedSnapshot = await db.ref("telegram/accountsByChat/" + chatId).once("value");
+      const linkedAccount = linkedSnapshot.val();
+      if (!linkedAccount || typeof linkedAccount.uid !== "string") {
+        await sendMessage(token, chat.id, "Link your verified Vee-AI account first in Vee-AI Settings.");
+      } else {
+        const emailsSnapshot = await db.ref("gmailConnections/" + linkedAccount.uid + "/emails").orderByChild("internalDate").limitToLast(100).once("value");
+        const emails = Object.values(emailsSnapshot.val() || {}).sort((a,b) => Number(b.internalDate || 0) - Number(a.internalDate || 0));
+        const securityOnly = /^\\/security(?:@\\w+)?$/i.test(text);
+        const selected = emails.filter(item => securityOnly ? item && item.riskLevel && item.riskLevel !== "none" : item).slice(0,10);
+        if (!emails.length) {
+          await sendMessage(token, chat.id, "No Gmail analysis is available yet. Connect Gmail and run a scan in Vee-AI Email Intelligence.");
+        } else if (!selected.length) {
+          await sendMessage(token, chat.id, "No email security findings are currently flagged for review in your scanned messages.");
+        } else {
+          const title = securityOnly ? "Your Gmail security review" : "Your latest Gmail intelligence";
+          const reply = title + "\\n\\n" + selected.map((item,index) => {
+            const categories = Array.isArray(item.categories) ? item.categories.join(", ") : "general";
+            const risk = item.riskLevel && item.riskLevel !== "none" ? "\\nRisk: " + String(item.riskLevel).toUpperCase() : "";
+            const findings = Array.isArray(item.securityFindings) ? item.securityFindings.slice(0,3).map(f => f.reason).join("; ") : "";
+            return (index+1) + ". " + String(item.subject || "(No subject)").slice(0,150) +
+              "\\nFrom: " + String(item.from || "Unknown").slice(0,150) +
+              "\\nCategory: " + categories + risk + (findings ? "\\nFindings: " + findings : "");
+          }).join("\\n\\n");
+          await sendMessage(token, chat.id, reply);
+        }
+      }
       return json(200, { ok: true });
     }
 
