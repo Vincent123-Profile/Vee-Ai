@@ -92,7 +92,7 @@ async function enforceUserRateLimit(db, uid) {
 function safeText(value, max) {
   return String(value || "").replace(/[\x00-\x1F\x7F]/g, " ").trim().slice(0, max);
 }
-async function createTestDraft(profile) {
+async function createTestDraft(profile, recentIdeas) {
   const apiKey = (process.env.GROQ_API_KEY || "").trim();
   if (!apiKey) throw new Error("Groq is not configured in Netlify.");
   const controller = new AbortController();
@@ -116,9 +116,9 @@ async function createTestDraft(profile) {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method:"POST", signal:controller.signal,
       headers:{Authorization:"Bearer "+apiKey,"Content-Type":"application/json"},
-      body:JSON.stringify({model:(process.env.GROQ_MODEL||"openai/gpt-oss-20b").trim(),temperature:0.2,max_tokens:1400,response_format:{type:"json_object"},messages:[
-        {role:"system",content:"You are Vee-AI, a practical business content strategist. Create one accurate short-form video idea using only explicit facts in the supplied profile. Never invent or guess a website, URL, address, branch, location, stock, price, offer, product specification, award, guarantee, customer result, delivery service, or business capability. Mention a location or service only when explicitly stated. Never create a website or URL. If a detail is absent, omit it. Use correct spelling and natural English. Return valid JSON only with keys topic, hook, talkingPoints (array), script, caption, platform, callToAction. Script should fit 30 to 60 seconds."},
-        {role:"user",content:"Create one original business content idea. Treat the profile as the only source of truth. Do not fill gaps with assumptions. "+JSON.stringify(context)}
+      body:JSON.stringify({model:(process.env.GROQ_MODEL||"openai/gpt-oss-20b").trim(),temperature:0.85,max_tokens:1400,response_format:{type:"json_object"},messages:[
+        {role:"system",content:"You are Vee-AI, a practical business content strategist. Create one accurate short-form video idea using only explicit facts in the supplied profile. Never invent or guess a website, URL, address, branch, location, stock, price, offer, product specification, award, guarantee, customer result, delivery service, or business capability. Mention a location or service only when explicitly stated. Never create a website or URL. If a detail is absent, omit it. Use correct spelling and natural English. Return valid JSON only with keys topic, style, format, hook, talkingPoints (array), script, caption, platform, callToAction. Script should fit 30 to 60 seconds. Every idea must have a different topic, angle, hook, structure and style. Rotate product demonstration, myth-versus-fact, buyer education, comparison, FAQ, storytelling, behind-the-scenes, checklist, problem-solution, objection handling, trend commentary and sales announcement. Avoid repeating or closely paraphrasing the recent ideas supplied. Rotate the format and opening hook each time."},
+        {role:"user",content:"Create a fresh idea for this delivery. Treat the profile as the only source of truth. Do not fill gaps with assumptions. Recent ideas to avoid repeating: "+JSON.stringify((recentIdeas||[]).slice(0,30))+". Business profile: "+JSON.stringify(context)}
       ]})
     });
     const data=await response.json().catch(()=>({}));
@@ -132,7 +132,7 @@ async function createTestDraft(profile) {
       throw new Error("The AI returned an incomplete content draft. Please tap the test button again.");
     }
     if(typeof draft.topic!=="string"||typeof draft.script!=="string"||!Array.isArray(draft.talkingPoints))throw new Error("Groq returned an invalid draft.");
-    return {topic:safeText(draft.topic,240),hook:safeText(draft.hook,500),talkingPoints:draft.talkingPoints.slice(0,5).map(x=>safeText(x,350)),script:safeText(draft.script,1800),caption:safeText(draft.caption,700),platform:safeText(draft.platform,100),callToAction:safeText(draft.callToAction,300)};
+    return {topic:safeText(draft.topic,240),style:safeText(draft.style,100),format:safeText(draft.format,100),hook:safeText(draft.hook,500),talkingPoints:draft.talkingPoints.slice(0,5).map(x=>safeText(x,350)),script:safeText(draft.script,1800),caption:safeText(draft.caption,700),platform:safeText(draft.platform,100),callToAction:safeText(draft.callToAction,300)};
   } finally { clearTimeout(timeout); }
 }
 async function sendTestTelegram(db, uid, draft) {
@@ -147,6 +147,8 @@ async function sendTestTelegram(db, uid, draft) {
     "Your scheduled content delivery is connected.",
     "",
     "Topic: "+draft.topic,
+    "Style: "+draft.style,
+    "Format: "+draft.format,
     "",
     "Hook: "+draft.hook,
     "",
@@ -183,7 +185,10 @@ exports.handler = async event => {
         throw new Error("Enable background processing first.");
       }
       const profile = decryptProfile(user.uid, automation.encryptedProfile);
-      const draft = await createTestDraft(profile);
+      const historySnapshot = await root.child("runs").orderByChild("createdAtMs").limitToLast(30).once("value");
+      const historyRecords = historySnapshot.val() || {};
+      const recentIdeas = Object.values(historyRecords).filter(item => item && item.draft).sort((a,b) => Number(b.createdAtMs||0)-Number(a.createdAtMs||0)).map(item => ({topic:item.draft.topic,style:item.draft.style,format:item.draft.format,hook:item.draft.hook}));
+      const draft = await createTestDraft(profile, recentIdeas);
       await sendTestTelegram(db, user.uid, draft);
       return json(200, { sent: true, message: "Test content idea sent to your linked Telegram account." });
     }
