@@ -1,0 +1,2 @@
+[functions."business-automation-scheduler"]
+  schedule = "0 */3 * * *"
