@@ -118,9 +118,15 @@ exports.handler = async event => {
       return json(200, { enabled: true, message: "Background processing permission saved. Content preparation is scheduled every three hours on published deployments." });
     }
     if (body.action === "disable") {
-      await Promise.all([root.child("encryptedProfile").remove(), root.child("runs").remove()]);
-      await root.child("consent").set({ enabled: false, revokedAtMs: Date.now(), consentVersion: 1, userUid: user.uid });
-      return json(200, { enabled: false, message: "Background processing disabled. The automation copy was deleted." });
+      const revokedAtMs = Date.now();
+      await root.transaction(current => {
+        const next = current || {};
+        delete next.encryptedProfile;
+        delete next.runs;
+        next.consent = { enabled: false, revokedAtMs, consentVersion: 1, userUid: user.uid };
+        return next;
+      });
+      return json(200, { enabled: false, message: "Background processing disabled. The automation copy and generated drafts were deleted." });
     }
     return json(400, { error: "Unknown action." });
   } catch (error) {
