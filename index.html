@@ -2145,6 +2145,7 @@
         var cloudReminderSettings = reminderSettingsSnapshot.val() || {};
         if (/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(cloudReminderSettings.time || "")) && Array.isArray(cloudReminderSettings.days)) {
           veePlannerReminderSettings = { time:cloudReminderSettings.time, days:cloudReminderSettings.days.filter(function(day){return Number.isInteger(day) && day >= 0 && day <= 6;}), timeZone:typeof cloudReminderSettings.timeZone === "string" && cloudReminderSettings.timeZone.length <= 80 ? cloudReminderSettings.timeZone : veeLocalTimeZone() };
+          if (cloudReminderSettings.enabled === true) veePlannerRemindersEnabled = true;
         }
       }
       try { localStorage.setItem("vee_ai_planner_reminder_settings", JSON.stringify(veePlannerReminderSettings)); } catch (e) {}
@@ -2628,7 +2629,7 @@
         veePlannerReminderStatus("Choose a valid time and at least one day.");
         return;
       }
-      var settings = { time:timeInput.value, days:selectedDays, timeZone:veeLocalTimeZone() };
+      var settings = { time:timeInput.value, days:selectedDays, timeZone:veeLocalTimeZone(), enabled:veePlannerRemindersEnabled === true };
       try {
         if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
           await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/planner/reminderSettings").set(settings);
@@ -2643,23 +2644,37 @@
       }
     }
     async function veeEnablePlannerReminders() {
-      if (!("Notification" in window)) {
-        veePlannerReminderStatus("This browser does not support notifications.");
-        return;
-      }
       try {
-        var permission = Notification.permission;
-        if (permission !== "granted") permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          veePlannerReminderStatus("Notifications were not enabled. Allow notifications in your browser settings, then try again.");
-          return;
+        var browserPermission = "unsupported";
+        if ("Notification" in window) {
+          browserPermission = Notification.permission;
+          if (browserPermission !== "granted") {
+            try { browserPermission = await Notification.requestPermission(); } catch (permissionError) {}
+          }
         }
         veePlannerRemindersEnabled = true;
-        try { localStorage.setItem("vee_ai_planner_reminders", "true"); } catch (e) {}
-        veePlannerReminderStatus("Notifications enabled. Save your preferred time and days below.");
+        veePlannerReminderSettings.enabled = true;
+        veePlannerReminderSettings.timeZone = veeLocalTimeZone();
+        try {
+          localStorage.setItem("vee_ai_planner_reminders", "true");
+          localStorage.setItem("vee_ai_planner_reminder_settings", JSON.stringify(veePlannerReminderSettings));
+        } catch (e) {}
+        if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
+          await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/planner/reminderSettings").update({
+            enabled:true,
+            timeZone:veeLocalTimeZone(),
+            time:veePlannerReminderSettings.time || "09:00",
+            days:Array.isArray(veePlannerReminderSettings.days) ? veePlannerReminderSettings.days : [0,1,2,3,4,5,6],
+            updatedAtMs:Date.now()
+          });
+          veePlannerReminderStatus("Reminders enabled. Telegram delivery uses your saved device time zone. Browser alerts " + (browserPermission === "granted" ? "are also enabled." : "are unavailable or not permitted."));
+        } else {
+          veePlannerReminderStatus("Reminders enabled on this device. Sign in and link Telegram to receive scheduled Telegram reminders.");
+        }
         veeCheckPlannerReminders();
       } catch (error) {
-        veePlannerReminderStatus("Unable to enable notifications in this browser.");
+        console.error("Vee-AI planner reminder enable failed:", error);
+        veePlannerReminderStatus("Could not enable reminders. Please try again.");
       }
     }
     function veeCheckPlannerReminders() {
