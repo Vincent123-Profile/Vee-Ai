@@ -47,7 +47,11 @@ async function verifyUser(event) {
 }
 function env(name) {
   const value = (process.env[name] || "").trim();
-  if (!value) throw new Error(name + " is not configured in Netlify.");
+  if (!value) {
+    const context = String(process.env.CONTEXT || "unknown");
+    const branch = String(process.env.BRANCH || "unknown");
+    throw new Error(name + " is missing from this Netlify Function runtime (context: " + context + ", branch: " + branch + "). Check variable scopes for this deploy context and redeploy.");
+  }
   return value;
 }
 function redirectUrl() { return env("GMAIL_REDIRECT_URI"); }
