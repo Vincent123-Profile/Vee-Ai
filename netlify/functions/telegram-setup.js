@@ -28,7 +28,19 @@ exports.handler = async event => {
   });
 
   const token = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
-  const baseUrl = (process.env.DEPLOY_PRIME_URL || process.env.URL || "").replace(/\/$/, "");
+  let requestedBaseUrl = "";
+  try {
+    const body = JSON.parse(event.body || "{}");
+    requestedBaseUrl = typeof body.deployUrl === "string" ? body.deployUrl.trim() : "";
+  } catch (_) {}
+  const candidateBaseUrl = requestedBaseUrl || process.env.DEPLOY_PRIME_URL || process.env.URL || "";
+  let baseUrl = "";
+  try {
+    const parsed = new URL(candidateBaseUrl);
+    const host = parsed.hostname.toLowerCase();
+    const allowedHost = host === "fantastic-sable-dba726.netlify.app" || /^deploy-preview-[0-9]+--fantastic-sable-dba726\.netlify\.app$/.test(host);
+    if (parsed.protocol === "https:" && allowedHost) baseUrl = parsed.origin;
+  } catch (_) {}
   if (!token || secret.length < 32 || !baseUrl) return json(503, {
     error: "Telegram setup configuration is incomplete.",
     diagnostic: {
