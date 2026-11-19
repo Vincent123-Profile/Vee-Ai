@@ -103,6 +103,7 @@ function collectText(payload, output) {
 function classifyEmail(email) {
   const text = (email.subject + " " + email.from + " " + email.snippet + " " + email.bodyText).toLowerCase();
   const categories = [];
+  if ((email.labels || []).includes("SPAM")) categories.push("spam");
   if (/bank|statement|transaction|credited|debited|transfer|withdrawal|deposit|balance alert|card payment|pos payment|account alert/.test(text)) categories.push("bank");
   if (/flight|boarding pass|itinerary|booking confirmation|airline|check-in|check in|departure|arrival|ticket number/.test(text)) categories.push("flight");
   if (/job application|application received|interview|recruiter|career opportunity|vacancy|employment|shortlisted|job offer/.test(text)) categories.push("job");
@@ -129,13 +130,14 @@ function classifyEmail(email) {
   return { categories:Array.from(new Set(categories)), linkCount:urls.length, securityFindings:suspicious.slice(0,12), riskLevel:suspicious.length >= 2 ? "high" : suspicious.length ? "review" : "none" };
 }
 async function syncMessages(uid, db, token) {
-  const list = await gmailFetch(token.accessToken,"messages?maxResults=30");
+  const list = await gmailFetch(token.accessToken,"messages?maxResults=30&includeSpamTrash=true");
   const messages = Array.isArray(list.messages) ? list.messages : [];
   const saved = [];
   for (const item of messages) {
     const message = await gmailFetch(token.accessToken,"messages/" + encodeURIComponent(item.id) + "?format=full");
     const payload = message.payload || {};
     const headers = payload.headers || [];
+    if ((message.labelIds || []).includes("TRASH")) continue;
     const textParts = [];
     collectText(payload,textParts);
     const email = {
