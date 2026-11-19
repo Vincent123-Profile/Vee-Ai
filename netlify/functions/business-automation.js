@@ -89,6 +89,75 @@ async function enforceUserRateLimit(db, uid) {
   });
   if (!result.committed) throw new Error("Too many background processing changes. Try again in 10 minutes.");
 }
+function safeText(value, max) {
+  return String(value || "").replace(/[\\u0000-\\u001f\\u007f]/g, " ").trim().slice(0, max);
+}
+async function createTestDraft(profile) {
+  const apiKey = (process.env.GROQ_API_KEY || "").trim();
+  if (!apiKey) throw new Error("Groq is not configured in Netlify.");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 22000);
+  try {
+    const context = {
+      businessName: safeText(profile.businessName,120),
+      businessIndustry: safeText(profile.businessIndustry,120),
+      businessModel: safeText(profile.businessModel,1200),
+      businessProducts: safeText(profile.businessProducts,2200),
+      businessCustomers: safeText(profile.businessCustomers,1200),
+      businessLocation: safeText(profile.businessLocation,300),
+      businessOffers: safeText(profile.businessOffers,1200),
+      businessDifference: safeText(profile.businessDifference,1200),
+      businessVoice: safeText(profile.businessVoice,100),
+      businessGoals: safeText(profile.businessGoals,1200),
+      businessPlatforms: safeText(profile.businessPlatforms,1000)
+    };
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method:"POST", signal:controller.signal,
+      headers:{Authorization:"Bearer "+apiKey,"Content-Type":"application/json"},
+      body:JSON.stringify({model:(process.env.GROQ_MODEL||"openai/gpt-oss-20b").trim(),temperature:0.7,max_tokens:900,messages:[
+        {role:"system",content:"You are Vee-AI, a practical business content strategist. Create one useful short-form video idea tailored to the supplied business. Do not invent prices, stock, guarantees, awards or results. Return valid JSON only with keys topic, hook, talkingPoints (array), script, caption, platform, callToAction. Script should fit 30 to 60 seconds."},
+        {role:"user",content:"Create one original business content idea from this approved profile. "+JSON.stringify(context)}
+      ]})
+    });
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error("Groq request failed with status "+response.status+".");
+    const raw=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+    if(typeof raw!=="string"||!raw.trim())throw new Error("Groq returned an empty draft.");
+    const draft=JSON.parse(raw.trim().replace(/^\`\`\`(?:json)?\\s*/i,"").replace(/\\s*\`\`\`$/,""));
+    if(typeof draft.topic!=="string"||typeof draft.script!=="string"||!Array.isArray(draft.talkingPoints))throw new Error("Groq returned an invalid draft.");
+    return {topic:safeText(draft.topic,240),hook:safeText(draft.hook,500),talkingPoints:draft.talkingPoints.slice(0,5).map(x=>safeText(x,350)),script:safeText(draft.script,1800),caption:safeText(draft.caption,700),platform:safeText(draft.platform,100),callToAction:safeText(draft.callToAction,300)};
+  } finally { clearTimeout(timeout); }
+}
+async function sendTestTelegram(db, uid, draft) {
+  const token=(process.env.TELEGRAM_BOT_TOKEN||"").trim();
+  if(!token)throw new Error("Telegram bot is not configured in Netlify.");
+  const snapshot=await db.ref("telegram/accountsByChat").once("value");
+  const accounts=snapshot.val()||{};
+  const match=Object.entries(accounts).find(([,account])=>account&&String(account.uid)===String(uid));
+  if(!match)throw new Error("No Telegram account is linked to this Vee-AI account.");
+  const message=[
+    "🧪 Vee-AI Telegram delivery test",
+    "Your scheduled content delivery is connected.",
+    "",
+    "Topic: "+draft.topic,
+    "",
+    "Hook: "+draft.hook,
+    "",
+    "Talking points:",
+    ...draft.talkingPoints.map((point,index)=>(index+1)+". "+point),
+    "",
+    "Video script:",
+    draft.script,
+    "",
+    "Caption: "+draft.caption,
+    "Platform: "+draft.platform,
+    "Call to action: "+draft.callToAction
+  ].join("\\n").slice(0,3900);
+  const response=await fetch("https://api.telegram.org/bot"+token+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:match[0],text:message,link_preview_options:{is_disabled:true}})});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||result.ok!==true)throw new Error("Telegram rejected the test message.");
+  return true;
+}
 exports.handler = async event => {
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed." });
   if (Buffer.byteLength(event.body || "", "utf8") > 70000) return json(413, { error: "Request is too large." });
@@ -99,6 +168,18 @@ exports.handler = async event => {
     const user = await verifyUser(event);
     const db = firebase().database();
     const root = db.ref("privateBusinessAutomation/" + user.uid);
+    if (body.action === "send-test-content") {
+      await enforceUserRateLimit(db, user.uid);
+      const automationSnapshot = await root.once("value");
+      const automation = automationSnapshot.val() || {};
+      if (!automation.consent || automation.consent.enabled !== true || !automation.encryptedProfile) {
+        throw new Error("Enable background processing first.");
+      }
+      const profile = decryptProfile(user.uid, automation.encryptedProfile);
+      const draft = await createTestDraft(profile);
+      await sendTestTelegram(db, user.uid, draft);
+      return json(200, { sent: true, message: "Test content idea sent to your linked Telegram account." });
+    }
     if (body.action === "account-profile-get") {
       const snapshot = await db.ref("privateBusinessAccount/" + user.uid + "/profile").once("value");
       const legacy = await db.ref("privateBusiness/" + user.uid + "/vault").once("value");
