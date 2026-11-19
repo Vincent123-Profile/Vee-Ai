@@ -115,7 +115,7 @@ exports.handler = async event => {
         encryptedProfile,
         consent: { enabled: true, consentGrantedAtMs: now, consentVersion: 1, userUid: user.uid }
       });
-      return json(200, { enabled: true, message: "Background processing permission saved. Scheduled delivery still needs to be configured." });
+      return json(200, { enabled: true, message: "Background processing permission saved. Content preparation is scheduled every three hours on published deployments." });
     }
     if (body.action === "disable") {
       await Promise.all([root.child("encryptedProfile").remove(), root.child("runs").remove()]);
