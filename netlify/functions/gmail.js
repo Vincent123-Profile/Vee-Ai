@@ -51,6 +51,7 @@ function env(name) {
   return value;
 }
 function redirectUrl() { return env("GMAIL_REDIRECT_URI"); }
+function appRedirectUrl() { return env("GMAIL_APP_REDIRECT_URL"); }
 async function tokenRequest(params) {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method:"POST", headers:{ "Content-Type":"application/x-www-form-urlencoded" },
@@ -174,14 +175,14 @@ exports.handler = async event => {
     if (method === "GET" && params.action === "callback") {
       const state = String(params.state || "");
       if (!/^[a-f0-9]{64}$/.test(state)) return { statusCode:400, body:"Invalid Gmail connection state." };
-      if (params.error) return { statusCode:302, headers:{ Location:redirectUrl() + "?gmail=denied" }, body:"" };
+      if (params.error) return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=denied" }, body:"" };
       const stateRef = db.ref("gmailOAuthStates/" + state);
       const claim = await stateRef.transaction(current => {
         if (!current || Number(current.expiresAtMs || 0) < Date.now() || current.usedAtMs) return;
         return Object.assign({},current,{usedAtMs:Date.now()});
       });
       const stateRecord = claim.snapshot && claim.snapshot.val();
-      if (!claim.committed || !stateRecord || !stateRecord.uid) return { statusCode:302, headers:{ Location:redirectUrl() + "?gmail=state_error" }, body:"" };
+      if (!claim.committed || !stateRecord || !stateRecord.uid) return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=state_error" }, body:"" };
       const tokens = await tokenRequest({
         code:String(params.code || ""), client_id:env("GMAIL_CLIENT_ID"),
         client_secret:env("GMAIL_CLIENT_SECRET"), redirect_uri:redirectUrl(),
@@ -206,7 +207,7 @@ exports.handler = async event => {
         status:{connected:true,gmailAddress:tokenData.gmailAddress,connectedAtMs:Date.now(),scope:"gmail.readonly"}
       });
       await stateRef.remove();
-      return {statusCode:302,headers:{Location:redirectUrl()+"?gmail=connected"},body:""};
+      return {statusCode:302,headers:{Location:appRedirectUrl()+"?gmail=connected"},body:""};
     }
     if (method !== "POST") return json(405,{error:"Method not allowed."});
     const user = await verifyUser(event);
