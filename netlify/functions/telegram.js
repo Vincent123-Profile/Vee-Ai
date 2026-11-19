@@ -63,6 +63,14 @@ async function linkTelegramAccount(token, chat, code, db) {
   const codeRef = db.ref("telegram/linkCodes/" + codeHash);
   const now = Date.now();
   let lookupState = "unknown";
+  const initialSnapshot = await codeRef.once("value");
+  console.log("Vee-AI Telegram link code lookup:", JSON.stringify({
+    hashPrefix: codeHash.slice(0, 12),
+    recordExists: initialSnapshot.exists(),
+    databaseHost: (() => { try { return new URL(process.env.FIREBASE_DATABASE_URL || "https://vee-ai-e745e-default-rtdb.firebaseio.com").host; } catch (_) { return "invalid"; } })(),
+    netlifyContext: process.env.CONTEXT || "unknown",
+    branch: process.env.BRANCH || "unknown"
+  }));
   const claim = await codeRef.transaction(current => {
     if (!current) {
       lookupState = "missing";
