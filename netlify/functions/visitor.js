@@ -15,7 +15,6 @@ function firebaseAdmin() {
   return app;
 }
 const db = () => firebaseAdmin().database();
-const auth = () => firebaseAdmin().auth();
 const json = (statusCode, body) => ({
   statusCode,
   headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
@@ -47,11 +46,6 @@ function networkFingerprint(event) {
   const key = (process.env.IP_HASH_SECRET || "").trim();
   if (!ip || !key) return "network_unknown";
   return crypto.createHmac("sha256", key).update(String(ip).trim()).digest("hex").slice(0, 32);
-}
-async function requireAdmin(idToken) {
-  const decoded = await auth().verifyIdToken(idToken);
-  if ((decoded.email || "").toLowerCase() !== "agboolavincent67@gmail.com" || decoded.email_verified !== true) throw new Error("Administrator access denied.");
-  return decoded;
 }
 exports.handler = async event => {
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed." });
@@ -141,20 +135,6 @@ exports.handler = async event => {
     if (body.action === "clear-history") {
       const visitorId = verifyVisitor(body.visitorToken);
       if (visitorId !== body.visitorId) throw new Error("Visitor identity mismatch.");
-      await database.ref("visitors/" + visitorId).update({ networks: null, "profile/historyClearedAtMs": now });
-      return json(200, { success: true });
-    }
-
-    if (body.action === "admin-list") {
-      await requireAdmin(body.idToken);
-      const snap = await database.ref("visitors").once("value");
-      return json(200, { visitors: snap.val() || {} });
-    }
-
-    if (body.action === "admin-delete-history") {
-      await requireAdmin(body.idToken);
-      const visitorId = String(body.visitorId || "");
-      if (!/^v_[A-Za-z0-9_-]{10,100}$/.test(visitorId)) throw new Error("Invalid visitor ID.");
       await database.ref("visitors/" + visitorId).update({ networks: null, "profile/historyClearedAtMs": now });
       return json(200, { success: true });
     }
