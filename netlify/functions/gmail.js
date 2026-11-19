@@ -187,12 +187,30 @@ exports.handler = async event => {
       if (!/^[a-f0-9]{64}$/.test(state)) return { statusCode:400, body:"Invalid Gmail connection state." };
       if (params.error) return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=denied" }, body:"" };
       const stateRef = db.ref("gmailOAuthStates/" + state);
+      const beforeClaim = await stateRef.once("value");
+      const existingState = beforeClaim.val();
+      if (!existingState) {
+        console.error("Vee-AI Gmail OAuth state check: state_missing");
+        return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=state_missing" }, body:"" };
+      }
+      if (Number(existingState.expiresAtMs || 0) < Date.now()) {
+        console.error("Vee-AI Gmail OAuth state check: state_expired");
+        await stateRef.remove();
+        return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=state_expired" }, body:"" };
+      }
+      if (existingState.usedAtMs) {
+        console.error("Vee-AI Gmail OAuth state check: state_already_used");
+        return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=state_used" }, body:"" };
+      }
       const claim = await stateRef.transaction(current => {
         if (!current || Number(current.expiresAtMs || 0) < Date.now() || current.usedAtMs) return;
         return Object.assign({},current,{usedAtMs:Date.now()});
       });
       const stateRecord = claim.snapshot && claim.snapshot.val();
-      if (!claim.committed || !stateRecord || !stateRecord.uid) return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=state_error" }, body:"" };
+      if (!claim.committed || !stateRecord || !stateRecord.uid) {
+        console.error("Vee-AI Gmail OAuth state check: transaction_not_committed", JSON.stringify({committed:claim.committed,hasSnapshot:!!stateRecord,hasUid:!!(stateRecord&&stateRecord.uid)}));
+        return { statusCode:302, headers:{ Location:appRedirectUrl() + "?gmail=state_claim_failed" }, body:"" };
+      }
       const tokens = await tokenRequest({
         code:String(params.code || ""), client_id:env("GMAIL_CLIENT_ID"),
         client_secret:env("GMAIL_CLIENT_SECRET"), redirect_uri:redirectUrl(),
@@ -228,6 +246,8 @@ exports.handler = async event => {
     if (body.action === "connect") {
       const state = crypto.randomBytes(32).toString("hex");
       await db.ref("gmailOAuthStates/" + state).set({uid:user.uid,createdAtMs:Date.now(),expiresAtMs:Date.now()+10*60*1000});
+      const savedState = await db.ref("gmailOAuthStates/" + state).once("value");
+      if (!savedState.exists()) throw new Error("Gmail OAuth state could not be saved to Firebase. Check Firebase Admin database access.");
       const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
       url.searchParams.set("client_id",env("GMAIL_CLIENT_ID"));
       url.searchParams.set("redirect_uri",redirectUrl());
