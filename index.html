@@ -1951,6 +1951,10 @@
           <button type="submit" class="send-btn" id="settingsProfileSave">Save profile</button>
         </form>
         <div class="setting-row"><span>Use saved memory in chats</span><input id="settingsMemoryToggle" type="checkbox" onchange="veeSetMemoryUse(this.checked)"></div>
+        <div class="setting-row"><span>Learn my communication style</span><input id="settingsAdaptiveToggle" type="checkbox" checked onchange="veeSetAdaptiveLearning(this.checked)"></div>
+        <p class="account-copy">Vee-AI learns from your message patterns, such as language, tone, message length and formatting. It saves a short style profile, not your raw voice recordings. Turn this off or reset the profile whenever you want.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="account-secondary" onclick="veeResetAdaptiveProfile()">Reset learned style</button></div>
+        <p class="account-copy" id="adaptiveStatus" role="status" aria-live="polite"></p>
         <p id="settingsStatus" class="account-copy" role="status" aria-live="polite"></p>
       </div>
       <div class="settings-section"><h3>Account</h3>
@@ -2321,6 +2325,8 @@
       if(name)name.value=veeUserFirstName||"";
       if(email)email.value=veeCurrentUser&&veeCurrentUser.email?veeCurrentUser.email:"Guest access";
       if(memory)memory.checked=veeMemoryUseEnabled;
+      var adaptiveToggle=document.getElementById("settingsAdaptiveToggle");if(adaptiveToggle)adaptiveToggle.checked=veeAdaptiveLearningEnabled;
+      var adaptiveStatus=document.getElementById("adaptiveStatus");if(adaptiveStatus)adaptiveStatus.textContent=veeAdaptiveLearningEnabled?"Learning is on. Your style profile updates as you chat.":"Learning is off. Your saved style profile is not used.";
       if(status)status.textContent=veeCurrentUser&&veeCurrentUser.emailVerified?"Signed in as "+(veeUserFirstName||veeCurrentUser.email)+". Your account data syncs across devices.":"You are using Vee-AI as a guest. Your guest data stays in this browser.";
       if(signout)signout.style.display=veeCurrentUser?"inline-flex":"none";
       var telegramLinkButton=document.getElementById("settingsTelegramLinkBtn");
@@ -2418,6 +2424,14 @@
     var veeAccountGuestSessionIds = {};
     var veeMemories = [];
     var veeMemoryUseEnabled = true;
+    var veeAdaptiveLearningEnabled = true;
+    var veeCommunicationProfile = { messageCount:0, averageLength:"unknown", tone:"still learning", languageSignals:[], formatting:"still learning", emojiUse:"unknown", updatedAtMs:0 };
+    try {
+      veeAdaptiveLearningEnabled = localStorage.getItem("vee_ai_adaptive_learning") !== "false";
+      var savedCommunicationProfile = JSON.parse(localStorage.getItem("vee_ai_communication_profile_v1") || "null");
+      if (savedCommunicationProfile && typeof savedCommunicationProfile === "object" && Number(savedCommunicationProfile.messageCount) >= 0) veeCommunicationProfile = savedCommunicationProfile;
+    } catch (e) {}
+
     var veePlannerTasks = [];
     var veePlannerFilter = "all";
     var veePlannerRemindersEnabled = false;
@@ -2456,6 +2470,18 @@
       var memorySnapshot = await veeAccountDb.ref("users/" + user.uid + "/memories").once("value");
       var memorySettingsSnapshot = await veeAccountDb.ref("users/" + user.uid + "/settings/useMemory").once("value");
       if (memorySettingsSnapshot.exists()) veeMemoryUseEnabled = memorySettingsSnapshot.val() !== false;
+      var adaptiveSettingsSnapshot = await veeAccountDb.ref("users/" + user.uid + "/settings/adaptiveLearning").once("value");
+      if (adaptiveSettingsSnapshot.exists()) veeAdaptiveLearningEnabled = adaptiveSettingsSnapshot.val() !== false;
+      var communicationProfileSnapshot = await veeAccountDb.ref("users/" + user.uid + "/settings/communicationProfile").once("value");
+      if (communicationProfileSnapshot.exists()) {
+        var cloudCommunicationProfile = communicationProfileSnapshot.val();
+        if (cloudCommunicationProfile && typeof cloudCommunicationProfile === "object") veeCommunicationProfile = veeSanitizeCommunicationProfile(cloudCommunicationProfile);
+      }
+      try {
+        localStorage.setItem("vee_ai_adaptive_learning", String(veeAdaptiveLearningEnabled));
+        localStorage.setItem("vee_ai_communication_profile_v1", JSON.stringify(veeCommunicationProfile));
+      } catch (e) {}
+
       var memoryData = memorySnapshot.val() || {};
       veeMemories = Object.keys(memoryData).map(function(id) {
         var item = memoryData[id];
@@ -2766,6 +2792,91 @@
         button.addEventListener("click", function() { veeDeleteMemory(button.getAttribute("data-memory-id")); });
       });
     }
+    function veeSanitizeCommunicationProfile(profile) {
+      var p = profile && typeof profile === "object" ? profile : {};
+      var signals = Array.isArray(p.languageSignals) ? p.languageSignals.filter(function(x){return typeof x==="string";}).slice(0,5) : [];
+      return {
+        messageCount:Math.max(0,Math.min(10000,Number(p.messageCount)||0)),
+        averageLength:["short","medium","long","unknown"].includes(p.averageLength)?p.averageLength:"unknown",
+        tone:["casual","formal","mixed","still learning"].includes(p.tone)?p.tone:"still learning",
+        languageSignals:signals,
+        formatting:["short paragraphs","detailed paragraphs","lists often","mixed","still learning"].includes(p.formatting)?p.formatting:"still learning",
+        emojiUse:["frequent","occasional","rare","unknown"].includes(p.emojiUse)?p.emojiUse:"unknown",
+        updatedAtMs:Math.max(0,Number(p.updatedAtMs)||0)
+      };
+    }
+
+    function veeBuildCommunicationProfile(message, history) {
+      var samples = (Array.isArray(history)?history:[]).filter(function(item){return item&&item.role==="user"&&typeof item.content==="string";}).slice(-24).map(function(item){return item.content;});
+      if (message) samples.push(String(message));
+      samples = samples.slice(-25);
+      var joined = samples.join(" ");
+      var words = joined.trim().split(/\\s+/).filter(Boolean);
+      var avg = samples.length ? Math.round(samples.reduce(function(total,item){return total+item.length;},0)/samples.length) : 0;
+      var lower = joined.toLowerCase();
+      var pidgin = /\\b(na|dey|abi|wetin|wahala|abeg|oya|sha|sef|una|make i|no be)\\b/.test(lower);
+      var yoruba = /\\b(bawo ni|ẹ ṣe|se daadaa|mo fẹ|ẹ jọ|ọ̀rọ̀)\\b/.test(lower);
+      var igbo = /\\b(kedu|biko|ndewo|ọ dị|anyị|daalu)\\b/.test(lower);
+      var hausa = /\\b(sannu|yaya|lafiya|na gode|don Allah|ina kwana)\\b/.test(lower);
+      var signals = [];
+      if(pidgin)signals.push("Nigerian Pidgin");
+      if(yoruba)signals.push("Yoruba");
+      if(igbo)signals.push("Igbo");
+      if(hausa)signals.push("Hausa");
+      if(/[a-z]/i.test(joined))signals.push("English");
+      var casualCount=(lower.match(/\\b(lol|lmao|bro|guy|omo|chai|lolz|😂|😭)\\b/g)||[]).length;
+      var formalCount=(lower.match(/\\b(please|kindly|regarding|therefore|request|professional)\\b/g)||[]).length;
+      var emojiCount=(joined.match(/[\\u{1F300}-\\u{1FAFF}]/gu)||[]).length;
+      var paragraphCount=(joined.match(/\\n/g)||[]).length;
+      var listCount=(joined.match(/(^|\\n)\\s*(?:[-*•]|\\d+[.)])\\s/gm)||[]).length;
+      var profile={
+        messageCount:samples.length,
+        averageLength:avg<70?"short":avg<240?"medium":"long",
+        tone:casualCount>formalCount+1?"casual":formalCount>casualCount+1?"formal":"mixed",
+        languageSignals:signals,
+        formatting:listCount>=3?"lists often":paragraphCount>samples.length?"detailed paragraphs":"mixed",
+        emojiUse:emojiCount>=5?"frequent":emojiCount>=1?"occasional":"rare",
+        updatedAtMs:Date.now()
+      };
+      return veeSanitizeCommunicationProfile(profile);
+    }
+
+    function veeSaveCommunicationProfile(profile) {
+      veeCommunicationProfile = veeSanitizeCommunicationProfile(profile);
+      try { localStorage.setItem("vee_ai_communication_profile_v1", JSON.stringify(veeCommunicationProfile)); } catch (e) {}
+      if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady && veeAdaptiveLearningEnabled) {
+        veeAccountDb.ref("users/" + veeCurrentUser.uid + "/settings/communicationProfile").set(veeCommunicationProfile).catch(function(error){console.error("Communication profile sync failed:",error);});
+      }
+    }
+
+    async function veeSetAdaptiveLearning(enabled) {
+      veeAdaptiveLearningEnabled = !!enabled;
+      try { localStorage.setItem("vee_ai_adaptive_learning", String(veeAdaptiveLearningEnabled)); } catch (e) {}
+      var status = document.getElementById("adaptiveStatus");
+      if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
+        try { await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/settings/adaptiveLearning").set(veeAdaptiveLearningEnabled); }
+        catch (error) {
+          veeAdaptiveLearningEnabled = !veeAdaptiveLearningEnabled;
+          var toggle = document.getElementById("settingsAdaptiveToggle");
+          if (toggle) toggle.checked = veeAdaptiveLearningEnabled;
+          if (status) status.textContent = "Your learning preference could not be synced. Please try again.";
+          return;
+        }
+      }
+      if (status) status.textContent = veeAdaptiveLearningEnabled ? "Learning is on. Vee-AI will adapt from your future messages." : "Learning is off. Your communication profile will not be updated or used.";
+    }
+
+    async function veeResetAdaptiveProfile() {
+      veeCommunicationProfile = { messageCount:0, averageLength:"unknown", tone:"still learning", languageSignals:[], formatting:"still learning", emojiUse:"unknown", updatedAtMs:0 };
+      try { localStorage.removeItem("vee_ai_communication_profile_v1"); } catch (e) {}
+      if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb && veeAccountSyncReady) {
+        try { await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/settings/communicationProfile").remove(); }
+        catch (error) { var status=document.getElementById("adaptiveStatus");if(status)status.textContent="Could not reset the cloud profile. Please try again.";return; }
+      }
+      var status=document.getElementById("adaptiveStatus");
+      if(status)status.textContent="Your learned communication style has been reset.";
+    }
+
     async function veeSetMemoryUse(enabled) {
       veeMemoryUseEnabled = !!enabled;
       try { localStorage.setItem("vee_ai_memory_use", String(veeMemoryUseEnabled)); } catch (e) {}
@@ -3545,6 +3656,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
             history: contextHistory,
             selectedModel: veeSelectedModel,
             selectedLanguage: veeSelectedLanguage,
+            communicationProfile: veeAdaptiveLearningEnabled ? veeBuildCommunicationProfile(message, contextHistory) : null,
             memory: veeMemoryUseEnabled ? veeMemories.slice(0, 20).map(function(item) {
               return { title:item.title, content:item.content, category:item.category };
             }) : []
@@ -3553,6 +3665,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
         var data = await res.json().catch(function () { return {}; });
         if (!res.ok) throw new Error(data.error || "Vee-AI could not complete the response.");
         var reply = data.reply || "Chai, small network blink! Try send am again.";
+        if (veeAdaptiveLearningEnabled) veeSaveCommunicationProfile(veeBuildCommunicationProfile(message, contextHistory));
 
         thinkingRow.remove();
         veeAppendMessage(reply, "bot");
