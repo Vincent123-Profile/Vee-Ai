@@ -155,9 +155,9 @@ exports.handler = async () => {
       const startParts = String(schedule.time).split(":").map(Number);
       const currentMinute = currentParts[0] * 60 + currentParts[1];
       const startMinute = startParts[0] * 60 + startParts[1];
-      const elapsedMinutes = (currentMinute - startMinute + 1440) % 1440;
+      const elapsedMinutes = currentMinute - startMinute;
       const intervalMinutes = intervalHours * 60;
-      if (elapsedMinutes % intervalMinutes !== 0 || !days.includes(clock.day)) continue;
+      if (elapsedMinutes < 0 || elapsedMinutes % intervalMinutes !== 0 || !days.includes(clock.day)) continue;
 
       const runKey = "content_" + clock.date.replace(/-/g,"") + "_" + clock.time.replace(":","");
       const userRef = db.ref("privateBusinessAutomation/" + uid);
