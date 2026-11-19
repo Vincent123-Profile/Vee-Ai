@@ -64,33 +64,36 @@ async function linkTelegramAccount(token, chat, code, db) {
   const now = Date.now();
   let lookupState = "unknown";
   const initialSnapshot = await codeRef.once("value");
+  const initialRecord = initialSnapshot.val();
   console.log("Vee-AI Telegram link code lookup:", JSON.stringify({
     hashPrefix: codeHash.slice(0, 12),
-    recordExists: initialSnapshot.exists(),
+    recordExists: Boolean(initialRecord),
     databaseHost: (() => { try { return new URL(process.env.FIREBASE_DATABASE_URL || "https://vee-ai-e745e-default-rtdb.firebaseio.com").host; } catch (_) { return "invalid"; } })(),
     netlifyContext: process.env.CONTEXT || "unknown",
     branch: process.env.BRANCH || "unknown"
   }));
-  const claim = await codeRef.transaction(current => {
-    if (!current) {
-      lookupState = "missing";
-      return;
-    }
-    if (Number(current.expiresAtMs || 0) <= now) {
+  if (!initialRecord) {
+    lookupState = "missing";
+  }
+  const claim = initialRecord ? await codeRef.transaction(current => {
+    // The Admin SDK may first invoke the updater with a null local value.
+    // Use the verified read immediately above as the initial transaction value.
+    const record = current || initialRecord;
+    if (Number(record.expiresAtMs || 0) <= now) {
       lookupState = "expired";
       return;
     }
-    if (current.usedAtMs) {
+    if (record.usedAtMs) {
       lookupState = "already_used";
       return;
     }
-    if (!current.uid) {
+    if (!record.uid) {
       lookupState = "missing_uid";
       return;
     }
     lookupState = "valid";
-    return Object.assign({}, current, { usedAtMs: now });
-  });
+    return Object.assign({}, record, { usedAtMs: now });
+  }, undefined, false) : { committed: false, snapshot: null };
   const link = claim.snapshot && claim.snapshot.val();
   if (!claim.committed || !link || !link.uid) {
     console.error("Vee-AI Telegram link lookup failed:", JSON.stringify({
