@@ -59,6 +59,7 @@ Configure these under Netlify environment variables. Never commit their values t
 | `VISITOR_TOKEN_SECRET` | Random secret of at least 32 characters for signed visitor tokens |
 | `IP_HASH_SECRET` | Existing secret used to create network fingerprints |
 | `GROQ_API_KEY` | Existing chat service credential |\n| `GROQ_MODEL` | Optional single Groq model ID. Defaults to `openai/gpt-oss-20b`. No automatic model fallback is used. |
+| `BUSINESS_AUTOMATION_ENCRYPTION_KEY` | Base64-encoded 32-byte key for encrypting opted-in background business profiles. Keep only in Netlify environment variables. |
 
 Keep the service-account JSON only in Netlify environment variables.
 
@@ -85,6 +86,20 @@ The development branch includes a user-owned business profile vault.
 - Business text import currently supports TXT, Markdown and CSV files, up to 20 KB per file and 50 KB total. Imported text is included in the encrypted profile. PDF and Word extraction are not implemented yet.
 
 This is client-side encrypted storage, not end-to-end encryption for AI processing. Server-side AI generation requires the user to explicitly provide the selected plaintext context. Telegram reminders, automated content delivery and email/document integrations are not implemented by this stage.
+
+## Optional background business processing
+
+The feature branch adds an explicit opt-in endpoint for scheduled business content preparation.
+
+- Background processing is off by default.
+- A verified signed-in user must unlock their private vault, tick the approval box, and select Enable.
+- The browser sends the selected profile over HTTPS to the authenticated Netlify function. The function encrypts the profile with AES-256-GCM before writing it to `privateBusinessAutomation/{uid}/encryptedProfile`.
+- The encryption key is a separate Netlify environment variable, `BUSINESS_AUTOMATION_ENCRYPTION_KEY`, containing base64 for exactly 32 random bytes. Generate a value locally with `openssl rand -base64 32`. Never commit or share the value.
+- Firebase client rules deny direct reads and writes to both `privateBusinessAutomation` and its rate-limit path. The function uses Firebase Admin SDK.
+- The admin dashboard does not query this path. Firebase project owners and anyone with access to the Netlify service credentials and encryption secret remain trusted infrastructure administrators.
+- Disable removes the encrypted automation profile and records revocation. The normal passphrase-encrypted vault is unchanged.
+- The endpoint saves permission and encrypted profile data only. It does not yet run a scheduler, generate content in the background, or send Telegram reminders. Those require a separate scheduled worker and a working Telegram account link.
+- When the worker is added, it must check current consent before every run, decrypt only for the task, send the minimum required context to Groq, and stop immediately after revocation.
 
 ## Admin dashboard
 
