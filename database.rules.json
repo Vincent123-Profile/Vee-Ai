@@ -6,6 +6,14 @@
       ".read": false,
       ".write": false
     },
+    "visitorStats": {
+      ".read": false,
+      ".write": false
+    },
+    "visitorRateLimits": {
+      ".read": false,
+      ".write": false
+    },
     "users": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
