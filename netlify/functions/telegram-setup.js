@@ -15,7 +15,17 @@ exports.handler = async event => {
   if (event.httpMethod !== "POST") return json(405, { error: "Use POST." });
   const secret = (process.env.TELEGRAM_WEBHOOK_SECRET || "").trim();
   const supplied = event.headers && (event.headers["x-setup-key"] || event.headers["X-Setup-Key"]);
-  if (!matches(supplied, secret)) return json(401, { error: "Unauthorized." });
+  if (!matches(supplied, secret)) return json(401, {
+    error: "Unauthorized.",
+    diagnostic: {
+      configuredSecretPresent: Boolean(secret),
+      configuredSecretLength: secret.length,
+      receivedHeaderPresent: typeof supplied === "string" && supplied.length > 0,
+      receivedHeaderLength: typeof supplied === "string" ? supplied.length : 0,
+      deployContext: process.env.CONTEXT || "unknown",
+      branch: process.env.BRANCH || "unknown"
+    }
+  });
 
   const token = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
   const baseUrl = (process.env.DEPLOY_PRIME_URL || process.env.URL || "").replace(/\/$/, "");
