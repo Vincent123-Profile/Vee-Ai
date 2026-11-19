@@ -1417,6 +1417,107 @@
     @media(max-width:480px){.explore-grid{grid-template-columns:1fr;gap:9px}.explore-card{min-height:0;padding:14px}.explore-card span:last-child{font-size:12px}}
 
   
+
+/* Business Workspace responsive form layout */
+#businessWorkspaceModal{
+  align-items:flex-start;
+  justify-content:center;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding: max(10px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling:touch;
+}
+#businessWorkspaceModal .modal-panel{
+  box-sizing:border-box;
+  width:min(100%,760px);
+  max-width:760px;
+  max-height:none !important;
+  min-width:0;
+  height:auto;
+  flex:0 0 auto;
+  overflow:visible !important;
+  margin:auto;
+  padding:clamp(14px,3vw,24px);
+}
+#businessWorkspaceModal .modal-head{width:100%;min-width:0;gap:10px}
+#businessWorkspaceModal .modal-head h2{min-width:0;overflow-wrap:anywhere}
+#businessWorkspaceModal #businessVaultFields,
+#businessWorkspaceModal #businessVaultFields .finance-section{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+#businessWorkspaceModal #businessVaultFields label{
+  display:block;
+  width:100%;
+  margin:14px 0 6px;
+  font-size:clamp(13px,3.5vw,15px);
+  line-height:1.4;
+  font-weight:650;
+  overflow-wrap:anywhere;
+}
+#businessWorkspaceModal #businessVaultFields input:not([type="file"]),
+#businessWorkspaceModal #businessVaultFields textarea,
+#businessWorkspaceModal #businessVaultFields select{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  margin:0;
+  padding:12px 13px;
+  border:1px solid var(--glass-border);
+  border-radius:11px;
+  background:var(--glass-surface);
+  color:var(--text-primary);
+  font:inherit;
+  font-size:16px;
+  line-height:1.45;
+}
+#businessWorkspaceModal #businessVaultFields textarea{
+  min-height:88px;
+  resize:vertical;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+#businessWorkspaceModal #businessVaultFields input[type="file"]{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  font:inherit;
+  font-size:14px;
+}
+#businessWorkspaceModal #businessVaultFields .account-copy{
+  overflow-wrap:anywhere;
+  line-height:1.55;
+}
+#businessWorkspaceModal .content-studio-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  width:100%;
+}
+#businessWorkspaceModal .content-studio-actions button{
+  max-width:100%;
+  min-width:0;
+}
+@media(max-width:600px){
+  #businessWorkspaceModal{padding:8px 8px max(12px,env(safe-area-inset-bottom))}
+  #businessWorkspaceModal .modal-panel{
+    width:100%;
+    border-radius:18px;
+    padding:15px;
+    gap:12px;
+  }
+  #businessWorkspaceModal #businessVaultFields label{margin-top:12px}
+  #businessWorkspaceModal #businessVaultFields input:not([type="file"]),
+  #businessWorkspaceModal #businessVaultFields textarea,
+  #businessWorkspaceModal #businessVaultFields select{font-size:16px}
+  #businessWorkspaceModal .content-studio-actions button{flex:1 1 100%}
+}
+
 .finance-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0}
 .finance-stat{padding:13px;border:1px solid var(--glass-border);border-radius:13px;background:var(--glass-surface);min-width:0}
 .finance-stat strong{display:block;font-size:clamp(15px,2vw,21px);overflow-wrap:anywhere}.finance-stat span{font-size:11px;color:var(--text-secondary)}
