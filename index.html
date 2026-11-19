@@ -1904,7 +1904,10 @@
       <div class="planner-summary"><div class="planner-stat"><strong id="plannerTotal">0</strong><span>Total tasks</span></div><div class="planner-stat"><strong id="plannerOpen">0</strong><span>Open</span></div><div class="planner-stat"><strong id="plannerDone">0</strong><span>Completed</span></div></div>
       <form class="planner-form" id="plannerForm" onsubmit="veeAddPlannerTask(event)">
         <input id="plannerTitle" maxlength="120" placeholder="What do you need to do?" required>
-        <input id="plannerDue" type="date" aria-label="Due date">
+        <label for="plannerDue" class="account-copy">Task date</label>
+        <input id="plannerDue" type="date" aria-label="Task date">
+        <label for="plannerDueTime" class="account-copy">Reminder time, your device local time</label>
+        <input id="plannerDueTime" type="time" aria-label="Reminder time">
         <textarea id="plannerNotes" maxlength="500" placeholder="Add notes (optional)"></textarea>
         <button class="send-btn" type="submit">Add task</button>
       </form>
@@ -1918,7 +1921,7 @@
         </div>
         <button class="send-btn" type="submit">Save reminder schedule</button>
       </form>
-      <p class="account-copy" id="plannerReminderStatus" role="status" aria-live="polite">Choose a time and one or more days. Reminders run while Vee-AI is open.</p>
+      <p class="account-copy" id="plannerReminderStatus" role="status" aria-live="polite">Enable reminders and link Telegram. Individual task reminders are sent automatically at the saved date and time, even when the website is closed. Times use your device time zone.</p>
       <div class="planner-filters" role="group" aria-label="Filter tasks"><button type="button" class="planner-filter active" data-planner-filter="all">All</button><button type="button" class="planner-filter" data-planner-filter="open">Open</button><button type="button" class="planner-filter" data-planner-filter="done">Completed</button></div>
       <div id="plannerTaskList" aria-live="polite"><div class="home-empty">Your tasks will appear here.</div></div>
       <p class="account-copy" id="plannerStatus" role="status" aria-live="polite"></p>
@@ -2503,7 +2506,7 @@
       if (Object.keys(cloudPlannerTasks).length) {
         veePlannerTasks = Object.keys(cloudPlannerTasks).map(function(id) {
           var task = cloudPlannerTasks[id];
-          return task && typeof task === "object" ? { id:id, title:String(task.title || "").slice(0,120), notes:String(task.notes || "").slice(0,500), dueDate:String(task.dueDate || ""), done:task.done === true, createdAtMs:Number(task.createdAtMs || Date.now()), updatedAtMs:Number(task.updatedAtMs || Date.now()) } : null;
+          return task && typeof task === "object" ? { id:id, title:String(task.title || "").slice(0,120), notes:String(task.notes || "").slice(0,500), dueDate:String(task.dueDate || ""), dueTime:String(task.dueTime || ""), timeZone:String(task.timeZone || veeLocalTimeZone()), done:task.done === true, createdAtMs:Number(task.createdAtMs || Date.now()), updatedAtMs:Number(task.updatedAtMs || Date.now()) } : null;
         }).filter(Boolean).slice(0,200);
       } else if (veePlannerTasks.length) {
         var initialPlannerData = {};
@@ -2954,7 +2957,7 @@
       }
     }
     function veePlannerTaskData(task) {
-      return { title:String(task.title || "").slice(0,120), notes:String(task.notes || "").slice(0,500), dueDate:String(task.dueDate || ""), done:task.done === true, createdAtMs:Number(task.createdAtMs || Date.now()), updatedAtMs:Number(task.updatedAtMs || Date.now()) };
+      return { title:String(task.title || "").slice(0,120), notes:String(task.notes || "").slice(0,500), dueDate:String(task.dueDate || ""), dueTime:String(task.dueTime || ""), timeZone:String(task.timeZone || veeLocalTimeZone()).slice(0,80), done:task.done === true, createdAtMs:Number(task.createdAtMs || Date.now()), updatedAtMs:Number(task.updatedAtMs || Date.now()) };
     }
     async function veePersistPlannerTask(task) {
       try {
@@ -2984,7 +2987,7 @@
         list.innerHTML = '<div class="home-empty">No tasks in this view. Add a task above to get started.</div>';
       } else {
         list.innerHTML = tasks.map(function(task) {
-          return '<div class="planner-task ' + (task.done ? 'done' : '') + '"><input type="checkbox" data-planner-toggle="' + veeEscapeHtml(task.id) + '" ' + (task.done ? 'checked' : '') + ' aria-label="Mark task complete"><div class="planner-task-main"><div class="planner-task-title">' + veeEscapeHtml(task.title) + '</div>' + (task.notes ? '<div class="planner-task-notes">' + veeEscapeHtml(task.notes) + '</div>' : '') + '<div class="planner-task-meta">' + (task.dueDate ? 'Due ' + veeEscapeHtml(task.dueDate) : 'No due date') + '</div></div><button type="button" class="planner-task-delete" data-planner-delete="' + veeEscapeHtml(task.id) + '">Delete</button></div>';
+          return '<div class="planner-task ' + (task.done ? 'done' : '') + '"><input type="checkbox" data-planner-toggle="' + veeEscapeHtml(task.id) + '" ' + (task.done ? 'checked' : '') + ' aria-label="Mark task complete"><div class="planner-task-main"><div class="planner-task-title">' + veeEscapeHtml(task.title) + '</div>' + (task.notes ? '<div class="planner-task-notes">' + veeEscapeHtml(task.notes) + '</div>' : '') + '<div class="planner-task-meta">' + (task.dueDate ? 'Due ' + veeEscapeHtml(task.dueDate) + (task.dueTime ? ' at ' + veeEscapeHtml(task.dueTime) : '') : 'No due date') + '</div></div><button type="button" class="planner-task-delete" data-planner-delete="' + veeEscapeHtml(task.id) + '">Delete</button></div>';
         }).join("");
         list.querySelectorAll("[data-planner-toggle]").forEach(function(input) {
           input.addEventListener("change",function(){veeTogglePlannerTask(input.getAttribute("data-planner-toggle"),input.checked);});
@@ -3002,8 +3005,13 @@
       var title = document.getElementById("plannerTitle").value.trim();
       var notes = document.getElementById("plannerNotes").value.trim();
       var dueDate = document.getElementById("plannerDue").value;
+      var dueTime = document.getElementById("plannerDueTime").value;
       if (!title || title.length > 120 || notes.length > 500) return;
-      var task = { id:"task_" + Date.now() + "_" + Math.random().toString(36).slice(2,8), title:title, notes:notes, dueDate:dueDate, done:false, createdAtMs:Date.now(), updatedAtMs:Date.now() };
+      if (dueTime && !dueDate) {
+        document.getElementById("plannerStatus").textContent = "Choose a task date before setting a reminder time.";
+        return;
+      }
+      var task = { id:"task_" + Date.now() + "_" + Math.random().toString(36).slice(2,8), title:title, notes:notes, dueDate:dueDate, dueTime:dueTime, timeZone:veeLocalTimeZone(), done:false, createdAtMs:Date.now(), updatedAtMs:Date.now() };
       veePlannerTasks.unshift(task);
       var saved = await veePersistPlannerTask(task);
       if (!saved) {
@@ -3012,7 +3020,7 @@
         return;
       }
       document.getElementById("plannerForm").reset();
-      document.getElementById("plannerStatus").textContent = "Task saved.";
+      document.getElementById("plannerStatus").textContent = dueTime ? "Task saved. Reminder set for " + dueDate + " at " + dueTime + " (" + task.timeZone + ")." : "Task saved.";
       veeRenderPlanner();
     }
     async function veeTogglePlannerTask(id, checked) {
