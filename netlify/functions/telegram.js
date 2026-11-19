@@ -305,7 +305,7 @@ exports.handler = async event => {
         const openTasks = Object.entries(tasks).filter(([, task]) => task && task.done !== true)
           .sort((a,b) => String(a[1].dueDate || "9999").localeCompare(String(b[1].dueDate || "9999"))).slice(0,12);
         const reply = openTasks.length
-          ? "Your open Vee-AI Planner tasks:\n\n" + openTasks.map(([id,task],index) => (index+1) + ". " + String(task.title || "Untitled task").slice(0,120) + (task.dueDate ? "\n   Due: " + String(task.dueDate) : "")).join("\n\n")
+          ? "Your open Vee-AI Planner tasks:\n\n" + openTasks.map(([id,task],index) => (index+1) + ". " + String(task.title || "Untitled task").slice(0,120) + (task.dueDate ? "\n   Due: " + String(task.dueDate) + (task.dueTime ? " at " + String(task.dueTime) : "") : "")).join("\n\n")
           : "You have no open Planner tasks.";
         await sendMessage(token, chat.id, reply);
       }
