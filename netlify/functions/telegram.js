@@ -182,8 +182,8 @@ exports.handler = async event => {
       await sendMessage(token, chat.id, "Welcome to Vee-AI. 👋\n\nI'm your personal AI assistant. Send me a message to get started.\n\nYour Telegram chat is being set up. Account linking and shared website memory will be added in the next connection step.");
       return json(200, { ok: true });
     }
-    if (/^\/link(?:@\\w+)?(?:\\s|$)/i.test(text)) {
-      const match = text.match(/^\/link(?:@\\w+)?\\s+([A-Fa-f0-9]{10})$/i);
+    if (/^\/link(?:@\w+)?(?:\s|$)/i.test(text)) {
+      const match = text.match(/^\/link(?:@\w+)?\s+([A-Fa-f0-9]{10})$/i);
       if (!match) {
         await sendMessage(token, chat.id, "To link your account, open Vee-AI Settings, generate a Telegram link code, then send /link followed by the code.");
       } else {
