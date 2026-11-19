@@ -1,5 +1,5 @@
 [functions."business-automation-scheduler"]
-  schedule = "0 */3 * * *"
+  schedule = "* * * * *"
 
 [functions."planner-reminder-scheduler"]
   schedule = "* * * * *"
