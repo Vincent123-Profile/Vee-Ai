@@ -3020,7 +3020,7 @@
         return;
       }
       document.getElementById("plannerForm").reset();
-      document.getElementById("plannerStatus").textContent = dueTime ? "Task saved. Reminder set for " + dueDate + " at " + dueTime + " (" + task.timeZone + ")." : "Task saved.";
+      document.getElementById("plannerStatus").textContent = dueTime ? "Task saved. Reminder set for " + dueDate + " at " + dueTime + " (" + task.timeZone + "). Automatic Telegram delivery requires a verified account, linked Telegram and enabled reminders." : "Task saved.";
       veeRenderPlanner();
     }
     async function veeTogglePlannerTask(id, checked) {
