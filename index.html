@@ -2818,7 +2818,7 @@
       var yoruba = /\b(bawo ni|ẹ ṣe|se daadaa|mo fẹ|ẹ jọ|ọ̀rọ̀)\b/.test(lower);
       var igbo = /\b(kedu|biko|ndewo|ọ dị|anyị|daalu)\b/.test(lower);
       var hausa = /\b(sannu|yaya|lafiya|na gode|don Allah|ina kwana)\b/.test(lower);
-      var signals = previous.languageSignals.slice();
+      var signals = samples.length >= 3 ? [] : previous.languageSignals.slice();
       if(pidgin && !signals.includes("Nigerian Pidgin"))signals.push("Nigerian Pidgin");
       if(yoruba && !signals.includes("Yoruba"))signals.push("Yoruba");
       if(igbo && !signals.includes("Igbo"))signals.push("Igbo");
