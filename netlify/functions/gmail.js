@@ -509,7 +509,7 @@ exports.handler = async event => {
         const fresh=await refreshAccessToken(user.uid,db,saved,accountId);
         const settingsSnapshot=await db.ref("users/"+user.uid+"/emailIntelligenceSettings").once("value");
         const settings=settingsSnapshot.val()||{};
-        const emails=await syncMessages(user.uid,db,fresh,accountId,0,settings.scanMode||"all_inbox",settings.timeZone||"UTC");
+        const emails=await syncMessages(user.uid,db,fresh,accountId,0,settings.scanMode||"all_inbox","Africa/Lagos");
         await target.child("status").update({connected:true,accountId,gmailAddress:fresh.gmailAddress||"",lastSyncAtMs:Date.now(),lastSyncCount:emails.length,securityAlertCount:emails.filter(item=>item.riskLevel!=="none").length});
         return json(200,{success:true,accountId,synced:emails.length,securityAlerts:emails.filter(item=>item.riskLevel!=="none").length});
       }
