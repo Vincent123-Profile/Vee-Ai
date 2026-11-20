@@ -4017,8 +4017,11 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       if(next)next.textContent=veeGuideIndex===veeGuideSlides.length-1?"Finish":"Next";
     }
     function veeGuideMove(direction) {
+      if(direction>0 && veeGuideIndex===veeGuideSlides.length-1){
+        veeFinishGuide();
+        return;
+      }
       veeGuideIndex=Math.max(0,Math.min(veeGuideSlides.length-1,veeGuideIndex+direction));
-      if(veeGuideIndex===veeGuideSlides.length-1){var next=document.getElementById("veeGuideNext");if(next)next.textContent="Finish";}
       veeRenderGuideSlide();
       var panel=document.querySelector("#veeWelcomeGuide .vee-guide-panel");if(panel)panel.scrollTop=0;
     }
