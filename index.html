@@ -2665,7 +2665,9 @@
           largeTransactionAlerts:checked("gmailLargeTransactionAlerts"),
           largeTransactionThreshold:Number((document.getElementById("gmailLargeTransactionThreshold")||{}).value||0)
         });
-        if(status)status.textContent="Your Telegram preferences have been saved.";
+        var verification=await veeGmailSettingsRequest({action:"get"});
+        if(!verification.settings||verification.settings.dailyReportTime!==data.settings.dailyReportTime||verification.settings.dailyReportEnabled!==data.settings.dailyReportEnabled)throw new Error("The server did not confirm the saved report settings. Please try again.");
+        if(status)status.textContent="Your Telegram preferences have been saved and verified on the server.";
       }catch(error){if(status)status.textContent=error.message||"Unable to save preferences.";}
     }
     async function veeOpenGmailIntelligence(){
@@ -2753,7 +2755,7 @@
         var reviewCount=0;
         allEmails.forEach(function(item){
           var tx=item.transaction;
-          if(item.categories&&item.categories.indexOf("bank")!==-1&&item.needsReview)reviewCount++;
+          if(item.categories&&item.categories.indexOf("bank")!==-1&&(item.needsReview||item.classificationConfidence!=="high"))reviewCount++;
           if(tx&&item.classificationConfidence==="high"&&!item.needsReview&&tx.amount>0&&tx.currency&&(tx.direction==="in"||tx.direction==="out")){
             var key=tx.currency;
             if(!totals[key])totals[key]={in:0,out:0};
@@ -2774,7 +2776,7 @@
         if(outNode)outNode.textContent=moneyText(moneyOut);
         if(reviewNode)reviewNode.textContent=String(reviewCount);
         var emails=allEmails;
-        if(veeGmailCurrentFilter==="needs_review")emails=emails.filter(function(item){return item.needsReview;});
+        if(veeGmailCurrentFilter==="needs_review")emails=emails.filter(function(item){return item.needsReview||(Array.isArray(item.categories)&&item.categories.indexOf("bank")!==-1&&item.classificationConfidence!=="high");});
         else if(veeGmailCurrentFilter!=="all")emails=emails.filter(function(item){return Array.isArray(item.categories)&&item.categories.indexOf(veeGmailCurrentFilter)!==-1;});
         list.textContent="";
         if(!emails.length){list.textContent="No messages in this category yet. Scan your Gmail inbox first.";return;}
@@ -2803,6 +2805,7 @@
               [tx.direction==="in"?"Sender":"Recipient",tx.counterparty||"Not identified in email"],
               ["Narration / purpose",tx.narration||"Not provided by the bank email"],
               ["Status",(tx.transactionStatus||"unknown").toUpperCase()],
+              ["Available balance",tx.availableBalance!==null&&tx.availableBalance!==undefined?(tx.availableBalanceCurrency||tx.currency||"Currency not stated")+" "+Number(tx.availableBalance).toLocaleString():"Not stated in email"],
               ["Transaction time",tx.transactionAtMs?new Date(tx.transactionAtMs).toLocaleString():"Not available"],
               ["Detection",item.classificationConfidence==="high"&&!item.needsReview?"High confidence":"Needs review"]
             ].forEach(function(pair){
