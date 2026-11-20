@@ -131,7 +131,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
       if(rows.length<(options.demoMode?60:30)){
         const eventTime=Number(tx.transactionAtMs||item.internalDate||0);
         const timeLabel=eventTime?new Intl.DateTimeFormat("en-NG",{timeZone:zone,dateStyle:"short",timeStyle:"short"}).format(new Date(eventTime)):"Time unavailable";
-        rows.push((tx.direction==="in"?"➕ ":"➖ ")+money(amount,currency)+" · "+html(item.bank&&item.bank.name||"Bank not identified")+" · "+html(timeLabel)+"\n"+redact(tx.counterparty||"Name unavailable",120)+" · "+redact(tx.narration||item.subject||item.snippet||"Description unavailable",180));
+        rows.push("<b>"+(tx.direction==="in"?"CREDIT":"DEBIT")+"</b> · "+money(amount,currency)+" · "+html(item.bank&&item.bank.name||"Bank not identified")+" · "+html(timeLabel)+"\n"+redact(tx.counterparty||"Name unavailable",120)+" · "+redact(tx.narration||item.subject||item.snippet||"Description unavailable",180));
       }
     }
   }
