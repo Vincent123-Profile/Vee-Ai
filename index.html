@@ -2646,17 +2646,29 @@
     }
     async function veeRunGmailDemoReportUntilDone(){
       var status=document.getElementById("gmailDemoReportStatus");
-      for(var attempt=0;attempt<12;attempt++){
+      for(var attempt=0;attempt<120;attempt++){
         try{
           var result=await veeGmailDemoReportRequest({action:"process"});
-          if(result.status==="sent"){if(status)status.textContent="Delivered successfully to your linked Telegram chat(s). Your full report is now in Telegram.";return;}
-          if(result.status==="failed"){if(status)status.textContent="Delivery failed. Check Telegram and schedule another demo.";return;}
-          if(result.status==="cancelled"){if(status)status.textContent="Demo report was cancelled.";return;}
-          if(result.status==="waiting"&&result.scheduledAtMs>Date.now()){await new Promise(function(resolve){setTimeout(resolve,Math.min(5000,result.scheduledAtMs-Date.now()));});}
-          else await new Promise(function(resolve){setTimeout(resolve,5000);});
-        }catch(error){if(status)status.textContent=error.message||"Unable to deliver the demo report.";return;}
+          if(result.status==="sent"){
+            if(status)status.textContent="Telegram confirmed delivery. Your full report is now in your linked chat(s).";
+            return;
+          }
+          if(result.status==="failed"){
+            if(status)status.textContent="Telegram did not confirm delivery. Please check the Telegram connection, then schedule another demo.";
+            return;
+          }
+          if(result.status==="cancelled"){
+            if(status)status.textContent="Demo report was cancelled.";
+            return;
+          }
+          if(status&&result.status==="waiting")status.textContent="Your report is scheduled. Waiting for the selected Nigeria time...";
+          else if(status&&result.status==="processing")status.textContent="Vee-AI is preparing or sending your report...";
+        }catch(error){
+          if(status)status.textContent="Delivery check temporarily failed. Retrying automatically...";
+        }
+        await new Promise(function(resolve){setTimeout(resolve,5000);});
       }
-      if(status)status.textContent="The report is still processing. Keep this page open and check Telegram.";
+      if(status)status.textContent="The demo delivery is still unconfirmed. Keep this page open and schedule another test if no Telegram report arrives.";
     }
     async function veeScheduleGmailDemoReport(){
       var status=document.getElementById("gmailDemoReportStatus");
