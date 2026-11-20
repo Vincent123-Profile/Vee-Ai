@@ -287,8 +287,9 @@ function classifyEmail(email) {
     needsReview
   };
 }
-async function syncMessages(uid, db, token, accountId) {
-  const list = await gmailFetch(token.accessToken,"messages?maxResults=30&includeSpamTrash=true");
+async function syncMessages(uid, db, token, accountId, afterMs) {
+  const query = Number(afterMs) > 0 ? "messages?maxResults=100&includeSpamTrash=true&q=" + encodeURIComponent("after:" + Math.max(0,Math.floor(Number(afterMs)/1000))) : "messages?maxResults=30&includeSpamTrash=true";
+  const list = await gmailFetch(token.accessToken,query);
   const messages = Array.isArray(list.messages) ? list.messages : [];
   const saved = [];
   for (let offset=0; offset<messages.length; offset+=5) {
@@ -340,8 +341,10 @@ exports.runScheduledScan = async (db, uid, accountId) => {
   const tokenSnapshot = await target.child("tokenVault").once("value");
   if (!tokenSnapshot.exists()) return { skipped:true, reason:"missing_token" };
   const saved = decrypt(uid, tokenSnapshot.val());
+  const statusSnapshot = await target.child("status").once("value");
+  const previousSyncAtMs = Number((statusSnapshot.val() || {}).lastSyncAtMs || 0);
   const fresh = await refreshAccessToken(uid, db, saved, accountId);
-  const emails = await syncMessages(uid, db, fresh, accountId);
+  const emails = await syncMessages(uid, db, fresh, accountId, previousSyncAtMs ? previousSyncAtMs - 10 * 60 * 1000 : 0);
   return { accountId, gmailAddress:fresh.gmailAddress||"", synced:emails.length, securityAlerts:emails.filter(item=>item.riskLevel!=="none").length };
 };
 
