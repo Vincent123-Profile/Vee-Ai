@@ -200,6 +200,7 @@ exports.handler=async()=>{
         if(!token||!chats.length)throw new Error("Selected Telegram chat is no longer linked.");
         const settings=(await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value")).val()||{};
         const result=await exports.sendDemoReport(db,token,chats,uid,settings,new Date(now),job.id);
+        if(result.status!=="sent"&&result.status!=="already_sent")throw new Error("Telegram delivery was not confirmed. Result: "+String(result.status||"unknown"));
         await jobRef.set(Object.assign({},job,{status:"sent",sentAtMs:Date.now(),resultStatus:result.status}));
       }catch(error){await jobRef.set(Object.assign({},job,{status:"failed",failedAtMs:Date.now(),failure:"Delivery failed. Check Telegram connection and retry."}));console.error("Vee-AI demo report failed:",clean(error.message,180));}
     }
