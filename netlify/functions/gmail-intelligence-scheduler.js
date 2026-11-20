@@ -86,7 +86,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
   const clock=localClock(zone,now);
   const current=clock.time.split(":").map(Number),wanted=String(settings.dailyReportTime).split(":").map(Number);
   const elapsed=(current[0]*60+current[1])-(wanted[0]*60+wanted[1]);
-  if(elapsed<0||elapsed>4)return;
+  if(elapsed<0)return;
   const snapshot=await db.ref("gmailConnections/"+uid).once("value"),root=snapshot.val()||{};
   const records=[];
   Object.entries(root.accounts||{}).forEach(([accountId,account])=>Object.values(account&&account.emails||{}).forEach(item=>records.push(Object.assign({accountId},item))));
