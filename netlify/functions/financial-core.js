@@ -111,6 +111,7 @@ function sanitiseState(state) {
 }
 
 async function verifyUser(event) {
+  database();
   const headers = event.headers || {};
   const header = headers.authorization || headers.Authorization || "";
   const match = /^Bearer\s+(.+)$/i.exec(header);
