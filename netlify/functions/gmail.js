@@ -161,13 +161,13 @@ function extractTransaction(email, text, timeZone) {
   const availableBalanceCurrency=balanceMatch?currencyCode(balanceMatch[1]||balanceMatch[0]):null;
   // Bank wording tags. Prefer the message body, then snippet, then subject.
   // Subject labels often conflict with the actual movement described in the alert.
-  const debitPattern=/\b(your transfer of|you transferred|you have transferred|you successfully transferred|successfully transferred|transfer to|sent to|you sent|you have sent|successfully sent|money sent|amount sent|outgoing transfer|funds transferred to|your account (?:has been|was) debited|debited from your account|account debited|withdrawn|withdrawal|cash withdrawal|pos purchase|pos transaction|card purchase|card transaction|payment made|paid to|you paid|purchase of|spent)\b/i;
+  const debitPattern=/\b(your transfer of|you transferred|you have transferred|you've transferred|you successfully transferred|successfully transferred|transfer to|sent to|you sent|you have sent|you've sent|successfully sent|money sent|amount sent|outgoing transfer|funds transferred to|your account (?:has been|was) debited|debited from your account|account debited|debit alert|debit transaction|withdrawn|withdrawal|cash withdrawal|pos purchase|pos transaction|card purchase|card transaction|payment made|paid to|you paid|purchase of|spent)\b/i;
   const creditPattern=/\b(your account (?:has been|was) credited|credited to your account|account credited|you received|you have received|received from|money received|amount received|funds received|incoming transfer|transfer from|deposit(?:ed)?|cash deposit|cashback received|refund(?:ed)?)\b/i;
   const bodyDebit=debitPattern.test(body),bodyCredit=creditPattern.test(body);
   const snippetDebit=debitPattern.test(String(email.snippet||"")),snippetCredit=creditPattern.test(String(email.snippet||""));
   const subjectDebit=debitPattern.test(String(email.subject||"")),subjectCredit=creditPattern.test(String(email.subject||""));
   const debit=bodyDebit||snippetDebit||subjectDebit,credit=bodyCredit||snippetCredit||subjectCredit;
-  const hasTransactionLanguage=debit||credit;
+  let hasTransactionLanguage=debit||credit;
   const evidenceFor=(pattern,value)=>{const match=String(value||"").match(pattern);return match?match[0]:"";};
   let direction=null,directionEvidence="",directionConflict=false;
   const layers=[
@@ -185,8 +185,8 @@ function extractTransaction(email, text, timeZone) {
   if(!direction&&!directionConflict){
     const subjectDebitLabel=/\b(debit alert|debit transaction)\b/i.test(String(email.subject||""));
     const subjectCreditLabel=/\b(credit alert|credit transaction)\b/i.test(String(email.subject||""));
-    if(subjectDebitLabel&&!subjectCreditLabel){direction="out";directionEvidence="Debit Alert (email subject)";}
-    else if(subjectCreditLabel&&!subjectDebitLabel){direction="in";directionEvidence="Credit Alert (email subject)";}
+    if(subjectDebitLabel&&!subjectCreditLabel){direction="out";directionEvidence="Debit Alert (email subject)";hasTransactionLanguage=true;}
+    else if(subjectCreditLabel&&!subjectDebitLabel){direction="in";directionEvidence="Credit Alert (email subject)";hasTransactionLanguage=true;}
     else if(subjectDebitLabel&&subjectCreditLabel){directionConflict=true;directionEvidence="Conflicting debit and credit labels in email subject";}
   }
   const explicitBodyDebit=bodyDebit&&!bodyCredit;
