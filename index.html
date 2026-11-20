@@ -1803,6 +1803,53 @@
     .vee-guide-panel h2{font-weight:900}
     @media(max-width:560px){.vee-guide-overlay{padding:10px}.vee-guide-panel{border-radius:20px;max-height:92dvh;padding:18px}.vee-manual-grid{grid-template-columns:1fr}.vee-guide-actions{flex-wrap:wrap}.vee-guide-actions button{flex:1}.vee-manual-card{padding:15px}.vee-manual-card p{font-size:14px;line-height:1.7}}
 
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled) {
+      width:100%;min-width:0;box-sizing:border-box;padding:18px;
+      border:1px solid var(--glass-border);border-radius:18px;
+      background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+      overflow:hidden;
+    }
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled) h3 {font-size:16px;font-weight:850;margin-bottom:7px}
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled) .account-copy {line-height:1.6;overflow-wrap:anywhere}
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled)>label,
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled)>div>label {
+      display:flex;align-items:flex-start;gap:11px;width:100%;min-width:0;
+      margin:12px 0;padding:12px;border:1px solid var(--glass-border);
+      border-radius:12px;background:rgba(255,255,255,.025);
+      font-size:13px;font-weight:650;line-height:1.45;overflow-wrap:anywhere;
+    }
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled) label input[type="checkbox"] {
+      flex:0 0 18px;width:18px;height:18px;margin:1px 0 0;accent-color:#f14c15;
+    }
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled)>label[for],
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled)>div>label[for] {
+      display:block;border:0;background:transparent;padding:4px 0 0;margin:12px 0 5px;
+    }
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled) input[type="time"],
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled) input[type="text"],
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled) input[type="number"] {
+      display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;
+      min-height:46px;padding:11px 13px;border:1px solid var(--glass-border);
+      border-radius:12px;background:var(--glass-surface);color:var(--text-primary);
+      font:inherit;font-size:15px;
+    }
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled) .content-studio-actions,
+    #gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled) .send-btn {width:100%;max-width:100%;min-width:0}
+    #gmailIntelligenceModal .finance-row {display:block;width:100%;min-width:0;box-sizing:border-box;overflow:hidden}
+    #gmailIntelligenceModal .finance-row-main {display:grid;gap:7px;width:100%;min-width:0}
+    #gmailIntelligenceModal .finance-row-main>span {line-height:1.5;overflow-wrap:anywhere;white-space:normal}
+    #gmailIntelligenceModal .gmail-transaction-heading {display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px;padding:12px;border-radius:12px;background:rgba(241,76,21,.075);border:1px solid rgba(241,76,21,.2)}
+    #gmailIntelligenceModal .gmail-direction {font-size:11px;font-weight:900;letter-spacing:.04em}
+    #gmailIntelligenceModal .gmail-direction.is-credit {color:#31c48d}
+    #gmailIntelligenceModal .gmail-direction.is-debit {color:#ff8057}
+    #gmailIntelligenceModal .gmail-direction.is-review {color:#e9b65b}
+    #gmailIntelligenceModal .gmail-transaction-amount {font-size:17px;font-weight:900;overflow-wrap:anywhere}
+    #gmailIntelligenceModal .gmail-transaction-details {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+    #gmailIntelligenceModal .gmail-transaction-detail {display:grid;gap:4px;min-width:0;padding:10px;border:1px solid var(--glass-border);border-radius:10px;background:var(--glass-surface)}
+    #gmailIntelligenceModal .gmail-transaction-detail span {font-size:10px;color:var(--text-secondary);font-weight:700;text-transform:uppercase;letter-spacing:.035em}
+    #gmailIntelligenceModal .gmail-transaction-detail strong {font-size:12px;line-height:1.45;overflow-wrap:anywhere;white-space:normal}
+    @media(max-width:560px){#gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled){padding:13px}#gmailIntelligenceModal .gmail-transaction-details{grid-template-columns:1fr}#gmailIntelligenceModal .gmail-transaction-heading{align-items:flex-start;flex-direction:column}}
+
 </style>
 </head>
 <body>
@@ -2709,12 +2756,30 @@
           main.appendChild(title);main.appendChild(from);main.appendChild(snippet);main.appendChild(tags);
           if(item.transaction){
             var tx=item.transaction;
-            var txLine=document.createElement("span");
-            txLine.textContent="Transaction: "+(tx.amount&&tx.currency?tx.currency+" "+Number(tx.amount).toLocaleString():"Amount not confirmed")+" · "+(tx.direction==="in"?"Money in":tx.direction==="out"?"Money out":"Direction unclear")+" · "+(item.bank&&item.bank.name?item.bank.name:"Bank not identified")+" · Status: "+(tx.transactionStatus||"Needs review")+" · "+(item.classificationConfidence==="high"&&!item.needsReview?"High confidence":"Needs your review");
-            main.appendChild(txLine);
-            var txDetails=document.createElement("span");
-            txDetails.textContent="Name: "+(tx.counterparty||"Not identified")+" · Description: "+(tx.narration||"Not identified")+" · Time: "+(tx.transactionAtMs?new Date(tx.transactionAtMs).toLocaleTimeString():"Not available");
-            main.appendChild(txDetails);
+            var txLine=document.createElement("div");
+            txLine.className="gmail-transaction-heading";
+            var direction=document.createElement("strong");
+            direction.className="gmail-direction "+(tx.direction==="in"?"is-credit":tx.direction==="out"?"is-debit":"is-review");
+            direction.textContent=tx.direction==="in"?"MONEY IN · CREDIT":tx.direction==="out"?"MONEY OUT · DEBIT":"DIRECTION NEEDS REVIEW";
+            var amount=document.createElement("strong");
+            amount.className="gmail-transaction-amount";
+            amount.textContent=tx.amount&&tx.currency?tx.currency+" "+Number(tx.amount).toLocaleString():"Amount not confirmed";
+            txLine.appendChild(direction);txLine.appendChild(amount);main.appendChild(txLine);
+            var details=document.createElement("div");details.className="gmail-transaction-details";
+            [
+              ["Bank",item.bank&&item.bank.name?item.bank.name:"Not identified"],
+              [tx.direction==="in"?"Sender":"Recipient",tx.counterparty||"Not identified in email"],
+              ["Narration / purpose",tx.narration||"Not provided by the bank email"],
+              ["Status",(tx.transactionStatus||"unknown").toUpperCase()],
+              ["Transaction time",tx.transactionAtMs?new Date(tx.transactionAtMs).toLocaleString():"Not available"],
+              ["Detection",item.classificationConfidence==="high"&&!item.needsReview?"High confidence":"Needs review"]
+            ].forEach(function(pair){
+              var detail=document.createElement("div");detail.className="gmail-transaction-detail";
+              var label=document.createElement("span");label.textContent=pair[0];
+              var value=document.createElement("strong");value.textContent=pair[1];
+              detail.appendChild(label);detail.appendChild(value);details.appendChild(detail);
+            });
+            main.appendChild(details);
           }
           if(item.flightDetails){
             var fl=item.flightDetails;
