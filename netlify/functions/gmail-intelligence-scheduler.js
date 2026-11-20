@@ -158,7 +158,7 @@ exports.handler=async()=>{
   const db=database(),now=Date.now(),claimId=crypto.randomBytes(16).toString("hex");
   const lockRef=db.ref("gmailIntelligenceScheduler/lock");
   const lock=await lockRef.transaction(current=>{
-    if(current&&current.claimedAtMs&&now-Number(current.claimedAtMs)<4*60*1000)return;
+    if(current&&current.claimedAtMs&&now-Number(current.claimedAtMs)<50*1000)return;
     return {claimId,claimedAtMs:now};
   },undefined,false);
   if(!lock.committed)return {statusCode:200,body:JSON.stringify({ok:true,skipped:"another scan is running"})};
