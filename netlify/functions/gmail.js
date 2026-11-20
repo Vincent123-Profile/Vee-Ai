@@ -153,6 +153,40 @@ function extractFlightDetails(email) {
     bookingReference:bookingReference
   };
 }
+function identifyBank(email) {
+  const from=String(email.from||"").toLowerCase();
+  const subject=String(email.subject||"").toLowerCase();
+  const body=String(email.bodyText||"").slice(0,5000).toLowerCase();
+  const source=from+" "+subject+" "+body;
+  const banks=[
+    ["First Bank",/firstbank|first bank|firstbanknigeria/],
+    ["Kuda",/kuda\.com|kuda bank|kuda/],
+    ["OPay",/opay|o-?pay/],
+    ["PalmPay",/palmpay|palm pay/],
+    ["Moniepoint",/moniepoint/],
+    ["Access Bank",/accessbank|access bank/],
+    ["GTBank",/gtbank|guaranty trust|gt\s*bank/],
+    ["UBA",/ubagroup|united bank for africa|\buba\b/],
+    ["Zenith Bank",/zenithbank|zenith bank/],
+    ["Wema Bank",/wemabank|wema bank/],
+    ["Sterling Bank",/sterlingbank|sterling bank/],
+    ["Fidelity Bank",/fidelitybank|fidelity bank/],
+    ["FCMB",/fcmb|first city monument/],
+    ["Union Bank",/unionbank|union bank/],
+    ["Stanbic IBTC",/stanbic|ibtc/],
+    ["Polaris Bank",/polarisbank|polaris bank/],
+    ["Ecobank",/ecobank|eco bank/],
+    ["Jaiz Bank",/jaizbank|jaiz bank/],
+    ["Providus Bank",/providus/],
+    ["Citibank",/citibank|citi bank/]
+  ];
+  const matches=banks.filter(entry=>entry[1].test(from+" "+subject));
+  if(matches.length===1)return {name:matches[0][0],confidence:"high"};
+  if(matches.length>1)return {name:"Multiple bank names detected",confidence:"review"};
+  const bodyMatches=banks.filter(entry=>entry[1].test(body));
+  if(bodyMatches.length===1)return {name:bodyMatches[0][0],confidence:"medium"};
+  return {name:"Bank not identified",confidence:"review"};
+}
 function classifyEmail(email) {
   const subject = String(email.subject || "");
   const from = String(email.from || "");
@@ -162,6 +196,7 @@ function classifyEmail(email) {
   const categories = [];
   const evidence = [];
   const transaction = extractTransaction(email,text);
+  const bank = identifyBank(email);
   const senderAddress = (from.match(/<([^>]+)>/) || [])[1] || from;
   const senderDomain = (senderAddress.split("@").pop() || "").replace(/[>]/g,"").toLowerCase();
   const knownBankNames = /\b(access bank|first bank|gtbank|guaranty trust|uba|united bank for africa|zenith bank|moniepoint|opay|palmpay|kuda|wema|sterling bank|fidelity bank|fcmb|union bank|providus|stanbic|polaris bank|ecobank|jaiz bank|citibank|chase|barclays|hsbc|natwest|lloyds|revolut|wise)\b/i;
@@ -233,6 +268,7 @@ function classifyEmail(email) {
     riskLevel:suspicious.length >= 2 ? "high" : suspicious.length ? "review" : "none",
     evidence:evidence.slice(0,8),
     transaction:categories.includes("bank") ? transaction : null,
+    bank:categories.includes("bank") ? bank : null,
     classificationConfidence:categories.includes("bank") ? (strongTransaction && financialContext ? "high" : "review") : categories.includes("flight") || categories.includes("job") ? "medium" : "low",
     needsReview
   };
@@ -268,7 +304,7 @@ async function syncMessages(uid, db, token, accountId) {
         unread:email.unread, labels:email.labels, categories:analysis.categories,
         linkCount:analysis.linkCount, securityFindings:analysis.securityFindings,
         riskLevel:analysis.riskLevel, evidence:analysis.evidence,
-        transaction:analysis.transaction, classificationConfidence:analysis.classificationConfidence,
+        transaction:analysis.transaction, bank:analysis.bank, classificationConfidence:analysis.classificationConfidence,
         needsReview:analysis.needsReview, flightDetails:analysis.categories.includes("flight") ? extractFlightDetails(email) : null,
         analysedAtMs:Date.now()
       };
@@ -392,7 +428,7 @@ exports.handler = async event => {
     }
     if (body.action === "disconnect") {
       if (!accountId) return json(400,{error:"Choose an email account to disconnect."});
-      if (accountId==="legacy") await root.remove(); else await root.child("accounts/"+accountId).remove();
+      if (accountId==="legacy") await Promise.all([root.child("tokenVault").remove(),root.child("status").remove(),root.child("emails").remove()]); else await root.child("accounts/"+accountId).remove();
       return json(200,{success:true,accountId});
     }
     if (body.action === "sync" || body.action === "list") {
