@@ -2240,7 +2240,7 @@
         <select id="gmailScanMode"><option value="all_inbox">Scan inbox and classify messages. Keep existing email intelligence features.</option><option value="financial_only">Store financial emails only during future scans. Existing saved emails are kept.</option></select>
         <label for="gmailReportTimeZone">Device time zone</label>
         <input id="gmailReportTimeZone" type="text" readonly value="Detecting device time zone..." aria-readonly="true">
-        <p class="account-copy">Vee-AI detects your device time zone and uses it for future report delivery.</p>
+        <p class="account-copy">Daily reports always use Nigeria time (Africa/Lagos, UTC+1), regardless of your device settings.</p>
         <div style="display:grid;gap:8px;margin-top:12px">
           <label style="display:flex;gap:10px;align-items:center"><input id="gmailReportShowTransactions" type="checkbox" checked style="width:auto"> Include transaction details in daily reports</label>
           <label style="display:flex;gap:10px;align-items:center"><input id="gmailReportShowExceptions" type="checkbox" checked style="width:auto"> Include failed, reversed, refunded, pending and review counts</label>
@@ -2629,8 +2629,7 @@
     }
     async function veeLoadGmailNotificationSettings(){
       var zone=document.getElementById("gmailReportTimeZone");
-      var deviceZone="UTC";
-      try{deviceZone=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";}catch(_){}
+      var deviceZone="Africa/Lagos";
       if(zone)zone.value=deviceZone;
       try{
         var data=await veeGmailSettingsRequest({action:"get"}),settings=data.settings||{};
@@ -2654,7 +2653,7 @@
           action:"save",
           dailyReportEnabled:checked("gmailDailyReportEnabled"),
           dailyReportTime:(document.getElementById("gmailDailyReportTime")||{}).value||"21:00",
-          timeZone:(document.getElementById("gmailReportTimeZone")||{}).value||"UTC",
+          timeZone:"Africa/Lagos",
           scanMode:(document.getElementById("gmailScanMode")||{}).value||"all_inbox",
           reportShowTransactions:checked("gmailReportShowTransactions"),
           reportShowExceptions:checked("gmailReportShowExceptions"),
