@@ -104,6 +104,22 @@ function collectText(payload, output) {
   if (payload.mimeType === "text/plain" && payload.body && payload.body.data) output.push(decodeBody(payload.body.data));
   (payload.parts || []).forEach(part => collectText(part,output));
 }
+function transactionDateFromText(source,email){
+  const value=String(source||"");
+  const iso=value.match(/\\b(20\\d{2})-(\\d{1,2})-(\\d{1,2})(?:[T ,]+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?\\s*(AM|PM)?)?/i);
+  const local=value.match(/\\b(\\d{1,2})[\\/-](\\d{1,2})[\\/-](20\\d{2}|\\d{2})(?:[ ,]+(?:at\\s*)?(\\d{1,2}):(\\d{2})(?::(\\d{2}))?\\s*(AM|PM)?)?/i);
+  let parts=null;
+  if(iso)parts={year:Number(iso[1]),month:Number(iso[2]),day:Number(iso[3]),hour:Number(iso[4]||0),minute:Number(iso[5]||0),second:Number(iso[6]||0),ampm:iso[7]};
+  else if(local)parts={year:Number(local[3].length===2?"20"+local[3]:local[3]),month:Number(local[2]),day:Number(local[1]),hour:Number(local[4]||0),minute:Number(local[5]||0),second:Number(local[6]||0),ampm:local[7]};
+  if(parts&&parts.year>=2000&&parts.month>=1&&parts.month<=12&&parts.day>=1&&parts.day<=31){
+    if(parts.ampm){const pm=String(parts.ampm).toUpperCase()==="PM";parts.hour=parts.hour%12+(pm?12:0);}
+    if(parts.hour<=23&&parts.minute<=59&&parts.second<=59){
+      const date=new Date(parts.year,parts.month-1,parts.day,parts.hour,parts.minute,parts.second);
+      if(date.getFullYear()===parts.year&&date.getMonth()===parts.month-1&&date.getDate()===parts.day)return date.getTime();
+    }
+  }
+  return Number(email.internalDate||Date.parse(email.date)||0)||null;
+}
 function extractTransaction(email, text) {
   const source = (email.subject + " " + email.snippet + " " + email.bodyText).replace(/\s+/g," ");
   const amountPatterns = [
@@ -150,7 +166,7 @@ function extractTransaction(email, text) {
     transactionStatus,
     counterparty,
     narration,
-    transactionAtMs:Number(email.internalDate||Date.parse(email.date)||0)||null,
+    transactionAtMs:transactionDateFromText(source,email),
     reference:reference.slice(0,80),
     hasTransactionLanguage,
     ambiguousDirection:debit && credit
@@ -221,7 +237,7 @@ function classifyEmail(email) {
   const senderLooksFinancial = knownBankNames.test(from) || /\b(bank|banking|alerts?|transaction|payments?)\b/i.test(senderDomain);
   const transactionSubject = /\b(debit|credit|transaction|transfer|withdrawal|deposit|payment|pos alert|card alert|account alert|statement)\b/i.test(subject);
   const strongTransaction = transaction.hasTransactionLanguage && transaction.amount !== null && !!transaction.direction;
-  const financialContext = senderLooksFinancial && (transactionSubject || strongTransaction);
+  const financialContext = (senderLooksFinancial && (transactionSubject || strongTransaction)) || (transactionSubject && strongTransaction);
   if ((email.labels || []).includes("SPAM")) {
     categories.push("spam");
     evidence.push("Gmail marked this message as spam");
