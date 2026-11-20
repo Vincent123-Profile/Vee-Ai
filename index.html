@@ -2651,7 +2651,7 @@
           if(item.transaction){
             var tx=item.transaction;
             var txLine=document.createElement("span");
-            txLine.textContent="Transaction: "+(tx.amount&&tx.currency?tx.currency+" "+Number(tx.amount).toLocaleString():"Amount not confirmed")+" · "+(tx.direction==="in"?"Money in":tx.direction==="out"?"Money out":"Direction unclear")+" · "+(item.classificationConfidence==="high"&&!item.needsReview?"High confidence":"Needs your review");
+            txLine.textContent="Transaction: "+(tx.amount&&tx.currency?tx.currency+" "+Number(tx.amount).toLocaleString():"Amount not confirmed")+" · "+(tx.direction==="in"?"Money in":tx.direction==="out"?"Money out":"Direction unclear")+" · "+(item.bank&&item.bank.name?item.bank.name:"Bank not identified")+" · "+(item.classificationConfidence==="high"&&!item.needsReview?"High confidence":"Needs your review");
             main.appendChild(txLine);
           }
           if(item.flightDetails){
