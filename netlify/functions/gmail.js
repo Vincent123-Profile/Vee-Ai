@@ -125,8 +125,8 @@ function extractTransaction(email, text) {
       amount = null;
     }
   }
-  const debit = /\b(debited|debit alert|withdrawn|withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|paid to)\b/i.test(source);
-  const credit = /\b(credited|credit alert|received from|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?)\b/i.test(source);
+  const debit = /\b(debited|debit(?:ed)? alert|debit transaction|withdrawn|withdrawal|cash withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|you sent|you paid|paid to|money sent|amount sent|outgoing transfer|funds transferred to)\b/i.test(source);
+  const credit = /\b(credited|credit(?:ed)? alert|credit transaction|received from|you received|money received|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?|incoming transfer|amount received)\b/i.test(source);
   const hasTransactionLanguage = debit || credit;
   let direction = debit && !credit ? "out" : credit && !debit ? "in" : null;
   const transactionStatus = /\b(failed|unsuccessful|declined|not successful|could not be completed)\b/i.test(source) ? "failed" : /\b(reversed|reversal)\b/i.test(source) ? "reversed" : /\b(refunded|refund)\b/i.test(source) ? "refunded" : /\b(pending|processing|awaiting confirmation)\b/i.test(source) ? "pending" : hasTransactionLanguage ? "successful" : "unknown";
@@ -135,8 +135,10 @@ function extractTransaction(email, text) {
     else if(/\b(?:credit|credited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:credit|credited)\b/i.test(source))direction="out";
     else direction=null;
   }
-  const partyMatch = source.match(/\b(?:sender(?: name)?|from|beneficiary(?: name)?|recipient|receiver)\s*[:#-]?\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance)\b|[,.;]|$)/i);
-  const narrationMatch = source.match(/\b(?:narration|description|remarks?|payment details|transfer details|purpose)\s*[:#-]\s*(.{2,180}?)(?=\s+(?:available balance|transaction reference|reference|session id|account number|account no|date|time)\s*[:#-]|$)/i);
+  const partyMatch = source.match(/\b(?:sender(?: name)?|sender's name|from|beneficiary(?: name)?|beneficiary|recipient(?: name)?|receiver(?: name)?|account name)\s*[:#-]?\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
+    || source.match(/\b(?:transfer to|sent to|paid to|beneficiary)\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
+    || source.match(/\b(?:received from|transfer from)\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i);
+  const narrationMatch = source.match(/\b(?:narration|description|remarks?|payment details|transfer details|purpose|transaction details|remark)\s*[:#-]\s*(.{2,180}?)(?=\s+(?:available balance|transaction reference|reference|session id|account number|account no|date|time|beneficiary|recipient|sender|amount)\s*[:#-]|$)/i);
   const counterparty = partyMatch ? partyMatch[1].trim().slice(0,100) : "";
   const narration = narrationMatch ? narrationMatch[1].trim().slice(0,180) : "";
   const reference = (source.match(/\b(?:transaction|trans(?:action)?|session|reference|ref)(?:\s*(?:id|no|number))?\s*[:#-]?\s*([A-Z0-9-]{6,})/i) || [])[1] || "";
