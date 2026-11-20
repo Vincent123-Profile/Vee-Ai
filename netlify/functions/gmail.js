@@ -99,10 +99,24 @@ function decodeBody(data) {
   try { return Buffer.from(String(data).replace(/-/g,"+").replace(/_/g,"/"),"base64").toString("utf8"); }
   catch (_) { return ""; }
 }
-function collectText(payload, output) {
+function decodeHtmlText(value) {
+  return String(value||"")
+    .replace(/<script\b[\s\S]*?<\/script>/gi," ")
+    .replace(/<style\b[\s\S]*?<\/style>/gi," ")
+    .replace(/<(?:br|\/p|\/div|\/tr|\/li|\/td|\/th|\/h[1-6])\b[^>]*>/gi,"\n")
+    .replace(/<[^>]*>/g," ")
+    .replace(/&nbsp;|&#160;/gi," ")
+    .replace(/&amp;/gi,"&").replace(/&lt;/gi,"<").replace(/&gt;/gi,">")
+    .replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'")
+    .replace(/&#(\d+);/g,(_,n)=>{const cp=Number(n);return cp>0&&cp<=0x10ffff?String.fromCodePoint(cp):" ";})
+    .replace(/&#x([0-9a-f]+);/gi,(_,n)=>{const cp=parseInt(n,16);return cp>0&&cp<=0x10ffff?String.fromCodePoint(cp):" ";})
+    .replace(/\s+/g," ").trim();
+}
+function collectText(payload, plainOutput, htmlOutput) {
   if (!payload) return;
-  if (payload.mimeType === "text/plain" && payload.body && payload.body.data) output.push(decodeBody(payload.body.data));
-  (payload.parts || []).forEach(part => collectText(part,output));
+  if (payload.mimeType === "text/plain" && payload.body && payload.body.data) plainOutput.push(decodeBody(payload.body.data));
+  if (payload.mimeType === "text/html" && payload.body && payload.body.data) htmlOutput.push(decodeHtmlText(decodeBody(payload.body.data)));
+  (payload.parts || []).forEach(part => collectText(part,plainOutput,htmlOutput));
 }
 function transactionDateFromText(source,email,timeZone){
   const value=String(source||"");
@@ -150,6 +164,10 @@ function extractTransaction(email, text, timeZone) {
   const debit=debitPattern.test(source),credit=creditPattern.test(source),bodyDebit=debitPattern.test(body),bodyCredit=creditPattern.test(body);
   const hasTransactionLanguage=debit||credit;
   let direction=bodyDebit&&!bodyCredit?"out":bodyCredit&&!bodyDebit?"in":debit&&!credit?"out":credit&&!debit?"in":null;
+  const explicitBodyDebit=/\b(?:your transfer of|you transferred|you have transferred|your account (?:has been|was) debited|debited from your account|you sent|transfer to|sent to|paid to|withdrawal|cash withdrawal)\b/i.test(body);
+  const explicitBodyCredit=/\b(?:your account (?:has been|was) credited|credited to your account|you received|received from|money received|incoming transfer|deposit(?:ed)?)\b/i.test(body);
+  if(explicitBodyDebit&&!explicitBodyCredit)direction="out";
+  else if(explicitBodyCredit&&!explicitBodyDebit)direction="in";
   const transactionStatus=/\b(failed|unsuccessful|declined|not successful|could not be completed)\b/i.test(source)?"failed":/\b(reversed|reversal)\b/i.test(source)?"reversed":/\b(refunded|refund)\b/i.test(source)?"refunded":/\b(pending|processing|awaiting confirmation)\b/i.test(source)?"pending":hasTransactionLanguage?"successful":"unknown";
   if(transactionStatus==="reversed"){if(/\b(?:debit|debited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:debit|debited)\b/i.test(source))direction="in";else if(/\b(?:credit|credited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:credit|credited)\b/i.test(source))direction="out";else direction=null;}
   const partyMatch=source.match(/\b(?:sender(?: name)?|sender's name|from|beneficiary(?: name)?|beneficiary|recipient(?: name)?|receiver(?: name)?|account name)\s*[:#-]?\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
@@ -311,8 +329,8 @@ async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZo
       if ((message.labelIds || []).includes("TRASH")) return null;
       const payload = message.payload || {};
       const headers = payload.headers || [];
-      const textParts = [];
-      collectText(payload,textParts);
+      const textParts = [], htmlParts = [];
+      collectText(payload,textParts,htmlParts);
       const email = {
         id:String(message.id),
         threadId:String(message.threadId || ""),
@@ -321,7 +339,7 @@ async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZo
         date:header(headers,"Date").slice(0,120),
         internalDate:Number(message.internalDate || 0),
         snippet:String(message.snippet || "").slice(0,1000),
-        bodyText:textParts.join("\n").replace(/<[^>]*>/g," ").replace(/\s+/g," ").slice(0,12000),
+        bodyText:(textParts.length?textParts:htmlParts).join("\n").replace(/\s+/g," ").slice(0,12000),
         unread:(message.labelIds || []).includes("UNREAD"),
         labels:(message.labelIds || []).filter(label => ["INBOX","UNREAD","IMPORTANT","STARRED","SPAM"].includes(label))
       };
