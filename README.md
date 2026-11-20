@@ -159,3 +159,20 @@ Firebase Console is not needed for routine visitor or conversation review.
 8. Clear browser site data to verify a fresh visitor ID is created.
 
 Production branch `main` is not changed by feature-branch commits.
+
+## Financial Intelligence foundation
+
+The first server-side financial data foundation is available at
+`netlify/functions/financial-core.js`.
+
+The endpoint requires a verified Firebase ID token and stores records under the
+server-protected Realtime Database path `financialIntelligence/{uid}`.
+Direct client reads and writes to this path are denied by
+`database.rules.json`.
+
+See [Financial Intelligence data foundation](docs/financial-intelligence-schema.md)
+for the current schema, API actions, safeguards and implementation limits.
+
+This foundation does not replace or migrate the existing
+`users/{uid}/finance` records. The existing Finance interface and Gmail
+transaction pipeline still require integration in later implementation stages.
