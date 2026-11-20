@@ -137,6 +137,8 @@ function extractTransaction(email, text) {
   }
   const partyMatch = source.match(/\b(?:sender(?: name)?|sender's name|from|beneficiary(?: name)?|beneficiary|recipient(?: name)?|receiver(?: name)?|account name)\s*[:#-]?\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
     || source.match(/\b(?:transfer to|sent to|paid to|beneficiary)\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
+    || source.match(/\byou sent\b.{0,45}?\bto\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
+    || source.match(/\byou paid\b.{0,45}?\bto\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
     || source.match(/\b(?:received from|transfer from)\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i);
   const narrationMatch = source.match(/\b(?:narration|description|remarks?|payment details|transfer details|purpose|transaction details|remark)\s*[:#-]\s*(.{2,180}?)(?=\s+(?:available balance|transaction reference|reference|session id|account number|account no|date|time|beneficiary|recipient|sender|amount)\s*[:#-]|$)/i);
   const counterparty = partyMatch ? partyMatch[1].trim().slice(0,100) : "";
