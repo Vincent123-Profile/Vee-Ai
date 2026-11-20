@@ -403,8 +403,14 @@ exports.handler = async event => {
         gmailAddress:String(profile.emailAddress).slice(0,254)
       };
       if (!tokenData.refreshToken) {
-        const previous = await db.ref("gmailConnections/" + stateRecord.uid + "/tokenVault").once("value");
-        if (previous.exists()) tokenData.refreshToken = decrypt(stateRecord.uid,previous.val()).refreshToken || "";
+        const userRoot=db.ref("gmailConnections/"+stateRecord.uid);
+        const previous=await userRoot.child("tokenVault").once("value");
+        if(previous.exists())tokenData.refreshToken=decrypt(stateRecord.uid,previous.val()).refreshToken||"";
+        if(!tokenData.refreshToken){
+          const accountsSnapshot=await userRoot.child("accounts").once("value");
+          const previousAccount=Object.values(accountsSnapshot.val()||{}).find(item=>item&&item.status&&String(item.status.gmailAddress||"").toLowerCase()===tokenData.gmailAddress.toLowerCase()&&item.tokenVault);
+          if(previousAccount)tokenData.refreshToken=decrypt(stateRecord.uid,previousAccount.tokenVault).refreshToken||"";
+        }
       }
       if (!tokenData.refreshToken) throw new Error("Google did not return offline access. Remove the app from Google Account connections and reconnect.");
       const proposedAccountId = /^[a-zA-Z0-9_-]{1,80}$/.test(String(stateRecord.accountId || "")) ? stateRecord.accountId : "mail_" + crypto.randomBytes(12).toString("hex");
