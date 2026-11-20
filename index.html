@@ -2168,6 +2168,25 @@
         <div class="finance-list" id="gmailEmailList" style="margin-top:12px"><div class="home-empty">Connect Gmail and scan your latest messages.</div></div>
       </div>
       <p class="finance-note">Security findings use initial rule-based indicators. A flagged email needs review. A clean result is not proof a message or link is safe. Links are analysed as text and are never opened automatically.</p>
+      <div class="finance-section" style="margin-top:18px">
+        <h3>Telegram alerts and reports</h3>
+        <p class="account-copy">Choose what Vee-AI sends to your linked Telegram account. Reports run in the background, even when this website is closed.</p>
+        <label style="display:flex;gap:10px;align-items:center"><input id="gmailDailyReportEnabled" type="checkbox" style="width:auto"> Send me a daily business email report</label>
+        <label for="gmailDailyReportTime">Daily report time</label>
+        <input id="gmailDailyReportTime" type="time" value="21:00">
+        <label for="gmailReportTimeZone">Your time zone</label>
+        <input id="gmailReportTimeZone" type="text" readonly>
+        <div style="display:grid;gap:9px;margin-top:12px">
+          <label style="display:flex;gap:10px;align-items:center"><input id="gmailAlertSecurity" type="checkbox" style="width:auto"> Immediate suspicious email and link alerts</label>
+          <label style="display:flex;gap:10px;align-items:center"><input id="gmailAlertFailed" type="checkbox" style="width:auto"> Immediate failed or reversed transaction alerts</label>
+          <label style="display:flex;gap:10px;align-items:center"><input id="gmailAlertEachTransaction" type="checkbox" style="width:auto"> Notify me about every detected transaction</label>
+          <label style="display:flex;gap:10px;align-items:center"><input id="gmailLargeTransactionAlerts" type="checkbox" style="width:auto"> Alert me about large transactions</label>
+          <label for="gmailLargeTransactionThreshold">Large transaction threshold (₦)</label>
+          <input id="gmailLargeTransactionThreshold" type="number" min="0" step="1000" placeholder="Example: 500000">
+        </div>
+        <div class="content-studio-actions" style="margin-top:14px"><button type="button" class="send-btn" onclick="veeSaveGmailNotificationSettings()">Save Telegram preferences</button></div>
+        <p id="gmailNotificationSettingsStatus" class="account-copy" role="status" aria-live="polite"></p>
+      </div>
     </div>
   </div>
 
@@ -2530,9 +2549,49 @@
       if(!response.ok)throw new Error(data.error||"Gmail request failed.");
       return data;
     }
+    async function veeGmailSettingsRequest(payload){
+      if(!veeCurrentUser||!veeCurrentUser.emailVerified)throw new Error("Sign in with a verified Vee-AI account first.");
+      var token=await veeCurrentUser.getIdToken(true);
+      var response=await fetch("/.netlify/functions/gmail-settings",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      var data=await response.json().catch(function(){return {};});
+      if(!response.ok)throw new Error(data.error||"Unable to load notification settings.");
+      return data;
+    }
+    async function veeLoadGmailNotificationSettings(){
+      var zone=document.getElementById("gmailReportTimeZone");
+      if(zone&&!zone.value)zone.value=(Intl.DateTimeFormat().resolvedOptions().timeZone||"Africa/Lagos");
+      try{
+        var data=await veeGmailSettingsRequest({action:"get"}),settings=data.settings||{};
+        var fields={gmailDailyReportEnabled:settings.dailyReportEnabled===true,gmailAlertSecurity:settings.alertSecurity===true,gmailAlertFailed:settings.alertFailedTransactions===true,gmailAlertEachTransaction:settings.alertEachTransaction===true,gmailLargeTransactionAlerts:settings.largeTransactionAlerts===true};
+        Object.keys(fields).forEach(function(id){var node=document.getElementById(id);if(node)node.checked=fields[id];});
+        var time=document.getElementById("gmailDailyReportTime");if(time&&settings.dailyReportTime)time.value=settings.dailyReportTime;
+        var threshold=document.getElementById("gmailLargeTransactionThreshold");if(threshold&&settings.largeTransactionThreshold)threshold.value=settings.largeTransactionThreshold;
+        if(zone&&settings.timeZone)zone.value=settings.timeZone;
+      }catch(error){var status=document.getElementById("gmailNotificationSettingsStatus");if(status)status.textContent=error.message;}
+    }
+    async function veeSaveGmailNotificationSettings(){
+      var status=document.getElementById("gmailNotificationSettingsStatus");
+      function checked(id){var node=document.getElementById(id);return !!(node&&node.checked);}
+      try{
+        if(status)status.textContent="Saving your Telegram preferences...";
+        var data=await veeGmailSettingsRequest({
+          action:"save",
+          dailyReportEnabled:checked("gmailDailyReportEnabled"),
+          dailyReportTime:(document.getElementById("gmailDailyReportTime")||{}).value||"21:00",
+          timeZone:(document.getElementById("gmailReportTimeZone")||{}).value||Intl.DateTimeFormat().resolvedOptions().timeZone||"Africa/Lagos",
+          alertSecurity:checked("gmailAlertSecurity"),
+          alertFailedTransactions:checked("gmailAlertFailed"),
+          alertEachTransaction:checked("gmailAlertEachTransaction"),
+          largeTransactionAlerts:checked("gmailLargeTransactionAlerts"),
+          largeTransactionThreshold:Number((document.getElementById("gmailLargeTransactionThreshold")||{}).value||0)
+        });
+        if(status)status.textContent="Your Telegram preferences have been saved.";
+      }catch(error){if(status)status.textContent=error.message||"Unable to save preferences.";}
+    }
     async function veeOpenGmailIntelligence(){
       veeOpenModal("gmailIntelligenceModal");
       await veeRefreshGmailStatus();
+      await veeLoadGmailNotificationSettings();
       var params=new URLSearchParams(window.location.search);
       var outcome=params.get("gmail");
       var status=document.getElementById("gmailIntelligenceStatus");
