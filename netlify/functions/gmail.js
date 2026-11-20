@@ -159,15 +159,31 @@ function extractTransaction(email, text, timeZone) {
   const balanceMatch=source.match(/(?:available balance|account balance|new balance|closing balance|balance)\s*(?:is|:|=|-)?\s*(NGN|₦|NAIRA|N|USD|\$|GBP|£|EUR|€)?\s*([\d,]+(?:\.\d{1,2})?)/i);
   const availableBalance=balanceMatch?Number(String(balanceMatch[2]).replace(/,/g,"")):null;
   const availableBalanceCurrency=balanceMatch?currencyCode(balanceMatch[1]||balanceMatch[0]):null;
-  const debitPattern=/\b(debited|debit(?:ed)? alert|debit transaction|withdrawn|withdrawal|cash withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|you sent|you paid|paid to|money sent|amount sent|outgoing transfer|funds transferred to|your transfer of|you transferred|your account has been debited|debited from your account|you have successfully transferred|transfer was successful|transfer is successful)\b/i;
-  const creditPattern=/\b(credited|credit(?:ed)? alert|credit transaction|received from|you received|money received|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?|incoming transfer|amount received|your account has been credited|credited to your account|you have received)\b/i;
-  const debit=debitPattern.test(source),credit=creditPattern.test(source),bodyDebit=debitPattern.test(body),bodyCredit=creditPattern.test(body);
+  // Bank wording tags. Prefer the message body, then snippet, then subject.
+  // Subject labels often conflict with the actual movement described in the alert.
+  const debitPattern=/\\b(your transfer of|you transferred|you have transferred|you successfully transferred|successfully transferred|transfer to|sent to|you sent|you have sent|successfully sent|money sent|amount sent|outgoing transfer|funds transferred to|your account (?:has been|was) debited|debited from your account|account debited|debit alert|debit transaction|withdrawn|withdrawal|cash withdrawal|pos purchase|pos transaction|card purchase|card transaction|payment made|paid to|you paid|purchase of|spent)\\b/i;
+  const creditPattern=/\\b(your account (?:has been|was) credited|credited to your account|account credited|credit alert|credit transaction|you received|you have received|received from|money received|amount received|funds received|incoming transfer|transfer from|deposit(?:ed)?|cash deposit|cashback received|refund(?:ed)?)\\b/i;
+  const bodyDebit=debitPattern.test(body),bodyCredit=creditPattern.test(body);
+  const snippetDebit=debitPattern.test(String(email.snippet||"")),snippetCredit=creditPattern.test(String(email.snippet||""));
+  const subjectDebit=debitPattern.test(String(email.subject||"")),subjectCredit=creditPattern.test(String(email.subject||""));
+  const debit=bodyDebit||snippetDebit||subjectDebit,credit=bodyCredit||snippetCredit||subjectCredit;
   const hasTransactionLanguage=debit||credit;
-  let direction=bodyDebit&&!bodyCredit?"out":bodyCredit&&!bodyDebit?"in":debit&&!credit?"out":credit&&!debit?"in":null;
-  const explicitBodyDebit=/\b(?:your transfer of|you transferred|you have transferred|your account (?:has been|was) debited|debited from your account|you sent|transfer to|sent to|paid to|withdrawal|cash withdrawal)\b/i.test(body);
-  const explicitBodyCredit=/\b(?:your account (?:has been|was) credited|credited to your account|you received|received from|money received|incoming transfer|deposit(?:ed)?)\b/i.test(body);
-  if(explicitBodyDebit&&!explicitBodyCredit)direction="out";
-  else if(explicitBodyCredit&&!explicitBodyDebit)direction="in";
+  const evidenceFor=(pattern,value)=>{const match=String(value||"").match(pattern);return match?match[0]:"";};
+  let direction=null,directionEvidence="",directionConflict=false;
+  const layers=[
+    {name:"email body",text:body,debit:bodyDebit,credit:bodyCredit},
+    {name:"email preview",text:String(email.snippet||""),debit:snippetDebit,credit:snippetCredit},
+    {name:"email subject",text:String(email.subject||""),debit:subjectDebit,credit:subjectCredit}
+  ];
+  for(const layer of layers){
+    if(!layer.debit&&!layer.credit)continue;
+    if(layer.debit&&layer.credit){directionConflict=true;directionEvidence="Conflicting credit and debit wording in "+layer.name;break;}
+    direction=layer.debit?"out":"in";
+    directionEvidence=(layer.debit?evidenceFor(debitPattern,layer.text):evidenceFor(creditPattern,layer.text))+" ("+layer.name+")";
+    break;
+  }
+  const explicitBodyDebit=bodyDebit&&!bodyCredit;
+  const explicitBodyCredit=bodyCredit&&!bodyDebit;
   const transactionStatus=/\b(failed|unsuccessful|declined|not successful|could not be completed)\b/i.test(source)?"failed":/\b(reversed|reversal)\b/i.test(source)?"reversed":/\b(refunded|refund)\b/i.test(source)?"refunded":/\b(pending|processing|awaiting confirmation)\b/i.test(source)?"pending":hasTransactionLanguage?"successful":"unknown";
   if(transactionStatus==="reversed"){if(/\b(?:debit|debited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:debit|debited)\b/i.test(source))direction="in";else if(/\b(?:credit|credited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:credit|credited)\b/i.test(source))direction="out";else direction=null;}
   const partyMatch=source.match(/\b(?:sender(?: name)?|sender's name|from|beneficiary(?: name)?|beneficiary|recipient(?: name)?|receiver(?: name)?|account name)\s*[:#-]?\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
@@ -177,7 +193,7 @@ function extractTransaction(email, text, timeZone) {
   const narrationMatch=source.match(/\b(?:narration|description|remarks?|payment details|transfer details|purpose|transaction details|remark)\s*[:#-]\s*(.{2,180}?)(?=\s+(?:available balance|transaction reference|reference|session id|account number|account no|date|time|beneficiary|recipient|sender|amount)\s*[:#-]|$)/i);
   const counterparty=partyMatch?partyMatch[1].trim().slice(0,100):"",narration=narrationMatch?narrationMatch[1].trim().slice(0,180):"";
   const reference=(source.match(/\b(?:transaction|trans(?:action)?|session|reference|ref)(?:\s*(?:id|no|number))?\s*[:#-]?\s*([A-Z0-9-]{6,})/i)||[])[1]||"";
-  return {amount,currency,direction,availableBalance:Number.isFinite(availableBalance)&&availableBalance>0?availableBalance:null,availableBalanceCurrency,transactionType:/\b(refund|refunded)\b/i.test(source)?"refund":direction==="in"?"income":direction==="out"?"expense":null,transactionStatus,counterparty,narration,transactionAtMs:transactionDateFromText(source,email,timeZone),reference:reference.slice(0,80),hasTransactionLanguage,ambiguousDirection:explicitBodyDebit&&!explicitBodyCredit?false:explicitBodyCredit&&!explicitBodyDebit?false:debit&&credit};
+  return {amount,currency,direction,directionTag:direction==="in"?"CREDIT":direction==="out"?"DEBIT":"REVIEW",directionEvidence,availableBalance:Number.isFinite(availableBalance)&&availableBalance>0?availableBalance:null,availableBalanceCurrency,transactionType:/\b(refund|refunded)\b/i.test(source)?"refund":direction==="in"?"income":direction==="out"?"expense":null,transactionStatus,counterparty,narration,transactionAtMs:transactionDateFromText(source,email,timeZone),reference:reference.slice(0,80),hasTransactionLanguage,ambiguousDirection:directionConflict};
 }
 function extractFlightDetails(email) {
   const source = email.subject + " " + email.snippet + " " + email.bodyText;
