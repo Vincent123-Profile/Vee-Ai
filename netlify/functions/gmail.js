@@ -407,7 +407,10 @@ exports.handler = async event => {
         if (previous.exists()) tokenData.refreshToken = decrypt(stateRecord.uid,previous.val()).refreshToken || "";
       }
       if (!tokenData.refreshToken) throw new Error("Google did not return offline access. Remove the app from Google Account connections and reconnect.");
-      const accountId = /^[a-zA-Z0-9_-]{1,80}$/.test(String(stateRecord.accountId || "")) ? stateRecord.accountId : "mail_" + crypto.randomBytes(12).toString("hex");
+      const proposedAccountId = /^[a-zA-Z0-9_-]{1,80}$/.test(String(stateRecord.accountId || "")) ? stateRecord.accountId : "mail_" + crypto.randomBytes(12).toString("hex");
+      const existingAccounts = await db.ref("gmailConnections/" + stateRecord.uid + "/accounts").once("value");
+      const existingMatch = Object.entries(existingAccounts.val() || {}).find(([,item]) => item && item.status && String(item.status.gmailAddress||"").toLowerCase() === tokenData.gmailAddress.toLowerCase());
+      const accountId = existingMatch ? existingMatch[0] : proposedAccountId;
       const accountRoot = db.ref("gmailConnections/" + stateRecord.uid + "/accounts/" + accountId);
       await accountRoot.update({tokenVault:encrypt(stateRecord.uid,tokenData),status:{connected:true,accountId,gmailAddress:tokenData.gmailAddress,connectedAtMs:Date.now(),scope:"gmail.readonly"}});
       await stateRef.remove();
