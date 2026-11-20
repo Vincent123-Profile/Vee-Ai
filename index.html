@@ -696,9 +696,7 @@
     .ai-mode-field select:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
     .ai-mode-caption{grid-column:1/-1;padding-left:7px;color:var(--text-muted);font-size:10px;line-height:1.4}
     @media(max-width:420px){.ai-mode-bar{gap:7px}.ai-mode-field select{font-size:11px;padding:0 8px}.ai-mode-field label{font-size:9px}}
-.privacy-footer{max-width:760px;margin:8px auto 0;padding:0 12px;color:var(--text-muted);font-size:10px;line-height:1.5;text-align:center}
-.privacy-inline{padding:10px 12px;border:1px solid var(--glass-border);border-radius:12px;background:var(--orange-soft);line-height:1.55}.privacy-inline strong{color:var(--orange)}.privacy-footer button{font:inherit;color:var(--orange);text-decoration:underline;text-underline-offset:2px}
-    /* Vee-AI launch animation and focused chat layout */
+.privacy-inline{padding:10px 12px;border:1px solid var(--glass-border);border-radius:12px;background:var(--orange-soft);line-height:1.55}.privacy-inline strong{color:var(--orange)}    /* Vee-AI launch animation and focused chat layout */
     .vee-launch-splash{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,rgba(241,76,21,.16),transparent 35%),#090909;color:#fff;opacity:1;visibility:visible;transition:opacity .45s ease,visibility .45s ease}
     .vee-launch-splash.leaving{opacity:0;visibility:hidden;pointer-events:none}
     .vee-launch-inner{display:flex;flex-direction:column;align-items:center;gap:19px;animation:veeLaunchRise 1.15s cubic-bezier(.22,1,.36,1) both}
@@ -1624,6 +1622,129 @@
       .chat-stream { padding-top: 8px; padding-bottom: 8px; }
       textarea#userInput { max-height: 84px; }
     }
+
+    /* Consistent primary and secondary action styling */
+    button { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+      outline: 2px solid rgba(241,76,21,.78);
+      outline-offset: 3px;
+    }
+    .composer-box {
+      align-items: center;
+      gap: 10px;
+      min-height: 62px;
+      padding: 8px 9px 8px 16px;
+    }
+    textarea#userInput {
+      display: block;
+      align-self: center;
+      min-height: 42px;
+      max-height: min(30dvh, 180px);
+      height: auto;
+      padding: 9px 0;
+      line-height: 1.5;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .composer-controls {
+      align-self: center;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0;
+    }
+    .composer-controls .send-btn,
+    .send-btn {
+      box-sizing: border-box;
+      display: inline-flex;
+      flex: 0 0 auto !important;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: auto !important;
+      min-width: 84px !important;
+      max-width: 112px;
+      height: 44px;
+      min-height: 44px;
+      padding: 0 15px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 15px;
+      background: linear-gradient(135deg, #ff713f 0%, #f14c15 58%, #d83a0b 100%);
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+      box-shadow: 0 5px 16px rgba(241,76,21,.24), inset 0 1px 0 rgba(255,255,255,.2);
+      transform: none;
+    }
+    .send-btn:hover { background: linear-gradient(135deg,#ff865c 0%,#f65a24 58%,#df4212 100%); transform: translateY(-1px); }
+    .send-btn:active { transform: scale(.97); }
+    .send-btn:disabled { opacity: .62; cursor: wait; transform: none; }
+    .send-btn svg { display: block; flex: 0 0 16px; width: 16px; height: 16px; }
+    #gmailIntelligenceModal .content-studio-actions {
+      display: flex !important;
+      align-items: stretch;
+      flex-wrap: wrap;
+      gap: 10px;
+      width: 100%;
+    }
+    #gmailIntelligenceModal #gmailConnectBtn {
+      flex: 1 1 190px !important;
+      width: auto !important;
+      min-width: min(100%, 190px) !important;
+      max-width: 100%;
+      min-height: 48px;
+      padding: 0 20px;
+      border-radius: 14px;
+      font-size: 14px;
+    }
+    #gmailIntelligenceModal .account-secondary {
+      flex: 1 1 150px;
+      min-height: 46px;
+      padding: 0 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 13px;
+      background: rgba(255,255,255,.045);
+      color: var(--text-primary);
+      font: 700 12px "Plus Jakarta Sans",sans-serif;
+      transition: border-color .2s ease, background .2s ease, color .2s ease;
+    }
+    #gmailIntelligenceModal .account-secondary:hover {
+      border-color: rgba(241,76,21,.45);
+      background: var(--orange-soft);
+      color: var(--orange);
+    }
+    #gmailIntelligenceModal #gmailCategoryFilters .account-secondary {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+    @media (max-width: 767px) {
+      .composer-box { min-height: 58px; padding: 7px 8px 7px 13px; gap: 7px; }
+      textarea#userInput { min-height: 40px; max-height: min(28dvh, 140px); padding: 8px 0; }
+      .composer-controls { gap: 5px; }
+      .composer-controls .send-btn, .send-btn {
+        min-width: 78px !important;
+        height: 42px;
+        min-height: 42px;
+        padding: 0 12px;
+        border-radius: 14px;
+        font-size: 13px;
+      }
+      .composer-controls .send-btn svg { width: 15px; height: 15px; flex-basis: 15px; }
+      #gmailIntelligenceModal .content-studio-actions { flex-direction: column; }
+      #gmailIntelligenceModal #gmailConnectBtn,
+      #gmailIntelligenceModal .account-secondary { width: 100%; min-width: 0 !important; flex: 1 1 auto; }
+    }
+    @media (max-width: 380px) {
+      .composer-box { padding-left: 10px; padding-right: 7px; gap: 5px; }
+      .composer-controls .send-btn, .send-btn { min-width: 72px !important; padding: 0 9px; gap: 5px; }
+    }
 </style>
 </head>
 <body>
@@ -1835,7 +1956,6 @@
           </button>
         </div>
       </div>
-      <div class="privacy-footer" role="note">Your privacy matters. Review how Vee-AI protects your information and connected services. <button type="button" class="act-btn" onclick="veeOpenModal('privacyModal')">Privacy and security details</button></div>
     </div>
   </div>
 
