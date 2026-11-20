@@ -380,7 +380,7 @@ exports.runScheduledScan = async (db, uid, accountId) => {
   const fresh = await refreshAccessToken(uid, db, saved, accountId);
   const settingsSnapshot = await db.ref("users/" + uid + "/emailIntelligenceSettings").once("value");
   const settings = settingsSnapshot.val() || {};
-  const emails = await syncMessages(uid, db, fresh, accountId, previousSyncAtMs ? previousSyncAtMs - 10 * 60 * 1000 : 0, settings.scanMode || "all_inbox", settings.timeZone || "UTC");
+  const emails = await syncMessages(uid, db, fresh, accountId, previousSyncAtMs ? previousSyncAtMs - 10 * 60 * 1000 : 0, settings.scanMode || "all_inbox", "Africa/Lagos");
   return { accountId, gmailAddress:fresh.gmailAddress||"", synced:emails.length, securityAlerts:emails.filter(item=>item.riskLevel!=="none").length };
 };
 
