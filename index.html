@@ -1759,6 +1759,35 @@
       .composer-box { padding-left: 10px; padding-right: 7px; gap: 5px; }
       .composer-controls .send-btn, .send-btn { min-width: 72px !important; padding: 0 9px; gap: 5px; }
     }
+
+    /* First-run onboarding and permanent Help Centre */
+    .vee-guide-overlay{position:fixed;inset:0;z-index:12000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+    .vee-guide-overlay.open{display:flex}
+    .vee-guide-panel{width:min(100%,620px);max-height:min(88dvh,820px);overflow:auto;border:1px solid var(--glass-border);border-radius:26px;background:var(--panel-bg,var(--bg-card));box-shadow:0 28px 90px rgba(0,0,0,.48);padding:clamp(18px,4vw,30px);color:var(--text-primary)}
+    .vee-guide-top,.vee-guide-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .vee-guide-kicker{font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--orange)}
+    .vee-guide-progress{height:5px;border-radius:99px;background:var(--glass-border);overflow:hidden;margin:15px 0 24px}
+    .vee-guide-progress>span{display:block;height:100%;width:0;background:linear-gradient(90deg,#f14c15,#ff9a55);border-radius:inherit;transition:width .2s ease}
+    .vee-guide-icon{width:62px;height:62px;border-radius:20px;display:grid;place-items:center;background:rgba(241,76,21,.13);color:var(--orange);font-size:29px;margin-bottom:18px}
+    .vee-guide-panel h2{font-size:clamp(24px,5vw,34px);line-height:1.12;margin:0 0 12px;letter-spacing:-.035em}
+    .vee-guide-panel p{color:var(--text-secondary);font-size:14px;line-height:1.65;margin:0 0 14px}
+    .vee-guide-points{display:grid;gap:10px;margin:18px 0 24px}
+    .vee-guide-point{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--glass-border);border-radius:14px;background:var(--glass-surface)}
+    .vee-guide-point span:first-child{color:var(--orange);font-weight:900}
+    .vee-guide-point span:last-child{font-size:13px;line-height:1.5;color:var(--text-primary)}
+    .vee-guide-actions{padding-top:16px;border-top:1px solid var(--glass-border)}
+    .vee-guide-actions button{min-height:42px;padding:0 17px;border-radius:13px;font-weight:750;cursor:pointer}
+    .vee-guide-primary{border:0;background:linear-gradient(135deg,#f14c15,#ff7138);color:white}
+    .vee-guide-secondary{border:1px solid var(--glass-border);background:var(--glass-surface);color:var(--text-primary)}
+    .vee-guide-link{border:0;background:transparent;color:var(--text-secondary);font-size:12px}
+    .vee-help-entry{font-size:12px!important}
+    .vee-manual-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .vee-manual-card{padding:14px;border:1px solid var(--glass-border);border-radius:15px;background:var(--glass-surface)}
+    .vee-manual-card h3{font-size:14px;margin:0 0 7px;color:var(--text-primary)}
+    .vee-manual-card p{font-size:12.5px;margin:0;color:var(--text-secondary);line-height:1.55}
+    .vee-manual-note{border-left:3px solid var(--orange);padding:10px 12px;background:rgba(241,76,21,.07);border-radius:0 10px 10px 0}
+    @media(max-width:560px){.vee-guide-overlay{padding:10px}.vee-guide-panel{border-radius:20px;max-height:92dvh;padding:18px}.vee-manual-grid{grid-template-columns:1fr}.vee-guide-actions{flex-wrap:wrap}.vee-guide-actions button{flex:1}}
+
 </style>
 </head>
 <body>
@@ -1806,6 +1835,7 @@
         <button type="button" id="homeNavBtn" class="active" onclick="veeShowHomeView()">Home</button>
         <button type="button" id="chatNavBtn" onclick="veeNewChat()">AI Chat</button>
         <button type="button" onclick="window.location.assign('games.html')">Games</button>
+        <button type="button" onclick="veeOpenManual()" class="vee-help-entry">Help &amp; Manual</button>
       </nav>
       <div class="nav-actions">
         <button type="button" class="icon-btn" onclick="veeNewChat()" title="New Chat">
@@ -2182,6 +2212,49 @@
     </div>
   </div>
 
+  <!-- First-visit welcome guide -->
+  <div class="vee-guide-overlay" id="veeWelcomeGuide" role="dialog" aria-modal="true" aria-labelledby="veeGuideTitle">
+    <div class="vee-guide-panel">
+      <div class="vee-guide-top"><span class="vee-guide-kicker">Your Vee-AI quick tour</span><button type="button" class="icon-btn" aria-label="Close guide" onclick="veeFinishGuide()">✕</button></div>
+      <div class="vee-guide-progress"><span id="veeGuideProgress"></span></div>
+      <div id="veeGuideSlide"></div>
+      <div class="vee-guide-actions"><button type="button" class="vee-guide-link" onclick="veeFinishGuide()">Skip guide</button><div style="display:flex;gap:8px"><button type="button" class="vee-guide-secondary" id="veeGuideBack" onclick="veeGuideMove(-1)">Back</button><button type="button" class="vee-guide-primary" id="veeGuideNext" onclick="veeGuideMove(1)">Next</button></div></div>
+    </div>
+  </div>
+  <!-- Permanent user manual -->
+  <div class="vee-guide-overlay" id="veeUserManual" role="dialog" aria-modal="true" aria-labelledby="veeManualTitle">
+    <div class="vee-guide-panel">
+      <div class="vee-guide-top"><span class="vee-guide-kicker">Help Centre</span><button type="button" class="icon-btn" aria-label="Close manual" onclick="veeCloseManual()">✕</button></div>
+      <h2 id="veeManualTitle">Vee-AI User Manual</h2>
+      <p>Learn what each available feature does and how to use it. This guide covers the user experience only.</p>
+      <div class="vee-manual-grid">
+        <article class="vee-manual-card"><h3>AI Chat</h3><p>Open AI Chat to ask questions, get explanations, brainstorm, write, translate, plan and work through problems. Type a message and press Send. Use Enter to send or Shift + Enter for a new line.</p></article>
+        <article class="vee-manual-card"><h3>AI Brains</h3><p>Open Chat Settings to select a response style. Vee Brain is the flagship assistant. Fabzi is creative and friendly. Hassign focuses on analysis and technical topics. Kurah supports calm planning. Portable uses an energetic, informal style.</p></article>
+        <article class="vee-manual-card"><h3>Response languages</h3><p>Choose Auto, Queen's English, Nigerian Pidgin, Yoruba, Igbo or Hausa in Chat Settings. Auto lets Vee-AI follow the language of your conversation.</p></article>
+        <article class="vee-manual-card"><h3>Explore</h3><p>Open Explore from the Home workspace to start focused conversations about areas such as finance, business, productivity and planning.</p></article>
+        <article class="vee-manual-card"><h3>My Memory</h3><p>Save useful details you want Vee-AI to use in future chats. Review, edit or delete saved entries, and control whether saved memories are used.</p></article>
+        <article class="vee-manual-card"><h3>Planner</h3><p>Create tasks with notes, due dates and times. Filter tasks by all, open or completed. Enable reminders and link Telegram where supported.</p></article>
+        <article class="vee-manual-card"><h3>Finance</h3><p>Record income and spending, set a monthly budget, create savings goals and track debts. Review entries before relying on totals.</p></article>
+        <article class="vee-manual-card"><h3>Content Studio</h3><p>Create and organise content drafts. Save drafts and return to them from your workspace.</p></article>
+        <article class="vee-manual-card"><h3>Email Intelligence</h3><p>Connect Gmail through Google's permission screen. Run scans to organise selected inbox messages, including bank alerts, travel, job and security-related messages. Review findings carefully. Vee-AI requests read-only access and does not send, delete or modify emails.</p></article>
+        <article class="vee-manual-card"><h3>Business Workspace</h3><p>Save a business profile and relevant details to support tailored content. Background content preparation is optional and requires your approval.</p></article>
+        <article class="vee-manual-card"><h3>History</h3><p>Open History to find saved conversations and continue a previous discussion. Guest history stays in the browser. Signed-in history syncs to your account.</p></article>
+        <article class="vee-manual-card"><h3>Games</h3><p>Open Games from the main navigation to access Vee-AI's available game experience.</p></article>
+        <article class="vee-manual-card"><h3>Settings and personalisation</h3><p>Change appearance, ambient effects, focus layout, profile details, memory preferences and communication-style learning. You may also open the Privacy Centre.</p></article>
+        <article class="vee-manual-card"><h3>Telegram</h3><p>Link the Vee-AI Telegram bot using a one-time link code from Settings. Use the bot for supported assistant tasks and reminders.</p></article>
+      </div>
+      <div class="settings-section" style="margin-top:18px"><h3>Privacy and security</h3>
+        <p>Guest conversations are stored in your browser. Signed-in conversation history syncs to your Vee-AI account. Conversations are not end-to-end encrypted.</p>
+        <p>Gmail connection requires your approval. Vee-AI requests read-only access and does not send, delete or modify your emails. Telegram bot chats are not end-to-end encrypted.</p>
+        <p>Vee-AI does not have direct access to your phone storage, camera, contacts, banking app or device passwords by default. Voice input is used after you choose the microphone feature.</p>
+        <p>Never share passwords, bank PINs, CVVs, one-time codes or recovery phrases in chat. Review permission requests before connecting services, and disconnect services you no longer use.</p>
+        <div class="vee-manual-note"><strong>Important:</strong> Security findings in Email Intelligence use initial indicators. A flagged email needs review, and a clean result is not proof a message or link is safe.</div>
+        <button type="button" class="account-secondary" style="margin-top:12px" onclick="veeOpenModal('privacyModal');veeCloseManual()">Open full Privacy Centre</button>
+      </div>
+      <div class="vee-guide-actions"><button type="button" class="vee-guide-secondary" onclick="veeReplayGuide();veeCloseManual()">Replay welcome guide</button><button type="button" class="vee-guide-primary" onclick="veeCloseManual()">Done</button></div>
+    </div>
+  </div>
+
   <!-- History Modal -->
   <div class="modal-backdrop" id="historyModal" onclick="if(event.target===this) veeCloseModal('historyModal')">
     <div class="modal-panel glass-chrome">
@@ -2218,6 +2291,7 @@
         <p class="account-copy" id="adaptiveStatus" role="status" aria-live="polite"></p>
         <p id="settingsStatus" class="account-copy" role="status" aria-live="polite"></p>
       </div>
+      <div class="settings-section"><h3>Help and learning</h3><p class="account-copy">Learn how to use Vee-AI features and revisit the welcome guide whenever you need it.</p><div class="settings-account-actions"><button type="button" class="account-secondary" onclick="veeOpenManual()">Open user manual</button><button type="button" class="account-secondary" onclick="veeReplayGuide()">Replay welcome guide</button></div></div>
       <div class="settings-section"><h3>Privacy and security</h3><p class="account-copy">See what Vee-AI receives, how account passwords are handled, and what changes when you connect Gmail or Telegram.</p><button type="button" class="account-secondary" onclick="veeOpenModal('privacyModal')">Open Privacy Centre</button></div>
       <div class="settings-section"><h3>Account</h3>
         <p id="settingsAccountStatus" class="account-copy">You are using Vee-AI as a guest.</p>
@@ -3895,6 +3969,63 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       stream.scrollTop = stream.scrollHeight;
       return row;
     }
+
+    /* =========================================================
+       USER ONBOARDING AND HELP CENTRE
+       ========================================================= */
+    var veeGuideSlides = [
+      {icon:"✦",title:"Meet your AI companion",body:"Vee-AI helps you think, create, learn, organise and work through everyday questions in one place.",points:["Ask questions and get explanations.","Create writing, ideas and plans.","Use the tools available in your personal workspace."]},
+      {icon:"◉",title:"Start with AI Chat",body:"Open AI Chat and write naturally. Give Vee-AI a question, an instruction or the context behind what you need.",points:["Ask follow-up questions in the same conversation.","Request writing, summaries, translations and step-by-step help.","Use Copy or Regenerate below an assistant response when available."]},
+      {icon:"✧",title:"Choose your AI brain",body:"Chat Settings lets you choose the assistant style and response language. Your choice helps shape the way replies are presented.",points:["Vee Brain: flagship general assistant.","Fabzi: creative and friendly. Hassign: analytical and technical.","Kurah: calm planning. Portable: energetic and informal."]},
+      {icon:"文",title:"Speak your language",body:"Choose a response language in Chat Settings or leave language selection on Auto.",points:["Queen's English and Nigerian Pidgin.","Yoruba, Hausa and Igbo.","You may write naturally and use familiar expressions."]},
+      {icon:"▤",title:"Make Vee-AI more personal",body:"My Memory lets you save details for future conversations. Conversation History helps you return to earlier chats.",points:["Review, edit or delete saved memories.","Control whether saved memories are used in chats.","Guest history stays in this browser. Signed-in history syncs to your account."]},
+      {icon:"▦",title:"Use your workspace tools",body:"Your Home workspace brings together tools for organising personal and work activities.",points:["Planner: tasks, due dates and supported reminders.","Finance: income, spending, budgets, savings goals and debts.","Content Studio and Business Workspace: drafts and business-specific content."]},
+      {icon:"✉",title:"Email Intelligence and Telegram",body:"Connect supported services only when you want to use their features. You remain in control of permission and linking steps.",points:["Email Intelligence scans selected Gmail messages after you connect and request a scan.","Gmail access is read-only. Vee-AI does not send, delete or modify your emails.","Link Telegram with a one-time code from Settings to use supported bot features."]},
+      {icon:"盾",title:"Your privacy and security",body:"Understand what you share and review permissions before connecting services. Use account and device security features responsibly.",points:["Guest history stays in your browser. Signed-in history syncs to your Vee-AI account.","Conversations and Telegram bot chats are not end-to-end encrypted.","Never share passwords, bank PINs, CVVs, one-time codes or recovery phrases."]},
+      {icon:"☰",title:"You're ready to begin",body:"Explore the app at your pace. The Help & Manual link stays available whenever you need guidance.",points:["Open Help & Manual from the main navigation.","Replay this welcome tour from Settings.","You may skip the guide and start chatting at any time."]}
+    ];
+    var veeGuideIndex = 0;
+    function veeRenderGuideSlide() {
+      var host=document.getElementById("veeGuideSlide"),progress=document.getElementById("veeGuideProgress");
+      var back=document.getElementById("veeGuideBack"),next=document.getElementById("veeGuideNext");
+      if(!host)return;
+      var slide=veeGuideSlides[veeGuideIndex];
+      host.innerHTML='<div class="vee-guide-icon" aria-hidden="true">'+slide.icon+'</div><h2 id="veeGuideTitle">'+slide.title+'</h2><p>'+slide.body+'</p><div class="vee-guide-points">'+slide.points.map(function(point){return '<div class="vee-guide-point"><span>✓</span><span>'+point+'</span></div>';}).join("")+'</div>';
+      if(progress)progress.style.width=((veeGuideIndex+1)/veeGuideSlides.length*100)+"%";
+      if(back)back.disabled=veeGuideIndex===0;
+      if(next)next.textContent=veeGuideIndex===veeGuideSlides.length-1?"Finish":"Next";
+    }
+    function veeGuideMove(direction) {
+      veeGuideIndex=Math.max(0,Math.min(veeGuideSlides.length-1,veeGuideIndex+direction));
+      if(veeGuideIndex===veeGuideSlides.length-1){var next=document.getElementById("veeGuideNext");if(next)next.textContent="Finish";}
+      veeRenderGuideSlide();
+      var panel=document.querySelector("#veeWelcomeGuide .vee-guide-panel");if(panel)panel.scrollTop=0;
+    }
+    function veeOpenGuide() {
+      var guide=document.getElementById("veeWelcomeGuide");if(!guide)return;
+      veeGuideIndex=0;veeRenderGuideSlide();guide.classList.add("open");
+      document.body.style.overflow="hidden";
+    }
+    function veeFinishGuide() {
+      var guide=document.getElementById("veeWelcomeGuide");if(guide)guide.classList.remove("open");
+      document.body.style.overflow="";
+      try{localStorage.setItem("vee_ai_welcome_guide_completed_v1","true");}catch(e){}
+    }
+    function veeReplayGuide(){veeOpenGuide();}
+    function veeOpenManual(){
+      var manual=document.getElementById("veeUserManual");if(manual){manual.classList.add("open");document.body.style.overflow="hidden";}
+    }
+    function veeCloseManual(){
+      var manual=document.getElementById("veeUserManual");if(manual)manual.classList.remove("open");
+      if(!document.querySelector(".vee-guide-overlay.open"))document.body.style.overflow="";
+    }
+    (function veeInitOnboarding(){
+      function checkFirstVisit(){
+        try{if(localStorage.getItem("vee_ai_welcome_guide_completed_v1")!=="true")veeOpenGuide();}catch(e){}
+      }
+      if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",checkFirstVisit,{once:true});
+      else setTimeout(checkFirstVisit,450);
+    })();
 
     /* =========================================================
        INPUT & BACKEND API SUBMISSION
