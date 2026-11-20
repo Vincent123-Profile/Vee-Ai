@@ -106,8 +106,8 @@ function collectText(payload, output) {
 }
 function transactionDateFromText(source,email){
   const value=String(source||"");
-  const iso=value.match(/\\b(20\\d{2})-(\\d{1,2})-(\\d{1,2})(?:[T ,]+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?\\s*(AM|PM)?)?/i);
-  const local=value.match(/\\b(\\d{1,2})[\\/-](\\d{1,2})[\\/-](20\\d{2}|\\d{2})(?:[ ,]+(?:at\\s*)?(\\d{1,2}):(\\d{2})(?::(\\d{2}))?\\s*(AM|PM)?)?/i);
+  const iso=value.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})(?:[T ,]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?/i);
+  const local=value.match(/\b(\d{1,2})[\/-](\d{1,2})[\/-](20\d{2}|\d{2})(?:[ ,]+(?:at\s*)?(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?/i);
   let parts=null;
   if(iso)parts={year:Number(iso[1]),month:Number(iso[2]),day:Number(iso[3]),hour:Number(iso[4]||0),minute:Number(iso[5]||0),second:Number(iso[6]||0),ampm:iso[7]};
   else if(local)parts={year:Number(local[3].length===2?"20"+local[3]:local[3]),month:Number(local[2]),day:Number(local[1]),hour:Number(local[4]||0),minute:Number(local[5]||0),second:Number(local[6]||0),ampm:local[7]};
