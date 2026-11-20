@@ -65,7 +65,7 @@ async function tokenRequest(params) {
   if (!response.ok || !data.access_token) throw new Error("Google token exchange failed. Check the Gmail OAuth configuration.");
   return data;
 }
-async function refreshAccessToken(uid, db, saved) {
+async function refreshAccessToken(uid, db, saved, accountId) {
   if (saved.accessToken && Number(saved.expiresAtMs || 0) > Date.now() + 60000) return saved;
   if (!saved.refreshToken) throw new Error("Gmail access expired. Disconnect Gmail and connect again.");
   const refreshed = await tokenRequest({
@@ -76,7 +76,7 @@ async function refreshAccessToken(uid, db, saved) {
     accessToken:refreshed.access_token,
     expiresAtMs:Date.now() + Number(refreshed.expires_in || 3600) * 1000
   });
-  await db.ref("gmailConnections/" + uid + "/tokenVault").set(encrypt(uid,next));
+  await db.ref("gmailConnections/" + uid + (accountId==="legacy" ? "/tokenVault" : "/accounts/" + accountId + "/tokenVault")).set(encrypt(uid,next));
   return next;
 }
 async function gmailFetch(accessToken, path) {
@@ -237,7 +237,7 @@ function classifyEmail(email) {
     needsReview
   };
 }
-async function syncMessages(uid, db, token) {
+async function syncMessages(uid, db, token, accountId) {
   const list = await gmailFetch(token.accessToken,"messages?maxResults=30&includeSpamTrash=true");
   const messages = Array.isArray(list.messages) ? list.messages : [];
   const saved = [];
@@ -274,11 +274,11 @@ async function syncMessages(uid, db, token) {
       };
     }));
     for (const record of batch.filter(Boolean)) {
-      await db.ref("gmailConnections/" + uid + "/emails/" + record.id).set(record);
+      await db.ref("gmailConnections/" + uid + (accountId==="legacy" ? "/emails/" : "/accounts/" + accountId + "/emails/") + record.id).set(record);
       saved.push(record);
     }
   }
-  await db.ref("gmailConnections/" + uid + "/status").update({
+  await db.ref("gmailConnections/" + uid + (accountId==="legacy" ? "/status" : "/accounts/" + accountId + "/status")).update({
     connected:true, lastSyncAtMs:Date.now(), lastSyncCount:saved.length,
     securityAlertCount:saved.filter(item => item.riskLevel !== "none").length
   });
@@ -402,8 +402,8 @@ exports.handler = async event => {
         const tokenSnapshot=await target.child("tokenVault").once("value");
         if(!tokenSnapshot.exists())return json(400,{error:"This email account is not connected."});
         const saved=decrypt(user.uid,tokenSnapshot.val());
-        const fresh=await refreshAccessToken(user.uid,db,saved);
-        const emails=await syncMessages(user.uid,db,fresh);
+        const fresh=await refreshAccessToken(user.uid,db,saved,accountId);
+        const emails=await syncMessages(user.uid,db,fresh,accountId);
         await target.child("status").update({connected:true,accountId,gmailAddress:fresh.gmailAddress||"",lastSyncAtMs:Date.now(),lastSyncCount:emails.length,securityAlertCount:emails.filter(item=>item.riskLevel!=="none").length});
         return json(200,{success:true,accountId,synced:emails.length,securityAlerts:emails.filter(item=>item.riskLevel!=="none").length});
       }
