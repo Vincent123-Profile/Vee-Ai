@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const crypto = require("crypto");
+const scheduler = require("./gmail-intelligence-scheduler");
 let app;
 function database(){
   if(!app){
@@ -22,6 +23,32 @@ exports.handler=async event=>{
     if(Buffer.byteLength(event.body||"","utf8")>3000)return json(413,{error:"Request too large."});
     const body=JSON.parse(event.body||"{}");
     const ref=db.ref("telegram/emailIntelligenceDemoReports/"+user.uid+"/pending");
+    if(body.action==="process"){
+      const current=(await ref.once("value")).val();
+      if(!current)return json(404,{error:"No demo report is scheduled."});
+      if(current.status==="sent"||current.status==="failed"||current.status==="cancelled")return json(200,{status:current.status});
+      if(current.status!=="scheduled")return json(200,{status:"processing"});
+      if(Number(current.scheduledAtMs)>Date.now())return json(200,{status:"waiting",scheduledAtMs:current.scheduledAtMs});
+      const claim=await ref.transaction(value=>{
+        if(!value||value.status!=="scheduled"||Number(value.scheduledAtMs)>Date.now())return;
+        return Object.assign({},value,{status:"sending",claimedAtMs:Date.now()});
+      },undefined,false);
+      if(!claim.committed)return json(200,{status:"processing"});
+      try{
+        const token=(process.env.TELEGRAM_BOT_TOKEN||"").trim();
+        const linked=(await db.ref("telegram/accountsByChat").once("value")).val()||{};
+        const chats=Object.entries(linked).filter(([,item])=>item&&String(item.uid)===String(user.uid)).map(([chatId])=>chatId).filter(chatId=>/^\\d{1,24}$/.test(chatId));
+        if(!token||!chats.length)throw new Error("Telegram connection is unavailable.");
+        const settings=(await db.ref("users/"+user.uid+"/emailIntelligenceSettings").once("value")).val()||{};
+        const result=await scheduler.sendDemoReport(db,token,chats,user.uid,settings,new Date(),current.id);
+        await ref.set(Object.assign({},current,{status:"sent",sentAtMs:Date.now(),resultStatus:result.status}));
+        return json(200,{status:"sent",sentAtMs:Date.now()});
+      }catch(error){
+        await ref.set(Object.assign({},current,{status:"failed",failedAtMs:Date.now(),failure:"Delivery failed. Check your Telegram connection and try again."}));
+        console.error("Vee-AI live demo report delivery failed:",error&&error.message||error);
+        return json(502,{error:"The demo report delivery failed. Check Telegram and schedule another demo."});
+      }
+    }
     if(body.action==="cancel"){
       const result=await ref.transaction(current=>{
         if(!current||current.status!=="scheduled")return;
