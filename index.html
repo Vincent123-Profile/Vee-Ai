@@ -1607,10 +1607,7 @@
             <span class="brand-title">Vee-AI</span>
             
           </div>
-          <div class="brand-sub">
-            <span class="status-pulse"></span>
-            <span>Created by Agboola Vincent Oluwaseyi</span>
-          </div>
+
         </div>
       </button>
 
@@ -3349,8 +3346,9 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
     try { veeFocusModeHidden = localStorage.getItem("vee_ai_focus_mode_hidden_v1") === "true"; } catch (e) {}
     function veeApplyFocusMode() {
       var shell = document.getElementById("appShell");
-      var chat = document.getElementById("chatStream");
-      var isChatView = !!(chat && chat.classList.contains("active"));
+      var home = document.getElementById("homeScreen");
+      var composer = document.getElementById("composerWrap");
+      var isChatView = !!(composer && !composer.classList.contains("home-hidden") && home && home.classList.contains("hidden"));
       var enabled = veeFocusModeHidden && isChatView;
       if (shell) shell.classList.toggle("focus-chat-mode", enabled);
       var setting = document.getElementById("focusModeSettingBtn");
@@ -3967,7 +3965,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
         window.setTimeout(function() {
           splash.classList.add("leaving");
           window.setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, reducedMotion ? 80 : 500);
-        }, reducedMotion ? 350 : 1850);
+        }, reducedMotion ? 350 : 1500);
       }
       veeApplyFocusMode();
     })();
