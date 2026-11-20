@@ -127,64 +127,38 @@ function transactionDateFromText(source,email,timeZone){
   return Number(email.internalDate||Date.parse(email.date)||0)||null;
 }
 function extractTransaction(email, text, timeZone) {
-  const source = (email.subject + " " + email.snippet + " " + email.bodyText).replace(/\s+/g," ");
-  const amountPatterns = [
-    /(?:NGN|₦|N)\s?([\d,]+(?:\.\d{2})?)/i,
-    /([\d,]+(?:\.\d{2})?)\s?(?:NGN|₦)\b/i,
-    /(?:USD|\$)\s?([\d,]+(?:\.\d{2})?)/i,
-    /(?:GBP|£)\s?([\d,]+(?:\.\d{2})?)/i,
-    /(?:EUR|€)\s?([\d,]+(?:\.\d{2})?)/i
+  const body=String(email.bodyText||"");
+  const source=(String(email.subject||"")+" "+String(email.snippet||"")+" "+body).replace(/\s+/g," ");
+  const currencyCode=token=>{const v=String(token||"").toUpperCase();return /NGN|₦|NAIRA|^N$/.test(v)?"NGN":/USD|\$/.test(v)?"USD":/GBP|£/.test(v)?"GBP":/EUR|€/.test(v)?"EUR":null;};
+  const patterns=[
+    /(?:transaction amount|transfer amount|amount transferred|amount credited|amount debited|amount)\s*[:#=-]?\s*(NGN|₦|NAIRA|N|USD|\$|GBP|£|EUR|€)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+    /(?:your transfer|transfer|transaction)\s+of\s+(NGN|₦|NAIRA|N|USD|\$|GBP|£|EUR|€)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+    /(?:NGN|₦|NAIRA|N)\s*([\d,]+(?:\.\d{1,2})?)/i,
+    /([\d,]+(?:\.\d{1,2})?)\s*(?:NGN|₦)\b/i,
+    /(?:USD|\$)\s*([\d,]+(?:\.\d{1,2})?)/i,
+    /(?:GBP|£)\s*([\d,]+(?:\.\d{1,2})?)/i,
+    /(?:EUR|€)\s*([\d,]+(?:\.\d{1,2})?)/i
   ];
-  let amount = null;
-  let currency = null;
-  for (const pattern of amountPatterns) {
-    const match = source.match(pattern);
-    if (match) {
-      amount = Number(String(match[1]).replace(/,/g,""));
-      const token = match[0];
-      currency = /NGN|₦|^N/i.test(token) ? "NGN" : /USD|\$/.test(token) ? "USD" : /GBP|£/.test(token) ? "GBP" : /EUR|€/.test(token) ? "EUR" : null;
-      if (Number.isFinite(amount) && amount > 0) break;
-      amount = null;
-    }
-  }
-  // Direction is based on the account holder's money movement, not the other party's name.
-  // "Your transfer of ..." is a common Nigerian bank wording for an outgoing debit.
-  const debitPattern = /\b(debited|debit(?:ed)? alert|debit transaction|withdrawn|withdrawal|cash withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|you sent|you paid|paid to|money sent|amount sent|outgoing transfer|funds transferred to|your transfer of|you transferred|your account has been debited|debited from your account)\b/i;
-  const creditPattern = /\b(credited|credit(?:ed)? alert|credit transaction|received from|you received|money received|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?|incoming transfer|amount received|your account has been credited|credited to your account)\b/i;
-  const debit = debitPattern.test(source);
-  const credit = creditPattern.test(source);
-  const bodyDebit = debitPattern.test(String(email.bodyText||""));
-  const bodyCredit = creditPattern.test(String(email.bodyText||""));
-  const hasTransactionLanguage = debit || credit;
-  // The bank's message body takes priority over a broad or misleading subject line.
-  let direction = bodyDebit && !bodyCredit ? "out" : bodyCredit && !bodyDebit ? "in" : debit && !credit ? "out" : credit && !debit ? "in" : null;
-  const transactionStatus = /\b(failed|unsuccessful|declined|not successful|could not be completed)\b/i.test(source) ? "failed" : /\b(reversed|reversal)\b/i.test(source) ? "reversed" : /\b(refunded|refund)\b/i.test(source) ? "refunded" : /\b(pending|processing|awaiting confirmation)\b/i.test(source) ? "pending" : hasTransactionLanguage ? "successful" : "unknown";
-  if(transactionStatus==="reversed"){
-    if(/\b(?:debit|debited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:debit|debited)\b/i.test(source))direction="in";
-    else if(/\b(?:credit|credited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:credit|credited)\b/i.test(source))direction="out";
-    else direction=null;
-  }
-  const partyMatch = source.match(/\b(?:sender(?: name)?|sender's name|from|beneficiary(?: name)?|beneficiary|recipient(?: name)?|receiver(?: name)?|account name)\s*[:#-]?\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
-    || source.match(/\b(?:to|recipient|beneficiary)\s*:\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
-    || source.match(/\b(?:transfer to|sent to|paid to|beneficiary)\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
-    || source.match(/\byou sent\b.{0,45}?\bto\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
-    || source.match(/\byou paid\b.{0,45}?\bto\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
-    || source.match(/\b(?:received from|transfer from)\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i);
-  const narrationMatch = source.match(/\b(?:narration|description|remarks?|payment details|transfer details|purpose|transaction details|remark)\s*[:#-]\s*(.{2,180}?)(?=\s+(?:available balance|transaction reference|reference|session id|account number|account no|date|time|beneficiary|recipient|sender|amount)\s*[:#-]|$)/i);
-  const counterparty = partyMatch ? partyMatch[1].trim().slice(0,100) : "";
-  const narration = narrationMatch ? narrationMatch[1].trim().slice(0,180) : "";
-  const reference = (source.match(/\b(?:transaction|trans(?:action)?|session|reference|ref)(?:\s*(?:id|no|number))?\s*[:#-]?\s*([A-Z0-9-]{6,})/i) || [])[1] || "";
-  return {
-    amount, currency, direction,
-    transactionType: /\b(refund|refunded)\b/i.test(source) ? "refund" : direction === "in" ? "income" : direction === "out" ? "expense" : null,
-    transactionStatus,
-    counterparty,
-    narration,
-    transactionAtMs:transactionDateFromText(source,email,timeZone),
-    reference:reference.slice(0,80),
-    hasTransactionLanguage,
-    ambiguousDirection:debit && credit
-  };
+  let amount=null,currency=null;
+  for(const pattern of patterns){const m=source.match(pattern);if(!m)continue;const raw=m[2]||m[1],n=Number(String(raw).replace(/,/g,""));if(!Number.isFinite(n)||n<=0)continue;amount=n;currency=currencyCode(m[2]?m[1]:m[0]);break;}
+  const balanceMatch=source.match(/(?:available balance|account balance|new balance|closing balance|balance)\s*(?:is|:|=|-)?\s*(NGN|₦|NAIRA|N|USD|\$|GBP|£|EUR|€)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  const availableBalance=balanceMatch?Number(String(balanceMatch[2]).replace(/,/g,"")):null;
+  const availableBalanceCurrency=balanceMatch?currencyCode(balanceMatch[1]||balanceMatch[0]):null;
+  const debitPattern=/\b(debited|debit(?:ed)? alert|debit transaction|withdrawn|withdrawal|cash withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|you sent|you paid|paid to|money sent|amount sent|outgoing transfer|funds transferred to|your transfer of|you transferred|your account has been debited|debited from your account|you have successfully transferred|transfer was successful|transfer is successful)\b/i;
+  const creditPattern=/\b(credited|credit(?:ed)? alert|credit transaction|received from|you received|money received|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?|incoming transfer|amount received|your account has been credited|credited to your account|you have received)\b/i;
+  const debit=debitPattern.test(source),credit=creditPattern.test(source),bodyDebit=debitPattern.test(body),bodyCredit=creditPattern.test(body);
+  const hasTransactionLanguage=debit||credit;
+  let direction=bodyDebit&&!bodyCredit?"out":bodyCredit&&!bodyDebit?"in":debit&&!credit?"out":credit&&!debit?"in":null;
+  const transactionStatus=/\b(failed|unsuccessful|declined|not successful|could not be completed)\b/i.test(source)?"failed":/\b(reversed|reversal)\b/i.test(source)?"reversed":/\b(refunded|refund)\b/i.test(source)?"refunded":/\b(pending|processing|awaiting confirmation)\b/i.test(source)?"pending":hasTransactionLanguage?"successful":"unknown";
+  if(transactionStatus==="reversed"){if(/\b(?:debit|debited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:debit|debited)\b/i.test(source))direction="in";else if(/\b(?:credit|credited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:credit|credited)\b/i.test(source))direction="out";else direction=null;}
+  const partyMatch=source.match(/\b(?:sender(?: name)?|sender's name|from|beneficiary(?: name)?|beneficiary|recipient(?: name)?|receiver(?: name)?|account name)\s*[:#-]?\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
+    ||source.match(/\b(?:to|recipient|beneficiary)\s*:\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
+    ||source.match(/\b(?:transfer to|sent to|paid to|beneficiary)\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
+    ||source.match(/\b(?:received from|transfer from)\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i);
+  const narrationMatch=source.match(/\b(?:narration|description|remarks?|payment details|transfer details|purpose|transaction details|remark)\s*[:#-]\s*(.{2,180}?)(?=\s+(?:available balance|transaction reference|reference|session id|account number|account no|date|time|beneficiary|recipient|sender|amount)\s*[:#-]|$)/i);
+  const counterparty=partyMatch?partyMatch[1].trim().slice(0,100):"",narration=narrationMatch?narrationMatch[1].trim().slice(0,180):"";
+  const reference=(source.match(/\b(?:transaction|trans(?:action)?|session|reference|ref)(?:\s*(?:id|no|number))?\s*[:#-]?\s*([A-Z0-9-]{6,})/i)||[])[1]||"";
+  return {amount,currency,direction,availableBalance:Number.isFinite(availableBalance)&&availableBalance>0?availableBalance:null,availableBalanceCurrency,transactionType:/\b(refund|refunded)\b/i.test(source)?"refund":direction==="in"?"income":direction==="out"?"expense":null,transactionStatus,counterparty,narration,transactionAtMs:transactionDateFromText(source,email,timeZone),reference:reference.slice(0,80),hasTransactionLanguage,ambiguousDirection:debit&&credit};
 }
 function extractFlightDetails(email) {
   const source = email.subject + " " + email.snippet + " " + email.bodyText;
@@ -312,7 +286,7 @@ function classifyEmail(email,timeZone) {
     evidence.push("Suspicious link or credential-pressure indicators found");
   }
   if (!categories.length) categories.push("general");
-  const needsReview = categories.includes("bank") && (!transaction.amount || !transaction.direction || transaction.ambiguousDirection);
+  const needsReview = categories.includes("bank") && (!transaction.amount || !transaction.currency || !transaction.direction || transaction.ambiguousDirection);
   return {
     categories:Array.from(new Set(categories)),
     linkCount:urls.length,
