@@ -2677,7 +2677,7 @@
 
     function veeInitAccountAuth() {
       try {
-        if (!window.firebase || !firebase.auth) throw new Error("Firebase Authentication SDK did not load.");
+        if (!window.firebase || !firebase.auth) throw new Error("Account security service did not load.");
         veeFirebaseApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(veeFirebaseConfig);
         veeFirebaseAuth = firebase.auth(veeFirebaseApp);
         veeFirebaseAuth.onAuthStateChanged(function(user) {
