@@ -149,10 +149,15 @@ function extractTransaction(email, text, timeZone) {
   }
   // Direction is based on the account holder's money movement, not the other party's name.
   // "Your transfer of ..." is a common Nigerian bank wording for an outgoing debit.
-  const debit = /\b(debited|debit(?:ed)? alert|debit transaction|withdrawn|withdrawal|cash withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|you sent|you paid|paid to|money sent|amount sent|outgoing transfer|funds transferred to|your transfer of|you transferred|your account has been debited|debited from your account)\b/i.test(source);
-  const credit = /\b(credited|credit(?:ed)? alert|credit transaction|received from|you received|money received|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?|incoming transfer|amount received|your account has been credited|credited to your account)\b/i.test(source);
+  const debitPattern = /\b(debited|debit(?:ed)? alert|debit transaction|withdrawn|withdrawal|cash withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|you sent|you paid|paid to|money sent|amount sent|outgoing transfer|funds transferred to|your transfer of|you transferred|your account has been debited|debited from your account)\b/i;
+  const creditPattern = /\b(credited|credit(?:ed)? alert|credit transaction|received from|you received|money received|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?|incoming transfer|amount received|your account has been credited|credited to your account)\b/i;
+  const debit = debitPattern.test(source);
+  const credit = creditPattern.test(source);
+  const bodyDebit = debitPattern.test(String(email.bodyText||""));
+  const bodyCredit = creditPattern.test(String(email.bodyText||""));
   const hasTransactionLanguage = debit || credit;
-  let direction = debit && !credit ? "out" : credit && !debit ? "in" : null;
+  // The bank's message body takes priority over a broad or misleading subject line.
+  let direction = bodyDebit && !bodyCredit ? "out" : bodyCredit && !bodyDebit ? "in" : debit && !credit ? "out" : credit && !debit ? "in" : null;
   const transactionStatus = /\b(failed|unsuccessful|declined|not successful|could not be completed)\b/i.test(source) ? "failed" : /\b(reversed|reversal)\b/i.test(source) ? "reversed" : /\b(refunded|refund)\b/i.test(source) ? "refunded" : /\b(pending|processing|awaiting confirmation)\b/i.test(source) ? "pending" : hasTransactionLanguage ? "successful" : "unknown";
   if(transactionStatus==="reversed"){
     if(/\b(?:debit|debited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:debit|debited)\b/i.test(source))direction="in";
