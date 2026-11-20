@@ -82,7 +82,7 @@ async function sendImmediateAlerts(db,token,chats,uid,accountId,items,settings){
 }
 async function sendDailyReport(db,token,chats,uid,settings,now){
   if(settings.dailyReportEnabled!==true||!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(settings.dailyReportTime||"")))return {status:"disabled_or_invalid_time"};
-  const zone=validTimeZone(settings.timeZone)?settings.timeZone:"UTC";
+  const zone="Africa/Lagos";
   const clock=localClock(zone,now);
   const current=clock.time.split(":").map(Number),wanted=String(settings.dailyReportTime).split(":").map(Number);
   const elapsed=(current[0]*60+current[1])-(wanted[0]*60+wanted[1]);
@@ -151,7 +151,11 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
   const transactionText=showTransactions?"\n\n<b>Transaction details</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence transactions to list."):"";
   const message="📊 <b>Vee-AI Daily Bank Report</b>\n"+html(clock.date)+" · "+html(zone)+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
   const delivered=await deliverOnce(db,token,chats,uid,"daily_"+clock.date,message.slice(0,3900));
-  return {status:delivered?"sent":"already_sent_or_in_progress",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
+  if(!delivered){
+    const existing=(await db.ref("telegram/emailIntelligenceDeliveries/"+uid+"/daily_"+clock.date).once("value")).val()||{};
+    return {status:existing.status==="sent"?"already_sent":"already_in_progress",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
+  }
+  return {status:"sent",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
 }
 exports.handler=async()=>{
   const token=(process.env.TELEGRAM_BOT_TOKEN||"").trim();
