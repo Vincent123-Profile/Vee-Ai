@@ -147,8 +147,10 @@ function extractTransaction(email, text, timeZone) {
       amount = null;
     }
   }
-  const debit = /\b(debited|debit(?:ed)? alert|debit transaction|withdrawn|withdrawal|cash withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|you sent|you paid|paid to|money sent|amount sent|outgoing transfer|funds transferred to)\b/i.test(source);
-  const credit = /\b(credited|credit(?:ed)? alert|credit transaction|received from|you received|money received|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?|incoming transfer|amount received)\b/i.test(source);
+  // Direction is based on the account holder's money movement, not the other party's name.
+  // "Your transfer of ..." is a common Nigerian bank wording for an outgoing debit.
+  const debit = /\b(debited|debit(?:ed)? alert|debit transaction|withdrawn|withdrawal|cash withdrawal|spent|purchase of|payment of|card transaction|pos transaction|transfer to|sent to|you sent|you paid|paid to|money sent|amount sent|outgoing transfer|funds transferred to|your transfer of|you transferred|your account has been debited|debited from your account)\b/i.test(source);
+  const credit = /\b(credited|credit(?:ed)? alert|credit transaction|received from|you received|money received|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?|incoming transfer|amount received|your account has been credited|credited to your account)\b/i.test(source);
   const hasTransactionLanguage = debit || credit;
   let direction = debit && !credit ? "out" : credit && !debit ? "in" : null;
   const transactionStatus = /\b(failed|unsuccessful|declined|not successful|could not be completed)\b/i.test(source) ? "failed" : /\b(reversed|reversal)\b/i.test(source) ? "reversed" : /\b(refunded|refund)\b/i.test(source) ? "refunded" : /\b(pending|processing|awaiting confirmation)\b/i.test(source) ? "pending" : hasTransactionLanguage ? "successful" : "unknown";
@@ -157,7 +159,8 @@ function extractTransaction(email, text, timeZone) {
     else if(/\b(?:credit|credited)\b.{0,35}\b(?:reversed|reversal)\b|\b(?:reversed|reversal)\b.{0,35}\b(?:credit|credited)\b/i.test(source))direction="out";
     else direction=null;
   }
-  const partyMatch = source.match(/\b(?:sender(?: name)?|sender's name|from|beneficiary(?: name)?|beneficiary|recipient(?: name)?|receiver(?: name)?|account name)\s*[:#-]?\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
+  const partyMatch = source.match(/\b(?:sender(?: name)?|sender's name|from|beneficiary(?: name)?|beneficiary|recipient(?: name)?|receiver(?: name)?|account name)\s*[:#-]\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
+    || source.match(/\b(?:to|recipient|beneficiary)\s*:\s*([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
     || source.match(/\b(?:transfer to|sent to|paid to|beneficiary)\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
     || source.match(/\byou sent\b.{0,45}?\bto\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
     || source.match(/\byou paid\b.{0,45}?\bto\s+([A-Z][A-Z .\x27-]{2,60}?)(?=\s+(?:account|acct|narration|description|remark|amount|date|time|reference|ref|available balance|bank|balance)\b|[,.;]|$)/i)
