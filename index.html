@@ -1906,6 +1906,7 @@
             <article class="home-feature" role="button" tabindex="0" onclick="veeOpenContentStudio()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenContentStudio()}"><div class="home-feature-icon">✎</div><h3>Content Studio</h3><p>Create, save and organise your content drafts.</p><em>Open Content Studio</em></article>
             <article class="home-feature" role="button" tabindex="0" onclick="veeOpenGmailIntelligence()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenGmailIntelligence()}"><div class="home-feature-icon">✉</div><h3>Email Intelligence</h3><p>Organise Gmail, bank alerts, flights, jobs and suspicious messages.</p><em>Connect Gmail</em></article>
             <article class="home-feature" role="button" tabindex="0" onclick="veeOpenBusinessWorkspace()"><div class="home-feature-icon">⌘</div><h3>Business Workspace</h3><p>Build a private business profile and create tailored content.</p><em>Open workspace</em></article>
+            <article class="home-feature" role="button" tabindex="0" aria-label="Video Call with Vee, in development" onclick="veeOpenVideoCallInfo()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();veeOpenVideoCallInfo()}"><div class="home-feature-icon" aria-hidden="true">▣</div><h3>Video Call with Vee</h3><p>Talk face-to-face with a digital Vee avatar using voice and live conversation.</p><em>In development</em></article>
           </div>
           <div class="home-section-head"><h2>Recent conversations</h2><span id="homeRecentCount">0 saved</span></div>
           <div class="home-recent" id="homeRecentList"><div class="home-empty">Your recent conversations will appear here.</div></div>
@@ -2120,6 +2121,17 @@
  </div>
 </div>
 
+
+  <div class="modal-backdrop" id="videoCallInfoModal" onclick="if(event.target===this)veeCloseModal('videoCallInfoModal')">
+    <div class="modal-panel glass-chrome" style="max-width:560px;width:min(560px,calc(100% - 28px));max-height:88vh;overflow-y:auto">
+      <div class="modal-head"><h2>Video Call with Vee</h2><button type="button" class="icon-btn" onclick="veeCloseModal('videoCallInfoModal')" aria-label="Close Video Call information">✕</button></div>
+      <div style="display:grid;place-items:center;width:76px;height:76px;border-radius:24px;background:var(--orange-soft);color:var(--orange);font-size:34px;margin:4px auto 8px" aria-hidden="true">▣</div>
+      <p class="account-copy" style="text-align:center">Meet Vee face-to-face through a voice-powered digital avatar. The planned experience will let you speak naturally, hear spoken replies and see the avatar respond during a live conversation.</p>
+      <div class="settings-section"><h3>What you will be able to do</h3><p class="account-copy">• Speak to Vee using your microphone.<br>• Ask questions and have natural voice conversations.<br>• Hear Vee's answers aloud.<br>• See a digital avatar with speech-synchronised facial movement.</p></div>
+      <div class="privacy-inline"><strong>Still in development.</strong> Video Call with Vee is not available yet. We are working on this experience. Your existing Vee-AI chat and voice input remain available.</div>
+      <button type="button" class="account-secondary" style="width:100%;min-height:46px" disabled aria-disabled="true">Video calling is coming soon</button>
+    </div>
+  </div>
 
   <div class="modal-backdrop" id="gmailIntelligenceModal" onclick="if(event.target===this)veeCloseModal('gmailIntelligenceModal')">
     <div class="modal-panel glass-chrome" style="max-width:820px;width:min(820px,calc(100% - 28px));max-height:90vh;overflow:auto">
@@ -3557,6 +3569,8 @@ async function veeDeleteContentDraft(id){if(!confirm("Delete this content draft?
 async function veeCopyContentDraft(id){var d=veeContentDrafts.find(function(x){return x.id===id;});if(!d)return;try{await navigator.clipboard.writeText(d.body);document.getElementById("contentStudioStatus").textContent="Draft copied to clipboard.";}catch(e){document.getElementById("contentStudioStatus").textContent="Clipboard access was blocked by your browser.";}}
 function veeGenerateContentPrompt(){var type=document.getElementById("contentStudioType").value,platform=document.getElementById("contentStudioPlatform").value,title=document.getElementById("contentStudioTitle").value.trim(),prompt="Help me create "+type+" for "+platform+". "+(title?"The topic or working title is: "+title+". ":"")+"Ask me for any essential missing details, then produce a polished draft I can save in Content Studio.";if(veeBusinessProfileContext&&veeBusinessProfileContextUid===(veeCurrentUser&&veeCurrentUser.uid)){prompt+=" Use this user-approved business profile as context. Do not invent facts, prices, stock, guarantees or claims. Business profile: "+JSON.stringify(veeBusinessProfileContext);}veeCloseModal("contentStudioModal");veeSendPrompt(prompt);}
 veeLoadContentDraftsLocal();
+
+function veeOpenVideoCallInfo(){veeOpenModal("videoCallInfoModal");}
 
 async function veeOpenFinance(){
  if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){try{var snap=await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/finance").once("value");if(snap.exists()){var d=snap.val()||{};veeFinanceData={transactions:Array.isArray(d.transactions)?d.transactions.slice(0,500):[],budgets:d.budgets&&typeof d.budgets==="object"?d.budgets:{},goals:Array.isArray(d.goals)?d.goals.slice(0,100):[],debts:Array.isArray(d.debts)?d.debts.slice(0,100):[]};veeSaveFinanceLocal();}else{veeLoadFinanceLocal();}}catch(e){console.error("Finance load failed",e);veeLoadFinanceLocal();}}else{veeLoadFinanceLocal();}
