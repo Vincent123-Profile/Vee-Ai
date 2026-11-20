@@ -2236,8 +2236,16 @@
         <label style="display:flex;gap:10px;align-items:center"><input id="gmailDailyReportEnabled" type="checkbox" style="width:auto"> Send me a daily business email report</label>
         <label for="gmailDailyReportTime">Daily report time</label>
         <input id="gmailDailyReportTime" type="time" value="21:00">
-        <label for="gmailReportTimeZone">Your time zone (detected automatically)</label>
-        <select id="gmailReportTimeZone"><option value="Africa/Lagos">Nigeria, West Africa Time (Africa/Lagos)</option><option value="Africa/Accra">Ghana, Greenwich Mean Time (Africa/Accra)</option><option value="Africa/Nairobi">East Africa Time (Africa/Nairobi)</option><option value="Africa/Johannesburg">South Africa Standard Time (Africa/Johannesburg)</option><option value="Europe/London">United Kingdom (Europe/London)</option><option value="Europe/Paris">Central Europe (Europe/Paris)</option><option value="America/Los_Angeles">Pacific Time (America/Los_Angeles)</option><option value="America/New_York">Eastern Time (America/New_York)</option><option value="Asia/Dubai">Gulf Standard Time (Asia/Dubai)</option><option value="UTC">UTC</option></select>
+        <label for="gmailScanMode">Gmail scanning preference</label>
+        <select id="gmailScanMode"><option value="all_inbox">Scan inbox and classify messages. Keep existing email intelligence features.</option><option value="financial_only">Financial emails only. Exclude unrelated emails from the Vee-AI email archive.</option></select>
+        <label for="gmailReportTimeZone">Device time zone</label>
+        <input id="gmailReportTimeZone" type="text" readonly value="Detecting device time zone..." aria-readonly="true">
+        <p class="account-copy">Vee-AI detects your device time zone and uses it for future report delivery.</p>
+        <div style="display:grid;gap:8px;margin-top:12px">
+          <label style="display:flex;gap:10px;align-items:center"><input id="gmailReportShowTransactions" type="checkbox" checked style="width:auto"> Include transaction details in daily reports</label>
+          <label style="display:flex;gap:10px;align-items:center"><input id="gmailReportShowExceptions" type="checkbox" checked style="width:auto"> Include failed, reversed, refunded, pending and review counts</label>
+          <label style="display:flex;gap:10px;align-items:center"><input id="gmailReportShowSecurity" type="checkbox" style="width:auto"> Include security findings in daily reports</label>
+        </div>
         <div style="display:grid;gap:9px;margin-top:12px">
           <label style="display:flex;gap:10px;align-items:center"><input id="gmailAlertSecurity" type="checkbox" style="width:auto"> Immediate suspicious email and link alerts</label>
           <label style="display:flex;gap:10px;align-items:center"><input id="gmailAlertFailed" type="checkbox" style="width:auto"> Immediate failed or reversed transaction alerts</label>
@@ -2621,14 +2629,20 @@
     }
     async function veeLoadGmailNotificationSettings(){
       var zone=document.getElementById("gmailReportTimeZone");
-      if(zone&&!zone.value)zone.value="Africa/Lagos";
+      var deviceZone="UTC";
+      try{deviceZone=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";}catch(_){}
+      if(zone)zone.value=deviceZone;
       try{
         var data=await veeGmailSettingsRequest({action:"get"}),settings=data.settings||{};
-        var fields={gmailDailyReportEnabled:settings.dailyReportEnabled===true,gmailAlertSecurity:settings.alertSecurity===true,gmailAlertFailed:settings.alertFailedTransactions===true,gmailAlertEachTransaction:settings.alertEachTransaction===true,gmailLargeTransactionAlerts:settings.largeTransactionAlerts===true};
+        var fields={gmailDailyReportEnabled:settings.dailyReportEnabled===true,gmailAlertSecurity:settings.alertSecurity===true,gmailAlertFailed:settings.alertFailedTransactions===true,gmailAlertEachTransaction:settings.alertEachTransaction===true,gmailLargeTransactionAlerts:settings.largeTransactionAlerts===true,gmailReportShowTransactions:settings.reportShowTransactions!==false,gmailReportShowExceptions:settings.reportShowExceptions!==false,gmailReportShowSecurity:settings.reportShowSecurity===true};
         Object.keys(fields).forEach(function(id){var node=document.getElementById(id);if(node)node.checked=fields[id];});
         var time=document.getElementById("gmailDailyReportTime");if(time&&settings.dailyReportTime)time.value=settings.dailyReportTime;
         var threshold=document.getElementById("gmailLargeTransactionThreshold");if(threshold&&settings.largeTransactionThreshold)threshold.value=settings.largeTransactionThreshold;
-        if(zone&&settings.timeZone)zone.value=settings.timeZone;
+        var scan=document.getElementById("gmailScanMode");if(scan)scan.value=settings.scanMode==="financial_only"?"financial_only":"all_inbox";
+        if(zone)zone.value=deviceZone;
+        if(settings.dailyReportEnabled===true&&settings.timeZone!==deviceZone){
+          await veeGmailSettingsRequest({action:"save",dailyReportEnabled:true,dailyReportTime:settings.dailyReportTime||"21:00",timeZone:deviceZone,alertSecurity:settings.alertSecurity===true,alertFailedTransactions:settings.alertFailedTransactions===true,alertEachTransaction:settings.alertEachTransaction===true,largeTransactionAlerts:settings.largeTransactionAlerts===true,largeTransactionThreshold:Number(settings.largeTransactionThreshold)||0,scanMode:settings.scanMode,reportShowTransactions:settings.reportShowTransactions!==false,reportShowExceptions:settings.reportShowExceptions!==false,reportShowSecurity:settings.reportShowSecurity===true});
+        }
       }catch(error){var status=document.getElementById("gmailNotificationSettingsStatus");if(status)status.textContent=error.message;}
     }
     async function veeSaveGmailNotificationSettings(){
@@ -2640,7 +2654,11 @@
           action:"save",
           dailyReportEnabled:checked("gmailDailyReportEnabled"),
           dailyReportTime:(document.getElementById("gmailDailyReportTime")||{}).value||"21:00",
-          timeZone:(document.getElementById("gmailReportTimeZone")||{}).value||"Africa/Lagos",
+          timeZone:(document.getElementById("gmailReportTimeZone")||{}).value||"UTC",
+          scanMode:(document.getElementById("gmailScanMode")||{}).value||"all_inbox",
+          reportShowTransactions:checked("gmailReportShowTransactions"),
+          reportShowExceptions:checked("gmailReportShowExceptions"),
+          reportShowSecurity:checked("gmailReportShowSecurity"),
           alertSecurity:checked("gmailAlertSecurity"),
           alertFailedTransactions:checked("gmailAlertFailed"),
           alertEachTransaction:checked("gmailAlertEachTransaction"),
