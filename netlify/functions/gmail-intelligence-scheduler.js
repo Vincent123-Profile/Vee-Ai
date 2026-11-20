@@ -12,7 +12,7 @@ function database() {
 }
 function clean(value,max){return String(value||"").replace(/[\u0000-\u001f\u007f]/g," ").trim().slice(0,max);}
 function html(value){return clean(value,400).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
-function redact(value,max){const text=clean(value,max||180).replace(/\\b\\d{10,16}\\b/g,"••••••").replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi,"[email hidden]").replace(/\\+?\\d[\\d\\s()-]{8,}\\d/g,"[number hidden]");return html(text);}
+function redact(value,max){const text=clean(value,max||180).replace(/\b\d{10,16}\b/g,"••••••").replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,"[email hidden]").replace(/\+?\d[\d\s()-]{8,}\d/g,"[number hidden]");return html(text);}
 function validTimeZone(value){if(typeof value!=="string"||value.length>80)return false;try{new Intl.DateTimeFormat("en",{timeZone:value}).format();return true;}catch(_){return false;}}
 function localClock(timeZone,now){
   const parts=new Intl.DateTimeFormat("en-GB",{timeZone,year:"numeric",month:"2-digit",day:"2-digit",weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(now);
