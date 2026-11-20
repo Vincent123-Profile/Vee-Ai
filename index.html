@@ -1568,7 +1568,62 @@
 .finance-note{font-size:11px;color:var(--text-secondary);line-height:1.5;margin-top:8px}
 @media(max-width:560px){.finance-summary{grid-template-columns:1fr 1fr}.finance-summary .finance-stat:last-child{grid-column:1/-1}.finance-form{grid-template-columns:1fr}.finance-form textarea,.finance-form button{grid-column:1}.finance-row{align-items:flex-start}}
 
-  </style>
+  
+    /* Final responsive safeguards for chat, composer and workspace layouts */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { width: 100%; min-width: 0; min-height: 100%; overflow-x: hidden; }
+    body { min-height: 100vh; min-height: 100dvh; }
+    .app-shell, .stage, .chat-stream, .composer-wrap, .composer-box,
+    .home-screen, .home-wrap, .modal-panel, .settings-section { min-width: 0; }
+    .app-shell { width: 100%; min-height: 100vh; min-height: 100dvh; height: 100vh; height: 100dvh; }
+    .stage { width: 100%; max-width: 100%; }
+    .chat-stream { width: 100%; max-width: 100%; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+    .msg-row, .msg-bubble { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: normal; }
+    .composer-wrap { width: 100%; max-width: 100%; padding-bottom: max(2px, env(safe-area-inset-bottom)); }
+    .composer-box { width: 100%; max-width: 100%; }
+    textarea#userInput { width: 100%; min-width: 0; max-width: 100%; font-size: 16px; overflow-wrap: anywhere; }
+    .composer-controls { min-width: 0; flex-shrink: 0; }
+    .privacy-footer { max-width: 100%; padding-inline: 4px; overflow-wrap: anywhere; }
+    img, video, canvas, iframe, table { max-width: 100%; }
+    input, select, textarea, button { max-width: 100%; }
+    @media (max-width: 767px) {
+      .app-shell { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+      .chat-stream { padding: 12px 2px max(14px, env(safe-area-inset-bottom)); gap: 12px; }
+      .msg-row { max-width: 94%; }
+      .msg-bubble { font-size: 14px; line-height: 1.55; padding: 11px 13px; }
+      .composer-box { gap: 6px; padding: 7px 8px 7px 12px; }
+      textarea#userInput { min-height: 40px; max-height: min(30dvh, 150px); }
+      .composer-controls { gap: 4px; }
+      .composer-controls button { flex: 0 0 36px; width: 36px; min-width: 36px; height: 36px; }
+      .send-btn { flex: 0 0 40px !important; width: 40px !important; min-width: 40px !important; }
+      .privacy-footer { font-size: 10px; line-height: 1.4; }
+    }
+    @media (max-width: 380px) {
+      .app-shell { padding-left: 7px; padding-right: 7px; }
+      .composer-box { padding-left: 10px; padding-right: 6px; }
+      .composer-controls button { flex-basis: 33px; width: 33px; min-width: 33px; height: 33px; }
+      .send-btn { flex-basis: 36px !important; width: 36px !important; min-width: 36px !important; }
+      .msg-row { max-width: 97%; }
+    }
+    @media (min-width: 768px) {
+      .app-shell { width: min(100%, 1440px); }
+      .composer-wrap { width: 100%; max-width: 100%; }
+      .chat-stream { padding-inline: clamp(16px, 3vw, 42px); }
+      .composer-box { padding: 10px 14px 10px 18px; }
+      textarea#userInput { max-height: min(24dvh, 190px); }
+    }
+    @media (min-width: 1440px) {
+      .app-shell { max-width: 1440px; padding-left: 36px; padding-right: 36px; }
+      .chat-stream { padding-inline: clamp(36px, 6vw, 88px); }
+      .composer-wrap { max-width: 1180px; margin-inline: auto; }
+    }
+    @media (max-height: 520px) {
+      .app-shell { padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: max(4px, env(safe-area-inset-bottom)); }
+      .top-nav { flex-shrink: 0; }
+      .chat-stream { padding-top: 8px; padding-bottom: 8px; }
+      textarea#userInput { max-height: 84px; }
+    }
+</style>
 </head>
 <body>
   <!-- Decorative Futuristic Background -->
@@ -1779,7 +1834,6 @@
           </button>
         </div>
       </div>
-      <div class="composer-footer">Vee-AI • Multilingual Intelligence & Nigerian Innovation</div>
       <div class="privacy-footer" role="note">Your privacy matters. Review how Vee-AI protects your information and connected services. <button type="button" class="act-btn" onclick="veeOpenModal('privacyModal')">Privacy and security details</button></div>
     </div>
   </div>
