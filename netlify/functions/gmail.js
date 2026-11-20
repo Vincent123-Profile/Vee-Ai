@@ -341,7 +341,9 @@ async function syncMessages(uid, db, token, accountId, afterMs) {
 }
 exports.runScheduledScan = async (db, uid, accountId) => {
   if (!/^[a-zA-Z0-9_-]{1,80}$/.test(String(accountId || ""))) throw new Error("Invalid mailbox reference.");
-  const target = db.ref("gmailConnections/" + uid + "/accounts/" + accountId);
+  const target = accountId==="legacy"
+    ? db.ref("gmailConnections/" + uid)
+    : db.ref("gmailConnections/" + uid + "/accounts/" + accountId);
   const tokenSnapshot = await target.child("tokenVault").once("value");
   if (!tokenSnapshot.exists()) return { skipped:true, reason:"missing_token" };
   const saved = decrypt(uid, tokenSnapshot.val());
