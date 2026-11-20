@@ -1075,6 +1075,17 @@
     @media(max-width:700px){.workspace-nav{gap:2px;margin-right:0}.workspace-nav button{padding:8px;font-size:10.5px}.home-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:480px){.workspace-nav button{padding:7px 6px;font-size:10px}.home-hero{align-items:flex-start;flex-direction:column}.home-primary-btn{width:100%}.home-feature-grid{gap:8px}.home-feature{min-height:108px;padding:12px}}
     @media(prefers-reduced-motion:reduce){.home-feature,.home-recent-item{transition:none}}
+    /* Consistent responsive workspace navigation */
+    .workspace-nav{min-width:0;max-width:100%;flex-wrap:nowrap}
+    .workspace-nav button{flex:0 1 auto;min-width:0}
+    @media(max-width:767px){
+      .top-nav{row-gap:9px}
+      .workspace-nav{order:3;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;max-width:100%;margin:4px 0 0;gap:6px;padding:4px;border:1px solid var(--glass-border);border-radius:15px;background:var(--glass-surface)}
+      .workspace-nav button{width:100%;min-width:0;min-height:38px;padding:8px 4px;font-size:clamp(10px,2.7vw,12px);line-height:1.15;white-space:normal;overflow-wrap:anywhere;border-radius:10px}
+      .nav-actions{min-width:0}
+    }
+    @media(max-width:380px){.workspace-nav{gap:4px;padding:3px}.workspace-nav button{min-height:36px;padding:7px 2px;font-size:10px}}
+    @media(min-width:768px) and (max-width:1100px){.workspace-nav{gap:3px}.workspace-nav button{padding:8px 8px;font-size:10.5px}}
 
     /* Refined welcome experience */
     .welcome-screen{padding:22px 10px 24px}
@@ -1783,10 +1794,14 @@
     .vee-help-entry{font-size:12px!important}
     .vee-manual-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .vee-manual-card{padding:14px;border:1px solid var(--glass-border);border-radius:15px;background:var(--glass-surface)}
-    .vee-manual-card h3{font-size:14px;margin:0 0 7px;color:var(--text-primary)}
-    .vee-manual-card p{font-size:12.5px;margin:0;color:var(--text-secondary);line-height:1.55}
-    .vee-manual-note{border-left:3px solid var(--orange);padding:10px 12px;background:rgba(241,76,21,.07);border-radius:0 10px 10px 0}
-    @media(max-width:560px){.vee-guide-overlay{padding:10px}.vee-guide-panel{border-radius:20px;max-height:92dvh;padding:18px}.vee-manual-grid{grid-template-columns:1fr}.vee-guide-actions{flex-wrap:wrap}.vee-guide-actions button{flex:1}}
+    .vee-manual-card h3{font-size:15px;font-weight:850;margin:0 0 8px;color:var(--text-primary);line-height:1.35}
+    .vee-manual-card p{font-size:14px;font-weight:650;margin:0;color:var(--text-primary);line-height:1.65;letter-spacing:.005em}
+    .vee-manual-card strong,.vee-manual-note strong{font-weight:850;color:var(--text-primary)}
+    .vee-manual-note{border-left:3px solid var(--orange);padding:12px 14px;background:rgba(241,76,21,.09);border-radius:0 10px 10px 0;color:var(--text-primary);font-weight:650;line-height:1.6}
+    .vee-guide-panel p{font-weight:600;color:var(--text-primary)}
+    .vee-guide-point span:last-child{font-size:14px;font-weight:650;line-height:1.6;color:var(--text-primary)}
+    .vee-guide-panel h2{font-weight:900}
+    @media(max-width:560px){.vee-guide-overlay{padding:10px}.vee-guide-panel{border-radius:20px;max-height:92dvh;padding:18px}.vee-manual-grid{grid-template-columns:1fr}.vee-guide-actions{flex-wrap:wrap}.vee-guide-actions button{flex:1}.vee-manual-card{padding:15px}.vee-manual-card p{font-size:14px;line-height:1.7}}
 
 </style>
 </head>
@@ -2120,7 +2135,7 @@
         <button type="button" class="account-secondary" id="gmailSyncBtn" onclick="veeGmailSync()">Scan latest emails</button>
         <button type="button" class="account-secondary" id="gmailDisconnectBtn" onclick="veeGmailDisconnect()">Disconnect Gmail</button>
       </div>
-      <p id="gmailIntelligenceStatus" class="account-copy" role="status" aria-live="polite"></p>
+      <p id="gmailIntelligenceStatus" class="account-copy" role="status" aria-live="polite">You need an approvement from the admin to be able to connect your mail 💌 reach out to the admin</p>
       <div class="finance-section"><h3>Inbox intelligence</h3>
         <div class="planner-filters" id="gmailCategoryFilters" style="display:flex;gap:7px;flex-wrap:wrap">
           <button type="button" class="account-secondary" onclick="veeLoadGmailEmails('all')">All</button>
@@ -2228,20 +2243,20 @@
       <h2 id="veeManualTitle">Vee-AI User Manual</h2>
       <p>Learn what each available feature does and how to use it. This guide covers the user experience only.</p>
       <div class="vee-manual-grid">
-        <article class="vee-manual-card"><h3>AI Chat</h3><p>Open AI Chat to ask questions, get explanations, brainstorm, write, translate, plan and work through problems. Type a message and press Send. Use Enter to send or Shift + Enter for a new line.</p></article>
-        <article class="vee-manual-card"><h3>AI Brains</h3><p>Open Chat Settings to select a response style. Vee Brain is the flagship assistant. Fabzi is creative and friendly. Hassign focuses on analysis and technical topics. Kurah supports calm planning. Portable uses an energetic, informal style.</p></article>
+        <article class="vee-manual-card"><h3>AI Chat</h3><p>Open AI Chat to ask questions, get explanations, brainstorm, write, translate, plan and solve problems. Ask for emails, captions, summaries, original lyrics, ideas or step-by-step guidance. Type your request and press Send. Use Enter to send or Shift + Enter for a new line.</p></article>
+        <article class="vee-manual-card"><h3>AI Brains</h3><p>Open Chat Settings to select a response style. Choose Vee Brain for general questions and everyday tasks. Choose Fabzi for friendly creative help. Choose Hassign for structured analysis and technical explanations. Choose Kurah for calm planning. Choose Portable for energetic, informal conversation.</p></article>
         <article class="vee-manual-card"><h3>Response languages</h3><p>Choose Auto, Queen's English, Nigerian Pidgin, Yoruba, Igbo or Hausa in Chat Settings. Auto lets Vee-AI follow the language of your conversation.</p></article>
         <article class="vee-manual-card"><h3>Explore</h3><p>Open Explore from the Home workspace to start focused conversations about areas such as finance, business, productivity and planning.</p></article>
-        <article class="vee-manual-card"><h3>My Memory</h3><p>Save useful details you want Vee-AI to use in future chats. Review, edit or delete saved entries, and control whether saved memories are used.</p></article>
-        <article class="vee-manual-card"><h3>Planner</h3><p>Create tasks with notes, due dates and times. Filter tasks by all, open or completed. Enable reminders and link Telegram where supported.</p></article>
-        <article class="vee-manual-card"><h3>Finance</h3><p>Record income and spending, set a monthly budget, create savings goals and track debts. Review entries before relying on totals.</p></article>
-        <article class="vee-manual-card"><h3>Content Studio</h3><p>Create and organise content drafts. Save drafts and return to them from your workspace.</p></article>
-        <article class="vee-manual-card"><h3>Email Intelligence</h3><p>Connect Gmail through Google's permission screen. Run scans to organise selected inbox messages, including bank alerts, travel, job and security-related messages. Review findings carefully. Vee-AI requests read-only access and does not send, delete or modify emails.</p></article>
-        <article class="vee-manual-card"><h3>Business Workspace</h3><p>Save a business profile and relevant details to support tailored content. Background content preparation is optional and requires your approval.</p></article>
+        <article class="vee-manual-card"><h3>My Memory</h3><p>Save preferences, goals and useful details you want Vee-AI to remember. Review saved entries, edit them, delete them or turn memory use off. Relevant saved details help personalise future replies.</p></article>
+        <article class="vee-manual-card"><h3>Planner</h3><p>Add a task, write notes, set a due date and mark the task complete when finished. Filter the list to see all, unfinished or completed tasks. Use supported reminders to help you stay on schedule.</p></article>
+        <article class="vee-manual-card"><h3>Finance</h3><p>Record money received and money spent. Set a budget, create savings targets, and track money people owe you or money you owe. Review each entry and category to keep your records accurate.</p></article>
+        <article class="vee-manual-card"><h3>Content Studio</h3><p>Prepare social posts, product descriptions, announcements and other writing. Save drafts, reopen them and edit your work later.</p></article>
+        <article class="vee-manual-card"><h3>Email Intelligence</h3><p>Gmail connection requires admin approval first. After approval, connect through Google's permission screen. Scan supported messages such as bank alerts, flight details, job messages and possible suspicious emails. Review every result yourself. Vee-AI uses read-only access and does not send, delete or change your emails.</p></article>
+        <article class="vee-manual-card"><h3>Business Workspace</h3><p>Add business details so Vee-AI has context when helping with product descriptions, promotions, customer replies and business content. Optional background content preparation requires your approval.</p></article>
         <article class="vee-manual-card"><h3>History</h3><p>Open History to find saved conversations and continue a previous discussion. Guest history stays in the browser. Signed-in history syncs to your account.</p></article>
         <article class="vee-manual-card"><h3>Games</h3><p>Open Games from the main navigation to access Vee-AI's available game experience.</p></article>
         <article class="vee-manual-card"><h3>Settings and personalisation</h3><p>Change appearance, ambient effects, focus layout, profile details, memory preferences and communication-style learning. You may also open the Privacy Centre.</p></article>
-        <article class="vee-manual-card"><h3>Telegram</h3><p>Link the Vee-AI Telegram bot using a one-time link code from Settings. Use the bot for supported assistant tasks and reminders.</p></article>
+        <article class="vee-manual-card"><h3>Telegram</h3><p>Open Settings, generate a one-time Telegram linking code and follow the linking steps. Once linked, use the Vee-AI bot for supported chat tasks and reminders.</p></article>
       </div>
       <div class="settings-section" style="margin-top:18px"><h3>Privacy and security</h3>
         <p>Guest conversations are stored in your browser. Signed-in conversation history syncs to your Vee-AI account. Conversations are not end-to-end encrypted.</p>
@@ -2512,6 +2527,8 @@
         window.history.replaceState({},document.title,window.location.pathname+(query?"?"+query:"")+window.location.hash);
       }
     }
+    var veeGmailAdminApproved = false;
+    var veeGmailApprovalMessage = "You need an approvement from the admin to be able to connect your mail 💌 reach out to the admin";
     async function veeRefreshGmailStatus(){
       var status=document.getElementById("gmailIntelligenceStatus");
       if(!veeCurrentUser||!veeCurrentUser.emailVerified){if(status)status.textContent="Sign in with a verified Vee-AI account to connect Gmail.";return;}
@@ -2520,16 +2537,20 @@
         var connected=document.getElementById("gmailConnectionStatus");
         var last=document.getElementById("gmailLastSync");
         var alerts=document.getElementById("gmailSecurityCount");
+        veeGmailAdminApproved = data.approved === true;
+        var connectButton=document.getElementById("gmailConnectBtn");
+        if(connectButton){connectButton.disabled=!veeGmailAdminApproved&&!data.connected;connectButton.textContent=data.connected?"Gmail connected":veeGmailAdminApproved?"Connect Gmail":"Admin approval required";}
         if(connected)connected.textContent=data.connected?(data.gmailAddress||"Connected"):"Not connected";
         if(last)last.textContent=data.lastSyncAtMs?new Date(data.lastSyncAtMs).toLocaleString():"Not synced";
         if(alerts)alerts.textContent=String(data.securityAlertCount||0);
-        if(status)status.textContent=data.connected?"Gmail is connected with read-only access.":"Connect a Gmail account to begin.";
+        if(status)status.textContent=data.connected?"Gmail is connected with read-only access.":veeGmailAdminApproved?"Your Gmail connection is ready to set up.":veeGmailApprovalMessage;
         if(data.connected)veeLoadGmailEmails(veeGmailCurrentFilter);
       }catch(error){if(status)status.textContent=error.message||"Unable to check Gmail connection.";}
     }
     async function veeGmailConnect(){
       var status=document.getElementById("gmailIntelligenceStatus");
       try{
+        if(!veeGmailAdminApproved){if(status)status.textContent=veeGmailApprovalMessage;return;}
         if(status)status.textContent="Preparing secure Google sign-in...";
         var data=await veeGmailRequest("connect");
         if(!data.authorizationUrl)throw new Error("Google sign-in URL was not returned.");
