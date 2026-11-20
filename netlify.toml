@@ -1,5 +1,5 @@
 [functions."gmail-intelligence-scheduler"]
-  schedule = "*/5 * * * *"
+  schedule = "* * * * *"
 
 [functions."business-automation-scheduler"]
   schedule = "* * * * *"
