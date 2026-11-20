@@ -81,7 +81,7 @@ async function sendImmediateAlerts(db,token,chats,uid,accountId,items,settings){
   }
 }
 async function sendDailyReport(db,token,chats,uid,settings,now){
-  if(settings.dailyReportEnabled!==true||!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(settings.dailyReportTime||"")))return {status:"disabled_or_invalid_time"};
+  if(settings.dailyReportEnabled!==true||!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(settings.dailyReportTime||"")))return {status:"disabled_or_invalid_time"};
   const zone=validTimeZone(settings.timeZone)?settings.timeZone:"UTC";
   const clock=localClock(zone,now);
   const current=clock.time.split(":").map(Number),wanted=String(settings.dailyReportTime).split(":").map(Number);
@@ -129,7 +129,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
       if(rows.length<30){
         const eventTime=Number(tx.transactionAtMs||item.internalDate||0);
         const timeLabel=eventTime?new Intl.DateTimeFormat("en-NG",{timeZone:zone,dateStyle:"short",timeStyle:"short"}).format(new Date(eventTime)):"Time unavailable";
-        rows.push((tx.direction==="in"?"➕ ":"➖ ")+money(amount,currency)+" · "+html(item.bank&&item.bank.name||"Bank not identified")+" · "+html(timeLabel)+"\\n"+html(tx.counterparty||"Name unavailable")+" · "+html(tx.narration||item.subject||item.snippet||"Description unavailable").slice(0,180));
+        rows.push((tx.direction==="in"?"➕ ":"➖ ")+money(amount,currency)+" · "+html(item.bank&&item.bank.name||"Bank not identified")+" · "+html(timeLabel)+"\n"+html(tx.counterparty||"Name unavailable")+" · "+html(tx.narration||item.subject||item.snippet||"Description unavailable").slice(0,180));
       }
     }
   }
@@ -138,7 +138,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
   const totalsText=currencies.length?currencies.map(currency=>{
     const g=groups[currency],net=g.net;
     return "<b>"+html(currency)+"</b> · Credits "+money(g.in,currency)+" · Debits "+money(g.out,currency)+" · Net "+(net>=0?"+":"")+money(net,currency)+" · Transactions "+g.transactions;
-  }).join("\\n"):"No bank transaction emails found for this date.";
+  }).join("\n"):"No bank transaction emails found for this date.";
   const showTransactions=settings.reportShowTransactions!==false;
   const showExceptions=settings.reportShowExceptions!==false;
   const showSecurity=settings.reportShowSecurity===true;
@@ -146,10 +146,10 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
     const ms=Number(item.transaction&&item.transaction.transactionAtMs||item.internalDate||0);
     return ms>0&&localDateFor(ms,zone)===clock.date&&item.riskLevel&&item.riskLevel!=="none";
   }).length:0;
-  const exceptionText=showExceptions?"\\nFailed: "+counts.failed+" · Reversed: "+counts.reversed+" · Refunded: "+counts.refunded+" · Pending: "+counts.pending+" · Needs review: "+counts.review:"";
-  const securityText=showSecurity?"\\n🛡️ Security findings: "+security:"";
-  const transactionText=showTransactions?"\\n\\n<b>Transaction details</b>\\n"+(rows.length?rows.join("\\n\\n"):"No high-confidence transactions to list."):"";
-  const message="📊 <b>Vee-AI Daily Bank Report</b>\\n"+html(clock.date)+" · "+html(zone)+"\\n\\n"+totalsText+"\\n\\n<b>Activity counts</b>\\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\\n\\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
+  const exceptionText=showExceptions?"\nFailed: "+counts.failed+" · Reversed: "+counts.reversed+" · Refunded: "+counts.refunded+" · Pending: "+counts.pending+" · Needs review: "+counts.review:"";
+  const securityText=showSecurity?"\n🛡️ Security findings: "+security:"";
+  const transactionText=showTransactions?"\n\n<b>Transaction details</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence transactions to list."):"";
+  const message="📊 <b>Vee-AI Daily Bank Report</b>\n"+html(clock.date)+" · "+html(zone)+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
   const delivered=await deliverOnce(db,token,chats,uid,"daily_"+clock.date,message.slice(0,3900));
   return {status:delivered?"sent":"already_sent_or_in_progress",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
 }
