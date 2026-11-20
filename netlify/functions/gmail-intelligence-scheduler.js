@@ -135,6 +135,19 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
       }
     }
   }
+  const bankGroups={};
+  for(const item of unique){
+    const tx=item.transaction||{},amount=Number(tx.amount||0),currency=String(tx.currency||"UNKNOWN").toUpperCase();
+    const bankName=String(item.bank&&item.bank.name||"Bank not identified"),key=bankName+"|"+currency;
+    if(!bankGroups[key])bankGroups[key]={bank:bankName,currency,in:0,out:0,transactions:0,review:0};
+    const group=bankGroups[key];group.transactions++;
+    const status=String(tx.transactionStatus||"unknown");
+    const verified=amount>0&&(tx.direction==="in"||tx.direction==="out")&&item.classificationConfidence==="high"&&!item.needsReview&&status!=="failed"&&status!=="pending";
+    if(!verified){group.review++;continue;}
+    if(tx.direction==="in")group.in+=amount;
+    if(tx.direction==="out")group.out+=amount;
+  }
+  const bankText=Object.values(bankGroups).sort((x,y)=>x.bank.localeCompare(y.bank)).map(g=>"<b>"+html(g.bank)+" · "+html(g.currency)+"</b>\\nCredits "+money(g.in,g.currency)+" · Debits "+money(g.out,g.currency)+" · Records "+g.transactions+" · Review "+g.review).join("\\n\\n");
   const currencies=Object.keys(groups).sort();
   currencies.forEach(currency=>{groups[currency].net=groups[currency].in-groups[currency].out;});
   const totalsText=currencies.length?currencies.map(currency=>{
@@ -151,7 +164,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
   const exceptionText=showExceptions?"\nFailed: "+counts.failed+" · Reversed: "+counts.reversed+" · Refunded: "+counts.refunded+" · Pending: "+counts.pending+" · Needs review: "+counts.review:"";
   const securityText=showSecurity?"\n🛡️ Security findings: "+security:"";
   const transactionText=showTransactions?"\n\n<b>Transaction details</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence transactions to list.")+(options.demoMode&&unique.length>rows.length?"\n\nShowing the latest "+rows.length+" transaction details. All eligible records are included in the totals.":""):"";
-  const message=(options.demoMode?"📊 <b>Vee-AI Financial Intelligence Demo Report</b>":"📊 <b>Vee-AI Daily Bank Report</b>")+"\n"+(options.demoMode?"All available connected Gmail financial records":"Reporting date: "+clock.date)+" · "+html(zone)+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
+  const message=(options.demoMode?"📊 <b>Vee-AI Financial Intelligence Demo Report</b>":"📊 <b>Vee-AI Daily Bank Report</b>")+"\n"+(options.demoMode?"All available connected Gmail financial records":"Reporting date: "+clock.date)+" · "+html(zone)+"\n\n<b>Bank breakdown</b>\n"+(bankText||"No connected bank records.")+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
   const deliveryKey=options.deliveryKey||("daily_"+clock.date);
   const parts=[];let currentPart="";
   for(const line of message.split("\n")){const next=currentPart?currentPart+"\n"+line:line;if(next.length>3800&&currentPart){parts.push(currentPart);currentPart=line;}else currentPart=next;}
