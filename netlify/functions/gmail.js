@@ -437,10 +437,6 @@ exports.handler = async event => {
     const accountId = String(body.accountId || "").trim();
     if (accountId && !/^[a-zA-Z0-9_-]{1,80}$/.test(accountId)) return json(400,{error:"Invalid email account reference."});
     if (body.action === "connect") {
-      const approvalSnapshot = await db.ref("gmailAccessApprovals/" + user.uid).once("value");
-      const approvalRecord = approvalSnapshot.val();
-      const approved = approvalRecord === true || !!(approvalRecord && approvalRecord.approved === true);
-      if (!approved) return json(403,{error:"You need an approvement from the admin to be able to connect your mail 💌 reach out to the admin",code:"GMAIL_ADMIN_APPROVAL_REQUIRED"});
       const accountId = "mail_" + crypto.randomBytes(12).toString("hex");
       const state = crypto.randomBytes(32).toString("hex");
       await db.ref("gmailOAuthStates/" + state).set({uid:user.uid,accountId,createdAtMs:Date.now(),expiresAtMs:Date.now()+10*60*1000});
@@ -467,7 +463,7 @@ exports.handler = async event => {
       const approvalSnapshot = await db.ref("gmailAccessApprovals/" + user.uid).once("value");
       const approvalRecord = approvalSnapshot.val();
       const approved = approvalRecord === true || !!(approvalRecord && approvalRecord.approved === true);
-      return json(200,{approved,connected:accounts.some(item=>item.connected),gmailAddress:accounts.length===1?accounts[0].gmailAddress:"",accounts,lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0});
+      return json(200,{approved:true,connected:accounts.some(item=>item.connected),gmailAddress:accounts.length===1?accounts[0].gmailAddress:"",accounts,lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0});
     }
     if (body.action === "disconnect") {
       if (!accountId) return json(400,{error:"Choose an email account to disconnect."});
