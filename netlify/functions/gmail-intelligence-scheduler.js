@@ -10,7 +10,7 @@ function database() {
   }
   return app.database();
 }
-function clean(value,max){return String(value||"").replace(/[\\u0000-\\u001f\\u007f]/g," ").trim().slice(0,max);}
+function clean(value,max){return String(value||"").replace(/[\u0000-\u001f\u007f]/g," ").trim().slice(0,max);}
 function html(value){return clean(value,400).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function validTimeZone(value){if(typeof value!=="string"||value.length>80)return false;try{new Intl.DateTimeFormat("en",{timeZone:value}).format();return true;}catch(_){return false;}}
 function localClock(timeZone,now){
@@ -26,7 +26,7 @@ async function sendTelegram(token,chatId,text){
 }
 async function chatsForUser(db,uid){
   const snap=await db.ref("telegram/accountsByChat").once("value");
-  return Object.entries(snap.val()||{}).filter(([,account])=>account&&String(account.uid)===String(uid)).map(([chatId])=>chatId).filter(id=>/^\\d{1,24}$/.test(id));
+  return Object.entries(snap.val()||{}).filter(([,account])=>account&&String(account.uid)===String(uid)).map(([chatId])=>chatId).filter(id=>/^\d{1,24}$/.test(id));
 }
 async function deliverOnce(db,token,chats,uid,key,message){
   const ref=db.ref("telegram/emailIntelligenceDeliveries/"+uid+"/"+key);
@@ -81,7 +81,7 @@ async function sendImmediateAlerts(db,token,chats,uid,accountId,items,settings){
   }
 }
 async function sendDailyReport(db,token,chats,uid,settings,now){
-  if(settings.dailyReportEnabled!==true||!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(settings.dailyReportTime||"")))return {status:"disabled_or_invalid_time"};
+  if(settings.dailyReportEnabled!==true||!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(settings.dailyReportTime||"")))return {status:"disabled_or_invalid_time"};
   const zone=validTimeZone(settings.timeZone)?settings.timeZone:"UTC";
   const clock=localClock(zone,now);
   const current=clock.time.split(":").map(Number),wanted=String(settings.dailyReportTime).split(":").map(Number);
