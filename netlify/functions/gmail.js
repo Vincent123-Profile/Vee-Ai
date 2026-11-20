@@ -291,7 +291,7 @@ function classifyEmail(email) {
     needsReview
   };
 }
-async function syncMessages(uid, db, token, accountId, afterMs) {
+async function syncMessages(uid, db, token, accountId, afterMs, scanMode) {
   const query = Number(afterMs) > 0 ? "messages?maxResults=100&includeSpamTrash=true&q=" + encodeURIComponent("after:" + Math.max(0,Math.floor(Number(afterMs)/1000))) : "messages?maxResults=30&includeSpamTrash=true";
   const list = await gmailFetch(token.accessToken,query);
   const messages = Array.isArray(list.messages) ? list.messages : [];
@@ -329,6 +329,7 @@ async function syncMessages(uid, db, token, accountId, afterMs) {
       };
     }));
     for (const record of batch.filter(Boolean)) {
+      if (scanMode === "financial_only" && !(record.categories || []).includes("bank")) continue;
       await db.ref("gmailConnections/" + uid + (accountId==="legacy" ? "/emails/" : "/accounts/" + accountId + "/emails/") + record.id).set(record);
       saved.push(record);
     }
@@ -350,7 +351,9 @@ exports.runScheduledScan = async (db, uid, accountId) => {
   const statusSnapshot = await target.child("status").once("value");
   const previousSyncAtMs = Number((statusSnapshot.val() || {}).lastSyncAtMs || 0);
   const fresh = await refreshAccessToken(uid, db, saved, accountId);
-  const emails = await syncMessages(uid, db, fresh, accountId, previousSyncAtMs ? previousSyncAtMs - 10 * 60 * 1000 : 0);
+  const settingsSnapshot = await db.ref("users/" + uid + "/emailIntelligenceSettings").once("value");
+  const settings = settingsSnapshot.val() || {};
+  const emails = await syncMessages(uid, db, fresh, accountId, previousSyncAtMs ? previousSyncAtMs - 10 * 60 * 1000 : 0, settings.scanMode || "all_inbox");
   return { accountId, gmailAddress:fresh.gmailAddress||"", synced:emails.length, securityAlerts:emails.filter(item=>item.riskLevel!=="none").length };
 };
 
@@ -477,7 +480,9 @@ exports.handler = async event => {
         if(!tokenSnapshot.exists())return json(400,{error:"This email account is not connected."});
         const saved=decrypt(user.uid,tokenSnapshot.val());
         const fresh=await refreshAccessToken(user.uid,db,saved,accountId);
-        const emails=await syncMessages(user.uid,db,fresh,accountId);
+        const settingsSnapshot=await db.ref("users/"+user.uid+"/emailIntelligenceSettings").once("value");
+        const settings=settingsSnapshot.val()||{};
+        const emails=await syncMessages(user.uid,db,fresh,accountId,0,settings.scanMode||"all_inbox");
         await target.child("status").update({connected:true,accountId,gmailAddress:fresh.gmailAddress||"",lastSyncAtMs:Date.now(),lastSyncCount:emails.length,securityAlertCount:emails.filter(item=>item.riskLevel!=="none").length});
         return json(200,{success:true,accountId,synced:emails.length,securityAlerts:emails.filter(item=>item.riskLevel!=="none").length});
       }
