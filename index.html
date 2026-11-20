@@ -2644,6 +2644,20 @@
       if(!response.ok)throw new Error(data.error||"Unable to schedule the demo report.");
       return data;
     }
+    async function veeRunGmailDemoReportUntilDone(){
+      var status=document.getElementById("gmailDemoReportStatus");
+      for(var attempt=0;attempt<12;attempt++){
+        try{
+          var result=await veeGmailDemoReportRequest({action:"process"});
+          if(result.status==="sent"){if(status)status.textContent="Delivered successfully to your linked Telegram chat(s). Your full report is now in Telegram.";return;}
+          if(result.status==="failed"){if(status)status.textContent="Delivery failed. Check Telegram and schedule another demo.";return;}
+          if(result.status==="cancelled"){if(status)status.textContent="Demo report was cancelled.";return;}
+          if(result.status==="waiting"&&result.scheduledAtMs>Date.now()){await new Promise(function(resolve){setTimeout(resolve,Math.min(5000,result.scheduledAtMs-Date.now()));});}
+          else await new Promise(function(resolve){setTimeout(resolve,5000);});
+        }catch(error){if(status)status.textContent=error.message||"Unable to deliver the demo report.";return;}
+      }
+      if(status)status.textContent="The report is still processing. Keep this page open and check Telegram.";
+    }
     async function veeScheduleGmailDemoReport(){
       var status=document.getElementById("gmailDemoReportStatus");
       var input=document.getElementById("gmailDemoReportTime");
@@ -2656,7 +2670,9 @@
         if(delay<45000||delay>30*60*1000)throw new Error("Choose a time between 1 and 30 minutes ahead. Check your phone is set to Nigeria time.");
         if(status)status.textContent="Saving your demo schedule...";
         var data=await veeGmailDemoReportRequest({action:"schedule",scheduledAtMs:scheduled.getTime(),chatId:"all"});
-        if(status)status.textContent="Scheduled and confirmed. Vee-AI will send your full connected-record report at "+value+" Nigeria time.";
+        if(status)status.textContent="Scheduled and confirmed. Waiting for "+value+" Nigeria time...";
+        if(window.veeDemoReportTimer)clearTimeout(window.veeDemoReportTimer);
+        window.veeDemoReportTimer=setTimeout(veeRunGmailDemoReportUntilDone,Math.max(500,scheduled.getTime()-Date.now()+500));
       }catch(error){if(status)status.textContent=error.message||"Unable to schedule the demo report.";}
     }
     async function veeCancelGmailDemoReport(){
