@@ -147,7 +147,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
     if(tx.direction==="in")group.in+=amount;
     if(tx.direction==="out")group.out+=amount;
   }
-  const bankText=Object.values(bankGroups).sort((x,y)=>x.bank.localeCompare(y.bank)).map(g=>"<b>"+html(g.bank)+" · "+html(g.currency)+"</b>\\nCredits "+money(g.in,g.currency)+" · Debits "+money(g.out,g.currency)+" · Records "+g.transactions+" · Review "+g.review).join("\\n\\n");
+  const bankText=Object.values(bankGroups).sort((x,y)=>x.bank.localeCompare(y.bank)).map(g=>"<b>"+html(g.bank)+" · "+html(g.currency)+"</b>\nCredits "+money(g.in,g.currency)+" · Debits "+money(g.out,g.currency)+" · Records "+g.transactions+" · Review "+g.review).join("\n\n");
   const currencies=Object.keys(groups).sort();
   currencies.forEach(currency=>{groups[currency].net=groups[currency].in-groups[currency].out;});
   const totalsText=currencies.length?currencies.map(currency=>{
