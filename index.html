@@ -698,6 +698,26 @@
     @media(max-width:420px){.ai-mode-bar{gap:7px}.ai-mode-field select{font-size:11px;padding:0 8px}.ai-mode-field label{font-size:9px}}
 .privacy-footer{max-width:760px;margin:8px auto 0;padding:0 12px;color:var(--text-muted);font-size:10px;line-height:1.5;text-align:center}
 .privacy-inline{padding:10px 12px;border:1px solid var(--glass-border);border-radius:12px;background:var(--orange-soft);line-height:1.55}.privacy-inline strong{color:var(--orange)}.privacy-footer button{font:inherit;color:var(--orange);text-decoration:underline;text-underline-offset:2px}
+    /* Vee-AI launch animation and focused chat layout */
+    .vee-launch-splash{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,rgba(241,76,21,.16),transparent 35%),#090909;color:#fff;opacity:1;visibility:visible;transition:opacity .45s ease,visibility .45s ease}
+    .vee-launch-splash.leaving{opacity:0;visibility:hidden;pointer-events:none}
+    .vee-launch-inner{display:flex;flex-direction:column;align-items:center;gap:19px;animation:veeLaunchRise 1.15s cubic-bezier(.22,1,.36,1) both}
+    .vee-launch-orb{position:relative;width:116px;height:116px;border-radius:38px;background:radial-gradient(circle at 28% 20%,#fff 0%,#ffb08f 8%,#ff6a38 23%,#f14c15 52%,#8e2105 100%);box-shadow:inset 0 5px 12px rgba(255,255,255,.72),inset 0 -13px 22px rgba(75,10,0,.5),0 0 34px rgba(241,76,21,.48),0 22px 55px rgba(0,0,0,.55);display:grid;place-items:center;animation:veeOrbFloat 2s ease-in-out infinite}
+    .vee-launch-orb:before{content:"";position:absolute;inset:9px;border:1px solid rgba(255,255,255,.42);border-radius:31px;transform:rotate(-12deg)}
+    .vee-launch-orb:after{content:"";position:absolute;width:29px;height:12px;top:15px;left:24px;border-radius:50%;background:rgba(255,255,255,.62);filter:blur(5px);transform:rotate(-35deg)}
+    .vee-launch-mark{width:57px;height:57px;filter:drop-shadow(0 3px 4px rgba(70,10,0,.35));position:relative;z-index:1}
+    .vee-launch-title{font-size:clamp(25px,5vw,32px);font-weight:800;letter-spacing:-.045em;color:#fff;text-shadow:0 3px 22px rgba(241,76,21,.25)}
+    .vee-launch-title span{color:#ff6a38}
+    .vee-launch-caption{font-size:10px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.48)}
+    @keyframes veeLaunchRise{from{opacity:0;transform:translateY(18px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes veeOrbFloat{0%,100%{transform:translateY(0) rotate(-3deg) scale(1)}50%{transform:translateY(-9px) rotate(3deg) scale(1.035)}}
+    .app-shell.focus-chat-mode{max-width:none;padding-left:clamp(10px,2vw,28px);padding-right:clamp(10px,2vw,28px)}
+    .app-shell.focus-chat-mode .top-nav{display:none}
+    .focus-nav-toggle{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:80;display:none;align-items:center;gap:7px;padding:10px 14px;border:1px solid rgba(241,76,21,.35);border-radius:999px;background:var(--glass-chrome);color:var(--text-primary);box-shadow:0 8px 24px rgba(0,0,0,.14);font:700 12px "Plus Jakarta Sans",sans-serif;cursor:pointer;backdrop-filter:blur(14px)}
+    .focus-nav-toggle svg{width:16px;height:16px;stroke:var(--orange)}
+    .app-shell.focus-chat-mode .focus-nav-toggle{display:inline-flex}
+    .focus-mode-button{border-color:rgba(241,76,21,.28)!important;color:var(--orange)!important}
+    @media(prefers-reduced-motion:reduce){.vee-launch-inner,.vee-launch-orb{animation:none}.vee-launch-splash{transition:none}}
     /* Floating Composer */
     .composer-wrap {
       position: relative;
@@ -1558,6 +1578,19 @@
     <canvas id="aiCanvas"></canvas>
   </div>
   <div class="cursor-aura" id="cursorAura" aria-hidden="true"></div>
+  <div class="vee-launch-splash" id="veeLaunchSplash" role="status" aria-label="Vee-AI is starting">
+    <div class="vee-launch-inner">
+      <div class="vee-launch-orb" aria-hidden="true">
+        <svg class="vee-launch-mark" viewBox="0 0 64 64" fill="none">
+          <path d="M10 15L32 52L54 15" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="32" cy="24" r="6" fill="#fff"/>
+          <circle cx="32" cy="24" r="2.5" fill="#F14C15"/>
+        </svg>
+      </div>
+      <div class="vee-launch-title">Vee<span>-AI</span></div>
+      <div class="vee-launch-caption">Your intelligent companion</div>
+    </div>
+  </div>
 
   <!-- Main Interactive App -->
   <div class="app-shell" id="appShell">
@@ -1602,12 +1635,20 @@
         <button type="button" class="icon-btn" onclick="veeShare()" title="Share on WhatsApp">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
         </button>
+        <button type="button" class="icon-btn focus-mode-button" id="focusModeButton" onclick="veeToggleFocusMode()" title="Give chat more space" aria-label="Hide navigation for a focused chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h10M4 17h16"/></svg>
+          <span class="btn-label">Focus</span>
+        </button>
         <button type="button" class="icon-btn" onclick="veeOpenModal('settingsModal')" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
       </div>
     </header>
 
+    <button type="button" class="focus-nav-toggle" id="focusNavToggle" onclick="veeToggleFocusMode()" aria-label="Show Vee-AI navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <span>Show menu</span>
+    </button>
     <main class="stage">
       <!-- Personal Home Dashboard -->
       <section class="home-screen" id="homeScreen">
@@ -1970,6 +2011,8 @@
       <div class="settings-section"><h3>Appearance</h3>
         <div class="setting-row"><span>Appearance mode</span><button type="button" class="toggle-pill" id="modalThemeToggle" onclick="veeToggleTheme()">Light (70% White)</button></div>
         <div class="setting-row"><span>Ambient AI particles</span><button type="button" class="toggle-pill" id="particleToggleBtn" onclick="veeToggleParticles()">Enabled</button></div>
+        <div class="setting-row"><span>Focused chat layout</span><button type="button" class="toggle-pill" id="focusModeSettingBtn" onclick="veeToggleFocusMode()">Off</button></div>
+        <p class="account-copy">Hide the top navigation while chatting to give your conversation more screen space. Use the floating Show menu button to bring navigation back.</p>
       </div>
       <div class="settings-section"><h3>Personalisation</h3>
         <form id="settingsProfileForm" onsubmit="veeSaveSettingsProfile(event)">
@@ -2670,7 +2713,9 @@
             });
             veeAccountGuestSessionIds = {};
             veeSessions.forEach(function(session) { if (session && session.id) veeAccountGuestSessionIds[session.id] = true; });
-            veeAccountSyncPromise = veeLoadAccountSessions(user).catch(function(error) {
+            veeAccountSyncPromise = veeLoadAccountSessions(user).then(function() {
+              return veeLoadFocusModePreference();
+            }).catch(function(error) {
               veeAccountSyncReady = false;
               console.error("Vee-AI account sync initialisation failed:", error);
               if (message) message.textContent = "Signed in, but account sync could not start. Your guest conversations remain safe. " + (error.message || "");
@@ -3300,6 +3345,46 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
     /* =========================================================
        CHAT NAVIGATION & HISTORY
        ========================================================= */
+    var veeFocusModeHidden = false;
+    try { veeFocusModeHidden = localStorage.getItem("vee_ai_focus_mode_hidden_v1") === "true"; } catch (e) {}
+    function veeApplyFocusMode() {
+      var shell = document.getElementById("appShell");
+      var chat = document.getElementById("chatStream");
+      var isChatView = !!(chat && chat.classList.contains("active"));
+      var enabled = veeFocusModeHidden && isChatView;
+      if (shell) shell.classList.toggle("focus-chat-mode", enabled);
+      var setting = document.getElementById("focusModeSettingBtn");
+      if (setting) setting.textContent = veeFocusModeHidden ? "On" : "Off";
+      var button = document.getElementById("focusModeButton");
+      if (button) {
+        button.title = veeFocusModeHidden ? "Show full navigation" : "Give chat more space";
+        button.setAttribute("aria-label", veeFocusModeHidden ? "Show full navigation" : "Hide navigation for a focused chat");
+      }
+    }
+    function veeToggleFocusMode() {
+      veeFocusModeHidden = !veeFocusModeHidden;
+      try { localStorage.setItem("vee_ai_focus_mode_hidden_v1", String(veeFocusModeHidden)); } catch (e) {}
+      veeApplyFocusMode();
+      if (veeCurrentUser && veeCurrentUser.emailVerified && veeAccountDb) {
+        veeAccountDb.ref("users/" + veeCurrentUser.uid + "/settings/focusModeHidden").set(veeFocusModeHidden).catch(function(error) {
+          console.error("Focus layout preference sync failed:", error);
+        });
+      }
+    }
+    async function veeLoadFocusModePreference() {
+      if (!veeCurrentUser || !veeCurrentUser.emailVerified || !veeAccountDb) return;
+      try {
+        var snapshot = await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/settings/focusModeHidden").once("value");
+        if (snapshot.exists()) {
+          veeFocusModeHidden = snapshot.val() === true;
+          try { localStorage.setItem("vee_ai_focus_mode_hidden_v1", String(veeFocusModeHidden)); } catch (e) {}
+          veeApplyFocusMode();
+        } else {
+          await veeAccountDb.ref("users/" + veeCurrentUser.uid + "/settings/focusModeHidden").set(veeFocusModeHidden);
+        }
+      } catch (error) { console.error("Focus layout preference load failed:", error); }
+    }
+
     function veeSetWorkspaceNav(active) {
       var homeBtn = document.getElementById("homeNavBtn");
       var chatBtn = document.getElementById("chatNavBtn");
@@ -3349,6 +3434,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       veeSetWorkspaceNav("home");
       veeRenderHome();
       veeCloseModal("historyModal");
+      veeApplyFocusMode();
     }
 
     function veeShowChatView() {
@@ -3358,6 +3444,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       document.getElementById("composerWrap").classList.remove("home-hidden");
       document.getElementById("quickStrip").style.display = "flex";
       veeSetWorkspaceNav("chat");
+      veeApplyFocusMode();
     }
 
     function veeNewChat() {
@@ -3372,6 +3459,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       document.getElementById("composerWrap").classList.remove("home-hidden");
       document.getElementById("welcomeScreen").classList.remove("hidden");
       veeSetWorkspaceNav("chat");
+      veeApplyFocusMode();
       veeCloseModal("historyModal");
       var input = document.getElementById("userInput");
       if (input) input.focus();
@@ -3870,6 +3958,19 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
     async function veeSaveBusinessVault(){try{if(!veeCurrentUser||!veeCurrentUser.emailVerified||!veeAccountDb)throw new Error("Sign in with a verified account first.");var profile=veeBusinessProfileFromForm();if(!profile.businessName||!profile.businessProducts||!profile.businessCustomers)throw new Error("Complete your business name, products or services, and target customers first.");veeBusinessVaultStatus("Saving your encrypted business profile...");var data=await veeBusinessAutomationRequest("account-profile-save",profile);veeBusinessVaultKey=true;veeBusinessVaultUnlockedUid=veeCurrentUser.uid;veeBusinessProfileContext=profile;veeBusinessProfileContextUid=veeCurrentUser.uid;veeBusinessVaultStatus(data.message||"Business profile saved securely.");}catch(error){veeBusinessVaultStatus(error.message||"Unable to save your business profile.");}}
     function veeGenerateBusinessContent(){if(!veeBusinessProfileContext||veeBusinessProfileContextUid!==(veeCurrentUser&&veeCurrentUser.uid)){veeBusinessVaultStatus("Save your business profile first.");return;}var profile=veeBusinessProfileFromForm();if(!profile.businessName||!profile.businessProducts||!profile.businessCustomers){veeBusinessVaultStatus("Add your business name, products or services, and target customers first.");return;}var prompt="Use this business profile to generate 7 distinct content ideas for the next week. For each idea include a strong hook, short talking points, a 30 to 60 second video script, caption, call to action, and best platform. Match the brand voice. Do not invent prices, guarantees, stock, credentials or claims. Ask for confirmation where facts are missing. The user has chosen to send this profile to the AI service for this request: "+JSON.stringify(profile);veeBusinessVaultStatus("Sending selected business details to Vee-AI. The AI service provider processes the supplied text.");veeCloseModal("businessWorkspaceModal");veeSendPrompt(prompt);}
 
+
+    // Vee-AI launch splash and saved chat layout preference
+    (function(){
+      var splash = document.getElementById("veeLaunchSplash");
+      if (splash) {
+        var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.setTimeout(function() {
+          splash.classList.add("leaving");
+          window.setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, reducedMotion ? 80 : 500);
+        }, reducedMotion ? 350 : 1850);
+      }
+      veeApplyFocusMode();
+    })();
 
     // Vee-AI install support
     (function(){
