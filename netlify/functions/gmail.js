@@ -245,6 +245,10 @@ function classifyEmail(email,timeZone) {
   const evidence = [];
   const transaction = extractTransaction(email,text,timeZone);
   const bank = identifyBank(email);
+  if(transaction.amount && !transaction.currency){
+    if(transaction.availableBalanceCurrency) transaction.currency=transaction.availableBalanceCurrency;
+    else if(bank.name!=="Bank not identified" && bank.name!=="Multiple bank names detected") transaction.currency="NGN";
+  }
   const senderAddress = (from.match(/<([^>]+)>/) || [])[1] || from;
   const senderDomain = (senderAddress.split("@").pop() || "").replace(/[>]/g,"").toLowerCase();
   const knownBankNames = /\b(access bank|first bank|gtbank|guaranty trust|uba|united bank for africa|zenith bank|moniepoint|opay|palmpay|kuda|wema|sterling bank|fidelity bank|fcmb|union bank|providus|stanbic|polaris bank|ecobank|jaiz bank|citibank|chase|barclays|hsbc|natwest|lloyds|revolut|wise)\b/i;
