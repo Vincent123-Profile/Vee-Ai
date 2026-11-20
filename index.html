@@ -2650,7 +2650,8 @@
       try{
         var value=input&&input.value;
         if(!value)throw new Error("Choose a delivery time first.");
-        var parts=value.split(":").map(Number),now=new Date(),scheduled=new Date(now.getFullYear(),now.getMonth(),now.getDate(),parts[0],parts[1],0,0);
+        var parts=value.split(":").map(Number),now=new Date(),dateParts=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(now),dateValues={};dateParts.forEach(function(part){if(part.type!=="literal")dateValues[part.type]=Number(part.value);});
+        var scheduled=new Date(Date.UTC(dateValues.year,dateValues.month-1,dateValues.day,parts[0]-1,parts[1],0,0));
         var delay=scheduled.getTime()-Date.now();
         if(delay<45000||delay>30*60*1000)throw new Error("Choose a time between 1 and 30 minutes ahead. Check your phone is set to Nigeria time.");
         if(status)status.textContent="Saving your demo schedule...";
