@@ -114,15 +114,15 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
     const amount=Number(tx.amount||0),currency=String(tx.currency||"UNKNOWN").toUpperCase();
     if(!groups[currency])groups[currency]={in:0,out:0,net:0,transactions:0};
     const group=groups[currency];group.transactions++;
-    if(item.needsReview||item.classificationConfidence!=="high"||!(amount>0)||!(tx.direction==="in"||tx.direction==="out")){
-      counts.review++;continue;
-    }
     if(status==="failed"){counts.failed++;continue;}
     if(status==="pending"){counts.pending++;continue;}
     if(status==="reversed")counts.reversed++;
     else if(status==="refunded"){counts.refunded++;}
-    else if(status==="successful")counts.successful++;
-    else counts.unknown++;
+    if(item.needsReview||item.classificationConfidence!=="high"||!(amount>0)||!(tx.direction==="in"||tx.direction==="out")){
+      counts.review++;continue;
+    }
+    if(status==="successful")counts.successful++;
+    else if(status!=="reversed"&&status!=="refunded")counts.unknown++;
     if(tx.direction==="in"){group.in+=amount;counts.credits++;}
     if(tx.direction==="out"){group.out+=amount;counts.debits++;}
     if(tx.direction==="in"||tx.direction==="out"){
