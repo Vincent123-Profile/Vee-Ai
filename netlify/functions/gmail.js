@@ -460,9 +460,6 @@ exports.handler = async event => {
       const accounts = Object.entries(accountsSnapshot.val() || {}).map(([id,record]) => {const status=record&&record.status||{};return {accountId:id,connected:status.connected===true,gmailAddress:status.gmailAddress||"",connectedAtMs:status.connectedAtMs||null,lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0};});
       if(legacyStatus.connected===true)accounts.unshift({accountId:"legacy",connected:true,gmailAddress:legacyStatus.gmailAddress||"",connectedAtMs:legacyStatus.connectedAtMs||null,lastSyncAtMs:legacyStatus.lastSyncAtMs||null,lastSyncCount:legacyStatus.lastSyncCount||0,securityAlertCount:legacyStatus.securityAlertCount||0,legacy:true});
       const status = legacyStatus;
-      const approvalSnapshot = await db.ref("gmailAccessApprovals/" + user.uid).once("value");
-      const approvalRecord = approvalSnapshot.val();
-      const approved = approvalRecord === true || !!(approvalRecord && approvalRecord.approved === true);
       return json(200,{approved:true,connected:accounts.some(item=>item.connected),gmailAddress:accounts.length===1?accounts[0].gmailAddress:"",accounts,lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0});
     }
     if (body.action === "disconnect") {
