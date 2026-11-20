@@ -128,26 +128,31 @@ exports.handler=async()=>{
   const outcomes=[];
   try{
     const snapshot=await db.ref("gmailConnections").once("value"),users=snapshot.val()||{};
+    const userEntries=Object.entries(users).slice(0,100);
+    // Run report delivery for all eligible users first. Gmail scans follow in a
+    // separate pass so slow mailbox reads cannot prevent later reports.
+    for(const [uid,record] of userEntries){
+      if(!uid||uid==="undefined"||!record)continue;
+      const settings=(await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value")).val()||{};
+      if(settings.dailyReportEnabled!==true)continue;
+      const chats=token?await chatsForUser(db,uid):[];
+      if(!token||!chats.length){
+        console.warn("Vee-AI daily report not sent:",JSON.stringify({uid,reason:!token?"telegram_bot_token_missing":"no_linked_telegram_chat"}));
+      }else{
+        try{
+          const reportResult=await sendDailyReport(db,token,chats,uid,settings,new Date(now));
+          console.log("Vee-AI daily report check:",JSON.stringify({uid,...reportResult}));
+        }catch(error){console.error("Vee-AI daily email report failed:",JSON.stringify({uid,error:clean(error.message,180)}));}
+      }
+    }
     let processed=0;
-    for(const [uid,record] of Object.entries(users).slice(0,100)){
+    for(const [uid,record] of userEntries){
       if(!uid||uid==="undefined"||!record)continue;
       const accounts=Object.entries(record.accounts||{}).filter(([,item])=>item&&item.status&&item.status.connected===true&&item.tokenVault);
       if(record.status&&record.status.connected===true&&record.tokenVault)accounts.unshift(["legacy",record]);
       const settingsSnapshot=await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value");
       const settings=settingsSnapshot.val()||{};
       const chats=token?await chatsForUser(db,uid):[];
-      // Deliver the time-sensitive daily report before Gmail API scanning.
-      // Gmail scans can consume the scheduled function's 30-second execution window.
-      if(settings.dailyReportEnabled===true){
-        if(!token||!chats.length){
-          console.warn("Vee-AI daily report not sent:",JSON.stringify({uid,reason:!token?"telegram_bot_token_missing":"no_linked_telegram_chat"}));
-        }else{
-          try{
-            const reportResult=await sendDailyReport(db,token,chats,uid,settings,new Date(now));
-            console.log("Vee-AI daily report check:",JSON.stringify({uid,...reportResult}));
-          }catch(error){console.error("Vee-AI daily email report failed:",JSON.stringify({uid,error:clean(error.message,180)}));}
-        }
-      }
       for(const [accountId,account] of accounts.slice(0,3)){
         if(processed>=30)break;
         try{
