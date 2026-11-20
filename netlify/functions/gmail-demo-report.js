@@ -35,9 +35,9 @@ exports.handler=async event=>{
     const now=Date.now();
     if(!Number.isFinite(scheduledAtMs)||scheduledAtMs<now+45000||scheduledAtMs>now+30*60*1000)return json(400,{error:"Choose a delivery time between 1 and 30 minutes from now."});
     const chatId=String(body.chatId||"");
-    if(!/^\\d{1,24}$/.test(chatId))return json(400,{error:"Choose a valid linked Telegram chat."});
-    const linked=(await db.ref("telegram/accountsByChat/"+chatId).once("value")).val();
-    if(!linked||String(linked.uid)!==String(user.uid))return json(403,{error:"This Telegram chat is not linked to your Vee-AI account."});
+    if(chatId!=="all")return json(400,{error:"Invalid Telegram recipient selection."});
+    const linkedChats=(await db.ref("telegram/accountsByChat").once("value")).val()||{};
+    if(!Object.values(linkedChats).some(item=>item&&String(item.uid)===String(user.uid)))return json(403,{error:"Link Telegram to your Vee-AI account before scheduling a demo report."});
     const job={id:crypto.randomBytes(16).toString("hex"),status:"scheduled",chatId,scheduledAtMs,createdAtMs:now,timeZone:"Africa/Lagos"};
     const result=await ref.transaction(current=>{
       if(current&&current.status==="sending")return;
