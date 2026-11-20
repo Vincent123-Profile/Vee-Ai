@@ -38,8 +38,9 @@ async function deliverOnce(db,token,chats,uid,key,message){
   },undefined,false);
   if(!claim.committed)return false;
   try{
-    for(const chatId of chats)await sendTelegram(token,chatId,message);
-    await ref.set({status:"sent",sentAtMs:Date.now()});
+    const messages=Array.isArray(message)?message:[message];
+    for(const chatId of chats)for(const part of messages)await sendTelegram(token,chatId,part);
+    await ref.set({status:"sent",sentAtMs:Date.now(),messageParts:messages.length});
     return true;
   }catch(error){
     const current=(await ref.once("value")).val();
@@ -125,7 +126,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
     if(tx.direction==="in"){group.in+=amount;counts.credits++;}
     if(tx.direction==="out"){group.out+=amount;counts.debits++;}
     if(tx.direction==="in"||tx.direction==="out"){
-      if(rows.length<30){
+      if(rows.length<(options.demoMode?60:30)){
         const eventTime=Number(tx.transactionAtMs||item.internalDate||0);
         const timeLabel=eventTime?new Intl.DateTimeFormat("en-NG",{timeZone:zone,dateStyle:"short",timeStyle:"short"}).format(new Date(eventTime)):"Time unavailable";
         rows.push((tx.direction==="in"?"➕ ":"➖ ")+money(amount,currency)+" · "+html(item.bank&&item.bank.name||"Bank not identified")+" · "+html(timeLabel)+"\n"+html(tx.counterparty||"Name unavailable")+" · "+html(tx.narration||item.subject||item.snippet||"Description unavailable").slice(0,180));
@@ -150,7 +151,10 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
   const transactionText=showTransactions?"\n\n<b>Transaction details</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence transactions to list."):"";
   const message=(options.demoMode?"📊 <b>Vee-AI Financial Intelligence Demo Report</b>":"📊 <b>Vee-AI Daily Bank Report</b>")+"\n"+(options.demoMode?"All available connected Gmail financial records":"Reporting date: "+clock.date)+" · "+html(zone)+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
   const deliveryKey=options.deliveryKey||("daily_"+clock.date);
-  const delivered=await deliverOnce(db,token,chats,uid,deliveryKey,message.slice(0,3900));
+  const parts=[];let currentPart="";
+  for(const line of message.split("\\n")){const next=currentPart?currentPart+"\\n"+line:line;if(next.length>3800&&currentPart){parts.push(currentPart);currentPart=line;}else currentPart=next;}
+  if(currentPart)parts.push(currentPart);
+  const delivered=await deliverOnce(db,token,chats,uid,deliveryKey,options.demoMode?parts:[message.slice(0,3900)]);
   if(!delivered){
     const existing=(await db.ref("telegram/emailIntelligenceDeliveries/"+uid+"/"+deliveryKey).once("value")).val()||{};
     return {status:existing.status==="sent"?"already_sent":"already_in_progress",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
