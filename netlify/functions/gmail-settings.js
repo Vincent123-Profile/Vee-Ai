@@ -25,9 +25,9 @@ exports.handler=async event=>{
     if(body.action==="get"){const snap=await ref.once("value");return json(200,{settings:snap.val()||{}});}
     if(body.action!=="save")return json(400,{error:"Unknown settings action."});
     const time=String(body.dailyReportTime||"21:00");
-    const timeZone=String(body.timeZone||"");
+    const timeZone="Africa/Lagos";
     if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))return json(400,{error:"Choose a valid report time."});
-    if(!validTimeZone(timeZone))return json(400,{error:"Choose a valid local time zone."});
+    if(!validTimeZone(timeZone))return json(400,{error:"Nigeria time zone configuration is invalid."});
     const settings={
       dailyReportEnabled:body.dailyReportEnabled===true,
       dailyReportTime:time,
