@@ -2639,8 +2639,8 @@
         var threshold=document.getElementById("gmailLargeTransactionThreshold");if(threshold&&settings.largeTransactionThreshold)threshold.value=settings.largeTransactionThreshold;
         var scan=document.getElementById("gmailScanMode");if(scan)scan.value=settings.scanMode==="financial_only"?"financial_only":"all_inbox";
         if(zone)zone.value=deviceZone;
-        if(settings.dailyReportEnabled===true&&settings.timeZone!==deviceZone){
-          await veeGmailSettingsRequest({action:"save",dailyReportEnabled:true,dailyReportTime:settings.dailyReportTime||"21:00",timeZone:deviceZone,alertSecurity:settings.alertSecurity===true,alertFailedTransactions:settings.alertFailedTransactions===true,alertEachTransaction:settings.alertEachTransaction===true,largeTransactionAlerts:settings.largeTransactionAlerts===true,largeTransactionThreshold:Number(settings.largeTransactionThreshold)||0,scanMode:settings.scanMode,reportShowTransactions:settings.reportShowTransactions!==false,reportShowExceptions:settings.reportShowExceptions!==false,reportShowSecurity:settings.reportShowSecurity===true});
+        if(settings.timeZone!==deviceZone){
+          await veeGmailSettingsRequest({action:"save",dailyReportEnabled:settings.dailyReportEnabled===true,dailyReportTime:settings.dailyReportTime||"21:00",timeZone:deviceZone,alertSecurity:settings.alertSecurity===true,alertFailedTransactions:settings.alertFailedTransactions===true,alertEachTransaction:settings.alertEachTransaction===true,largeTransactionAlerts:settings.largeTransactionAlerts===true,largeTransactionThreshold:Number(settings.largeTransactionThreshold)||0,scanMode:settings.scanMode,reportShowTransactions:settings.reportShowTransactions!==false,reportShowExceptions:settings.reportShowExceptions!==false,reportShowSecurity:settings.reportShowSecurity===true});
         }
       }catch(error){var status=document.getElementById("gmailNotificationSettingsStatus");if(status)status.textContent=error.message;}
     }
