@@ -2237,7 +2237,7 @@
         <label for="gmailDailyReportTime">Daily report time</label>
         <input id="gmailDailyReportTime" type="time" value="21:00">
         <label for="gmailReportTimeZone">Your time zone (detected automatically)</label>
-        <input id="gmailReportTimeZone" type="text" readonly>
+        <select id="gmailReportTimeZone"><option value="Africa/Lagos">Nigeria, West Africa Time (Africa/Lagos)</option><option value="Africa/Accra">Ghana, Greenwich Mean Time (Africa/Accra)</option><option value="Africa/Nairobi">East Africa Time (Africa/Nairobi)</option><option value="Africa/Johannesburg">South Africa Standard Time (Africa/Johannesburg)</option><option value="Europe/London">United Kingdom (Europe/London)</option><option value="Europe/Paris">Central Europe (Europe/Paris)</option><option value="America/Los_Angeles">Pacific Time (America/Los_Angeles)</option><option value="America/New_York">Eastern Time (America/New_York)</option><option value="Asia/Dubai">Gulf Standard Time (Asia/Dubai)</option><option value="UTC">UTC</option></select>
         <div style="display:grid;gap:9px;margin-top:12px">
           <label style="display:flex;gap:10px;align-items:center"><input id="gmailAlertSecurity" type="checkbox" style="width:auto"> Immediate suspicious email and link alerts</label>
           <label style="display:flex;gap:10px;align-items:center"><input id="gmailAlertFailed" type="checkbox" style="width:auto"> Immediate failed or reversed transaction alerts</label>
@@ -2621,7 +2621,7 @@
     }
     async function veeLoadGmailNotificationSettings(){
       var zone=document.getElementById("gmailReportTimeZone");
-      if(zone&&!zone.value)zone.value=(Intl.DateTimeFormat().resolvedOptions().timeZone||"Africa/Lagos");
+      if(zone&&!zone.value)zone.value="Africa/Lagos";
       try{
         var data=await veeGmailSettingsRequest({action:"get"}),settings=data.settings||{};
         var fields={gmailDailyReportEnabled:settings.dailyReportEnabled===true,gmailAlertSecurity:settings.alertSecurity===true,gmailAlertFailed:settings.alertFailedTransactions===true,gmailAlertEachTransaction:settings.alertEachTransaction===true,gmailLargeTransactionAlerts:settings.largeTransactionAlerts===true};
@@ -2640,7 +2640,7 @@
           action:"save",
           dailyReportEnabled:checked("gmailDailyReportEnabled"),
           dailyReportTime:(document.getElementById("gmailDailyReportTime")||{}).value||"21:00",
-          timeZone:(document.getElementById("gmailReportTimeZone")||{}).value||Intl.DateTimeFormat().resolvedOptions().timeZone||"Africa/Lagos",
+          timeZone:(document.getElementById("gmailReportTimeZone")||{}).value||"Africa/Lagos",
           alertSecurity:checked("gmailAlertSecurity"),
           alertFailedTransactions:checked("gmailAlertFailed"),
           alertEachTransaction:checked("gmailAlertEachTransaction"),
