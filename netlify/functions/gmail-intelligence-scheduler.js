@@ -80,13 +80,12 @@ async function sendImmediateAlerts(db,token,chats,uid,accountId,items,settings){
     }
   }
 }
-async function sendDailyReport(db,token,chats,uid,settings,now){
-  if(settings.dailyReportEnabled!==true||!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(settings.dailyReportTime||"")))return {status:"disabled_or_invalid_time"};
+async function sendDailyReport(db,token,chats,uid,settings,now,options){
+  options=options||{};
+  if(!options.demoMode&&(settings.dailyReportEnabled!==true||!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(settings.dailyReportTime||""))))return {status:"disabled_or_invalid_time"};
   const zone="Africa/Lagos";
   const clock=localClock(zone,now);
-  const current=clock.time.split(":").map(Number),wanted=String(settings.dailyReportTime).split(":").map(Number);
-  const elapsed=(current[0]*60+current[1])-(wanted[0]*60+wanted[1]);
-  if(elapsed<0)return {status:"not_due",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone};
+  if(!options.demoMode){const current=clock.time.split(":").map(Number),wanted=String(settings.dailyReportTime).split(":").map(Number);const elapsed=(current[0]*60+current[1])-(wanted[0]*60+wanted[1]);if(elapsed<0)return {status:"not_due",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone};}
   const snapshot=await db.ref("gmailConnections/"+uid).once("value"),root=snapshot.val()||{};
   const records=[];
   Object.entries(root.accounts||{}).forEach(([accountId,account])=>Object.values(account&&account.emails||{}).forEach(item=>records.push(Object.assign({accountId},item))));
@@ -149,8 +148,9 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
   const exceptionText=showExceptions?"\nFailed: "+counts.failed+" · Reversed: "+counts.reversed+" · Refunded: "+counts.refunded+" · Pending: "+counts.pending+" · Needs review: "+counts.review:"";
   const securityText=showSecurity?"\n🛡️ Security findings: "+security:"";
   const transactionText=showTransactions?"\n\n<b>Transaction details</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence transactions to list."):"";
-  const message="📊 <b>Vee-AI Daily Bank Report</b>\n"+html(clock.date)+" · "+html(zone)+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
-  const deliveryKey=options.deliveryKey||("daily_"+clock.date);\n  const delivered=await deliverOnce(db,token,chats,uid,deliveryKey,message.slice(0,3900));
+  const message=(options.demoMode?"📊 <b>Vee-AI Financial Intelligence Demo Report</b>":"📊 <b>Vee-AI Daily Bank Report</b>")+"\n"+(options.demoMode?"All available connected Gmail financial records":"Reporting date: "+clock.date)+" · "+html(zone)+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
+  const deliveryKey=options.deliveryKey||("daily_"+clock.date);
+  const delivered=await deliverOnce(db,token,chats,uid,deliveryKey,message.slice(0,3900));
   if(!delivered){
     const existing=(await db.ref("telegram/emailIntelligenceDeliveries/"+uid+"/"+deliveryKey).once("value")).val()||{};
     return {status:existing.status==="sent"?"already_sent":"already_in_progress",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
@@ -167,7 +167,8 @@ exports.handler=async()=>{
   },undefined,false);
   if(!lock.committed)return {statusCode:200,body:JSON.stringify({ok:true,skipped:"another scan is running"})};
   const outcomes=[];
-  try{\n    // Process one-off demo reports independently from normal daily reports.\n    for(const [uid] of Object.entries((await db.ref("gmailConnections").once("value")).val()||{})){\n      const jobRef=db.ref("telegram/emailIntelligenceDemoReports/"+uid+"/pending");\n      const job=(await jobRef.once("value")).val();\n      if(!job||job.status!=="scheduled"||Number(job.scheduledAtMs)>now)continue;\n      const claim=await jobRef.transaction(current=>{if(!current||current.status!=="scheduled"||Number(current.scheduledAtMs)>now)return;return Object.assign({},current,{status:"sending",claimedAtMs:now});},undefined,false);\n      if(!claim.committed)continue;\n      try{\n        const chats=token&&/^\\d{1,24}$/.test(String(job.chatId||""))?(await chatsForUser(db,uid)).filter(id=>id===String(job.chatId)):[];\n        if(!token||!chats.length)throw new Error("Selected Telegram chat is no longer linked.");\n        const settings=(await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value")).val()||{};\n        const result=await sendDailyReport(db,token,chats,uid,settings,new Date(now),{demoMode:true,deliveryKey:"demo_"+String(job.id||"")});\n        await jobRef.set(Object.assign({},job,{status:"sent",sentAtMs:Date.now(),resultStatus:result.status}));\n      }catch(error){await jobRef.set(Object.assign({},job,{status:"failed",failedAtMs:Date.now(),failure:"Delivery failed. Check Telegram connection and retry."}));console.error("Vee-AI demo report failed:",clean(error.message,180));}\n    }
+  try{
+    // Process one-off demo reports independently from normal daily reports.\n    for(const [uid] of Object.entries((await db.ref("gmailConnections").once("value")).val()||{})){\n      const jobRef=db.ref("telegram/emailIntelligenceDemoReports/"+uid+"/pending");\n      const job=(await jobRef.once("value")).val();\n      if(!job||job.status!=="scheduled"||Number(job.scheduledAtMs)>now)continue;\n      const claim=await jobRef.transaction(current=>{if(!current||current.status!=="scheduled"||Number(current.scheduledAtMs)>now)return;return Object.assign({},current,{status:"sending",claimedAtMs:now});},undefined,false);\n      if(!claim.committed)continue;\n      try{\n        const chats=token&&/^\\d{1,24}$/.test(String(job.chatId||""))?(await chatsForUser(db,uid)).filter(id=>id===String(job.chatId)):[];\n        if(!token||!chats.length)throw new Error("Selected Telegram chat is no longer linked.");\n        const settings=(await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value")).val()||{};\n        const result=await sendDailyReport(db,token,chats,uid,settings,new Date(now),{demoMode:true,deliveryKey:"demo_"+String(job.id||"")});\n        await jobRef.set(Object.assign({},job,{status:"sent",sentAtMs:Date.now(),resultStatus:result.status}));\n      }catch(error){await jobRef.set(Object.assign({},job,{status:"failed",failedAtMs:Date.now(),failure:"Delivery failed. Check Telegram connection and retry."}));console.error("Vee-AI demo report failed:",clean(error.message,180));}\n    }
     const snapshot=await db.ref("gmailConnections").once("value"),users=snapshot.val()||{};
     const userEntries=Object.entries(users).slice(0,100);
     // Run report delivery for all eligible users first. Gmail scans follow in a
