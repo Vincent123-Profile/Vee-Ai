@@ -2539,7 +2539,7 @@
         var alerts=document.getElementById("gmailSecurityCount");
         veeGmailAdminApproved = data.approved === true;
         var connectButton=document.getElementById("gmailConnectBtn");
-        if(connectButton){connectButton.disabled=!veeGmailAdminApproved&&!data.connected;connectButton.textContent=data.connected?"Gmail connected":veeGmailAdminApproved?"Connect Gmail":"Admin approval required";}
+        if(connectButton){connectButton.disabled=!!data.connected;connectButton.textContent=data.connected?"Gmail connected":veeGmailAdminApproved?"Connect Gmail":"Request admin approval";}
         if(connected)connected.textContent=data.connected?(data.gmailAddress||"Connected"):"Not connected";
         if(last)last.textContent=data.lastSyncAtMs?new Date(data.lastSyncAtMs).toLocaleString():"Not synced";
         if(alerts)alerts.textContent=String(data.securityAlertCount||0);
