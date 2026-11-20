@@ -14,7 +14,7 @@ exports.handler=async event=>{
   if(event.httpMethod!=="POST")return json(405,{error:"Method not allowed."});
   try{
     const header=event.headers&&(event.headers.authorization||event.headers.Authorization)||"";
-    const match=/^Bearer\\s+(.+)$/i.exec(header);
+    const match=/^Bearer\s+(.+)$/i.exec(header);
     if(!match)return json(401,{error:"Sign in to Vee-AI first."});
     const db=database();
     const user=await admin.auth(app).verifyIdToken(match[1],true);
