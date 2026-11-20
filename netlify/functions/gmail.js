@@ -129,11 +129,11 @@ function extractTransaction(email, text) {
   const credit = /\b(credited|credit alert|received from|deposit(?:ed)?|transfer from|payment received|funds received|cashback received|refund(?:ed)?)\b/i.test(source);
   const hasTransactionLanguage = debit || credit;
   const direction = debit && !credit ? "out" : credit && !debit ? "in" : null;
-  const transactionStatus = /\b(failed|unsuccessful|declined|not successful|could not be completed)\\b/i.test(source) ? "failed" : /\b(reversed|reversal)\\b/i.test(source) ? "reversed" : /\b(refunded|refund)\\b/i.test(source) ? "refunded" : /\b(pending|processing|awaiting confirmation)\\b/i.test(source) ? "pending" : hasTransactionLanguage ? "successful" : "unknown";
+  const transactionStatus = /\b(failed|unsuccessful|declined|not successful|could not be completed)\b/i.test(source) ? "failed" : /\b(reversed|reversal)\b/i.test(source) ? "reversed" : /\b(refunded|refund)\b/i.test(source) ? "refunded" : /\b(pending|processing|awaiting confirmation)\b/i.test(source) ? "pending" : hasTransactionLanguage ? "successful" : "unknown";
   const reference = (source.match(/\b(?:transaction|trans(?:action)?|session|reference|ref)(?:\s*(?:id|no|number))?\s*[:#-]?\s*([A-Z0-9-]{6,})/i) || [])[1] || "";
   return {
     amount, currency, direction,
-    transactionType: /\b(refund|refunded)\\b/i.test(source) ? "refund" : direction === "in" ? "income" : direction === "out" ? "expense" : null,
+    transactionType: /\b(refund|refunded)\b/i.test(source) ? "refund" : direction === "in" ? "income" : direction === "out" ? "expense" : null,
     transactionStatus,
     reference:reference.slice(0,80),
     hasTransactionLanguage,
