@@ -95,7 +95,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
     if(!item||!Array.isArray(item.categories)||!item.categories.includes("bank"))return false;
     const tx=item.transaction||{};
     const eventMs=Number(tx.transactionAtMs||item.internalDate||0);
-    return eventMs>0&&localDateFor(eventMs,zone)===clock.date;
+    return eventMs>0&&(options.demoMode||localDateFor(eventMs,zone)===clock.date);
   });
   const seen=new Set();
   const unique=today.filter(item=>{
@@ -150,9 +150,9 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
   const securityText=showSecurity?"\n🛡️ Security findings: "+security:"";
   const transactionText=showTransactions?"\n\n<b>Transaction details</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence transactions to list."):"";
   const message="📊 <b>Vee-AI Daily Bank Report</b>\n"+html(clock.date)+" · "+html(zone)+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
-  const delivered=await deliverOnce(db,token,chats,uid,"daily_"+clock.date,message.slice(0,3900));
+  const deliveryKey=options.deliveryKey||("daily_"+clock.date);\n  const delivered=await deliverOnce(db,token,chats,uid,deliveryKey,message.slice(0,3900));
   if(!delivered){
-    const existing=(await db.ref("telegram/emailIntelligenceDeliveries/"+uid+"/daily_"+clock.date).once("value")).val()||{};
+    const existing=(await db.ref("telegram/emailIntelligenceDeliveries/"+uid+"/"+deliveryKey).once("value")).val()||{};
     return {status:existing.status==="sent"?"already_sent":"already_in_progress",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
   }
   return {status:"sent",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
@@ -167,7 +167,7 @@ exports.handler=async()=>{
   },undefined,false);
   if(!lock.committed)return {statusCode:200,body:JSON.stringify({ok:true,skipped:"another scan is running"})};
   const outcomes=[];
-  try{
+  try{\n    // Process one-off demo reports independently from normal daily reports.\n    for(const [uid] of Object.entries((await db.ref("gmailConnections").once("value")).val()||{})){\n      const jobRef=db.ref("telegram/emailIntelligenceDemoReports/"+uid+"/pending");\n      const job=(await jobRef.once("value")).val();\n      if(!job||job.status!=="scheduled"||Number(job.scheduledAtMs)>now)continue;\n      const claim=await jobRef.transaction(current=>{if(!current||current.status!=="scheduled"||Number(current.scheduledAtMs)>now)return;return Object.assign({},current,{status:"sending",claimedAtMs:now});},undefined,false);\n      if(!claim.committed)continue;\n      try{\n        const chats=token&&/^\\d{1,24}$/.test(String(job.chatId||""))?(await chatsForUser(db,uid)).filter(id=>id===String(job.chatId)):[];\n        if(!token||!chats.length)throw new Error("Selected Telegram chat is no longer linked.");\n        const settings=(await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value")).val()||{};\n        const result=await sendDailyReport(db,token,chats,uid,settings,new Date(now),{demoMode:true,deliveryKey:"demo_"+String(job.id||"")});\n        await jobRef.set(Object.assign({},job,{status:"sent",sentAtMs:Date.now(),resultStatus:result.status}));\n      }catch(error){await jobRef.set(Object.assign({},job,{status:"failed",failedAtMs:Date.now(),failure:"Delivery failed. Check Telegram connection and retry."}));console.error("Vee-AI demo report failed:",clean(error.message,180));}\n    }
     const snapshot=await db.ref("gmailConnections").once("value"),users=snapshot.val()||{};
     const userEntries=Object.entries(users).slice(0,100);
     // Run report delivery for all eligible users first. Gmail scans follow in a
