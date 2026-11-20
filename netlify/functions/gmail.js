@@ -357,6 +357,10 @@ exports.handler = async event => {
     try { body=JSON.parse(event.body || "{}"); } catch (_) { return json(400,{error:"Invalid JSON."}); }
     const root = db.ref("gmailConnections/" + user.uid);
     if (body.action === "connect") {
+      const approvalSnapshot = await db.ref("gmailAccessApprovals/" + user.uid).once("value");
+      const approvalRecord = approvalSnapshot.val();
+      const approved = approvalRecord === true || !!(approvalRecord && approvalRecord.approved === true);
+      if (!approved) return json(403,{error:"You need an approvement from the admin to be able to connect your mail 💌 reach out to the admin",code:"GMAIL_ADMIN_APPROVAL_REQUIRED"});
       const state = crypto.randomBytes(32).toString("hex");
       await db.ref("gmailOAuthStates/" + state).set({uid:user.uid,createdAtMs:Date.now(),expiresAtMs:Date.now()+10*60*1000});
       const savedState = await db.ref("gmailOAuthStates/" + state).once("value");
@@ -375,7 +379,10 @@ exports.handler = async event => {
     if (body.action === "status") {
       const snapshot = await root.child("status").once("value");
       const status = snapshot.val() || {};
-      return json(200,{connected:status.connected===true,gmailAddress:status.gmailAddress||"",lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0});
+      const approvalSnapshot = await db.ref("gmailAccessApprovals/" + user.uid).once("value");
+      const approvalRecord = approvalSnapshot.val();
+      const approved = approvalRecord === true || !!(approvalRecord && approvalRecord.approved === true);
+      return json(200,{approved,connected:status.connected===true,gmailAddress:status.gmailAddress||"",lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0});
     }
     if (body.action === "disconnect") {
       await root.remove();
