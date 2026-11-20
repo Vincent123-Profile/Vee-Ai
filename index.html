@@ -2712,6 +2712,9 @@
             var txLine=document.createElement("span");
             txLine.textContent="Transaction: "+(tx.amount&&tx.currency?tx.currency+" "+Number(tx.amount).toLocaleString():"Amount not confirmed")+" · "+(tx.direction==="in"?"Money in":tx.direction==="out"?"Money out":"Direction unclear")+" · "+(item.bank&&item.bank.name?item.bank.name:"Bank not identified")+" · Status: "+(tx.transactionStatus||"Needs review")+" · "+(item.classificationConfidence==="high"&&!item.needsReview?"High confidence":"Needs your review");
             main.appendChild(txLine);
+            var txDetails=document.createElement("span");
+            txDetails.textContent="Name: "+(tx.counterparty||"Not identified")+" · Description: "+(tx.narration||"Not identified")+" · Time: "+(tx.transactionAtMs?new Date(tx.transactionAtMs).toLocaleTimeString():"Not available");
+            main.appendChild(txDetails);
           }
           if(item.flightDetails){
             var fl=item.flightDetails;
