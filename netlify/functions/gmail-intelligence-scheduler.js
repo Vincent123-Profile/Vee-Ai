@@ -74,7 +74,7 @@ async function sendImmediateAlerts(db,token,chats,uid,accountId,items,settings){
       const large=settings.largeTransactionAlerts===true&&threshold>0&&Number(transaction.amount)>=threshold;
       if(settings.alertEachTransaction===true||large){
         const label=transaction.direction==="in"?"Credit received":"Debit recorded";
-        const msg="💳 <b>"+label+"</b>\n\n<b>"+money(transaction.amount,transaction.currency)+"</b>\nBank: "+html(item.bank&&item.bank.name||"Not identified")+"\nDate: "+html(item.date||"Date unavailable")+"\nFrom / To: "+html(item.from||"Name unavailable")+"\nDetails: "+html(item.subject||item.snippet||"No description available");
+        const msg="💳 <b>"+label+"</b>\n\n<b>"+money(transaction.amount,transaction.currency)+"</b>\nBank: "+html(item.bank&&item.bank.name||"Not identified")+"\nDate: "+html(item.date||"Date unavailable")+"\nFrom / To: "+html(transaction.counterparty||"Name unavailable")+"\nTime: "+html(item.date||"Unavailable")+"\nDetails: "+html(transaction.narration||item.subject||item.snippet||"No description available");
         await deliverOnce(db,token,chats,uid,"alert_"+accountId+"_"+item.id+"_transaction",msg);
       }
     }
@@ -105,7 +105,9 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
     if(tx.direction==="in"&&Number(tx.amount)>0)totals.in+=Number(tx.amount);
     if(tx.direction==="out"&&Number(tx.amount)>0)totals.out+=Number(tx.amount);
     if((tx.direction==="in"||tx.direction==="out")&&Number(tx.amount)>0&&rows.length<10){
-      rows.push((tx.direction==="in"?"➕ ":"➖ ")+money(tx.amount,tx.currency)+" · "+html(item.bank&&item.bank.name||"Bank not identified")+"\n"+html(item.subject||item.snippet||"Transaction notification").slice(0,180));
+      const eventTime=Number(tx.transactionAtMs||item.internalDate||0);
+      const timeLabel=eventTime?new Intl.DateTimeFormat("en-NG",{timeZone:zone,hour:"2-digit",minute:"2-digit"}).format(new Date(eventTime)):"Time unavailable";
+      rows.push((tx.direction==="in"?"➕ ":"➖ ")+money(tx.amount,tx.currency)+" · "+html(item.bank&&item.bank.name||"Bank not identified")+" · "+html(timeLabel)+"\n"+html(tx.counterparty||"Name unavailable")+" · "+html(tx.narration||item.subject||item.snippet||"Description unavailable").slice(0,180));
     }
   }
   const security=records.filter(item=>item&&Number(item.internalDate)>0&&localDateFor(item.internalDate,zone)===clock.date&&item.riskLevel&&item.riskLevel!=="none").length;
