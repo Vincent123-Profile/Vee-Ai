@@ -343,10 +343,9 @@ exports.handler = async event => {
         if (previous.exists()) tokenData.refreshToken = decrypt(stateRecord.uid,previous.val()).refreshToken || "";
       }
       if (!tokenData.refreshToken) throw new Error("Google did not return offline access. Remove the app from Google Account connections and reconnect.");
-      await db.ref("gmailConnections/" + stateRecord.uid).update({
-        tokenVault:encrypt(stateRecord.uid,tokenData),
-        status:{connected:true,gmailAddress:tokenData.gmailAddress,connectedAtMs:Date.now(),scope:"gmail.readonly"}
-      });
+      const accountId = /^[a-zA-Z0-9_-]{1,80}$/.test(String(stateRecord.accountId || "")) ? stateRecord.accountId : "mail_" + crypto.randomBytes(12).toString("hex");
+      const accountRoot = db.ref("gmailConnections/" + stateRecord.uid + "/accounts/" + accountId);
+      await accountRoot.update({tokenVault:encrypt(stateRecord.uid,tokenData),status:{connected:true,accountId,gmailAddress:tokenData.gmailAddress,connectedAtMs:Date.now(),scope:"gmail.readonly"}});
       await stateRef.remove();
       return {statusCode:302,headers:{Location:appRedirectUrl()+"?gmail=connected"},body:""};
     }
@@ -356,13 +355,16 @@ exports.handler = async event => {
     let body;
     try { body=JSON.parse(event.body || "{}"); } catch (_) { return json(400,{error:"Invalid JSON."}); }
     const root = db.ref("gmailConnections/" + user.uid);
+    const accountId = String(body.accountId || "").trim();
+    if (accountId && !/^[a-zA-Z0-9_-]{1,80}$/.test(accountId)) return json(400,{error:"Invalid email account reference."});
     if (body.action === "connect") {
       const approvalSnapshot = await db.ref("gmailAccessApprovals/" + user.uid).once("value");
       const approvalRecord = approvalSnapshot.val();
       const approved = approvalRecord === true || !!(approvalRecord && approvalRecord.approved === true);
       if (!approved) return json(403,{error:"You need an approvement from the admin to be able to connect your mail 💌 reach out to the admin",code:"GMAIL_ADMIN_APPROVAL_REQUIRED"});
+      const accountId = "mail_" + crypto.randomBytes(12).toString("hex");
       const state = crypto.randomBytes(32).toString("hex");
-      await db.ref("gmailOAuthStates/" + state).set({uid:user.uid,createdAtMs:Date.now(),expiresAtMs:Date.now()+10*60*1000});
+      await db.ref("gmailOAuthStates/" + state).set({uid:user.uid,accountId,createdAtMs:Date.now(),expiresAtMs:Date.now()+10*60*1000});
       const savedState = await db.ref("gmailOAuthStates/" + state).once("value");
       if (!savedState.exists()) throw new Error("Gmail OAuth state could not be saved to Firebase. Check Firebase Admin database access.");
       const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -378,28 +380,36 @@ exports.handler = async event => {
     }
     if (body.action === "status") {
       const snapshot = await root.child("status").once("value");
-      const status = snapshot.val() || {};
+      const legacyStatus = snapshot.val() || {};
+      const accountsSnapshot = await root.child("accounts").once("value");
+      const accounts = Object.entries(accountsSnapshot.val() || {}).map(([id,record]) => {const status=record&&record.status||{};return {accountId:id,connected:status.connected===true,gmailAddress:status.gmailAddress||"",connectedAtMs:status.connectedAtMs||null,lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0};});
+      if(legacyStatus.connected===true)accounts.unshift({accountId:"legacy",connected:true,gmailAddress:legacyStatus.gmailAddress||"",connectedAtMs:legacyStatus.connectedAtMs||null,lastSyncAtMs:legacyStatus.lastSyncAtMs||null,lastSyncCount:legacyStatus.lastSyncCount||0,securityAlertCount:legacyStatus.securityAlertCount||0,legacy:true});
+      const status = legacyStatus;
       const approvalSnapshot = await db.ref("gmailAccessApprovals/" + user.uid).once("value");
       const approvalRecord = approvalSnapshot.val();
       const approved = approvalRecord === true || !!(approvalRecord && approvalRecord.approved === true);
-      return json(200,{approved,connected:status.connected===true,gmailAddress:status.gmailAddress||"",lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0});
+      return json(200,{approved,connected:accounts.some(item=>item.connected),gmailAddress:accounts.length===1?accounts[0].gmailAddress:"",accounts,lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0});
     }
     if (body.action === "disconnect") {
-      await root.remove();
-      return json(200,{success:true});
+      if (!accountId) return json(400,{error:"Choose an email account to disconnect."});
+      if (accountId==="legacy") await root.remove(); else await root.child("accounts/"+accountId).remove();
+      return json(200,{success:true,accountId});
     }
-    if (body.action === "sync") {
-      const snapshot = await root.child("tokenVault").once("value");
-      if (!snapshot.exists()) return json(400,{error:"Connect Gmail first."});
-      const saved = decrypt(user.uid,snapshot.val());
-      const fresh = await refreshAccessToken(user.uid,db,saved);
-      const emails = await syncMessages(user.uid,db,fresh);
-      return json(200,{success:true,synced:emails.length,securityAlerts:emails.filter(item=>item.riskLevel!=="none").length});
-    }
-    if (body.action === "list") {
-      const snapshot = await root.child("emails").orderByChild("internalDate").limitToLast(100).once("value");
-      const emails = Object.values(snapshot.val()||{}).sort((a,b)=>Number(b.internalDate||0)-Number(a.internalDate||0));
-      return json(200,{emails});
+    if (body.action === "sync" || body.action === "list") {
+      if (!accountId) return json(400,{error:"Choose an email account first."});
+      const target = accountId==="legacy" ? root : root.child("accounts/"+accountId);
+      if (body.action === "sync") {
+        const tokenSnapshot=await target.child("tokenVault").once("value");
+        if(!tokenSnapshot.exists())return json(400,{error:"This email account is not connected."});
+        const saved=decrypt(user.uid,tokenSnapshot.val());
+        const fresh=await refreshAccessToken(user.uid,db,saved);
+        const emails=await syncMessages(user.uid,db,fresh);
+        await target.child("status").update({connected:true,accountId,gmailAddress:fresh.gmailAddress||"",lastSyncAtMs:Date.now(),lastSyncCount:emails.length,securityAlertCount:emails.filter(item=>item.riskLevel!=="none").length});
+        return json(200,{success:true,accountId,synced:emails.length,securityAlerts:emails.filter(item=>item.riskLevel!=="none").length});
+      }
+      const snapshot=await target.child("emails").orderByChild("internalDate").limitToLast(100).once("value");
+      const emails=Object.values(snapshot.val()||{}).sort((a,b)=>Number(b.internalDate||0)-Number(a.internalDate||0)).map(item=>Object.assign({accountId},item));
+      return json(200,{accountId,emails});
     }
     return json(400,{error:"Unknown Gmail action."});
   } catch (error) {
