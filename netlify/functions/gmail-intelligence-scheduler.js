@@ -89,12 +89,14 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
   if(elapsed<0||elapsed>4)return;
   const snapshot=await db.ref("gmailConnections/"+uid).once("value"),root=snapshot.val()||{};
   const records=[];
-  Object.values(root.accounts||{}).forEach(account=>Object.values(account&&account.emails||{}).forEach(item=>records.push(item)));
-  Object.values(root.emails||{}).forEach(item=>records.push(item));
+  Object.entries(root.accounts||{}).forEach(([accountId,account])=>Object.values(account&&account.emails||{}).forEach(item=>records.push(Object.assign({accountId},item))));
+  Object.values(root.emails||{}).forEach(item=>records.push(Object.assign({accountId:"legacy"},item)));
   const today=records.filter(item=>item&&Number(item.internalDate)>0&&localDateFor(item.internalDate,zone)===clock.date&&Array.isArray(item.categories)&&item.categories.includes("bank"));
+  const seenReferences=new Set();
+  const uniqueToday=today.filter(item=>{const tx=item.transaction||{};const bankName=item.bank&&item.bank.name||"unknown";const key=tx.reference?bankName+":"+String(tx.reference).toLowerCase():String(item.accountId)+":"+String(item.id);if(seenReferences.has(key))return false;seenReferences.add(key);return true;});
   const totals={in:0,out:0,refunds:0,failed:0,pending:0,review:0};
   const rows=[];
-  for(const item of today){
+  for(const item of uniqueToday){
     const tx=item.transaction||{},status=tx.transactionStatus||"unknown";
     if(item.needsReview||item.classificationConfidence!=="high"){totals.review++;continue;}
     if(status==="failed"){totals.failed++;continue;}
@@ -136,11 +138,13 @@ exports.handler=async()=>{
         try{
           const statusPath=accountId==="legacy"?"gmailConnections/"+uid+"/status":"gmailConnections/"+uid+"/accounts/"+accountId+"/status";
           const priorStatus=(await db.ref(statusPath).once("value")).val()||{};
+          const emailPath=accountId==="legacy"?"gmailConnections/"+uid+"/emails":"gmailConnections/"+uid+"/accounts/"+accountId+"/emails";
+          const beforeSnapshot=await db.ref(emailPath).once("value");
+          const beforeIds=new Set(Object.keys(beforeSnapshot.val()||{}));
           const result=await gmail.runScheduledScan(db,uid,accountId);
           if(token&&chats.length&&priorStatus.lastSyncAtMs){
-            const emailPath=accountId==="legacy"?"gmailConnections/"+uid+"/emails":"gmailConnections/"+uid+"/accounts/"+accountId+"/emails";
             const emailSnapshot=await db.ref(emailPath).orderByChild("internalDate").limitToLast(30).once("value");
-            const newItems=Object.values(emailSnapshot.val()||{}).filter(item=>Number(item.internalDate||0)>Number(priorStatus.lastSyncAtMs||0));
+            const newItems=Object.values(emailSnapshot.val()||{}).filter(item=>!beforeIds.has(String(item.id||"")));
             await sendImmediateAlerts(db,token,chats,uid,accountId,newItems,settings);
           }
           outcomes.push({uid,accountId,status:"scanned",messages:result.synced||0});
