@@ -37,6 +37,10 @@ exports.handler=async event=>{
       alertEachTransaction:body.alertEachTransaction===true,
       largeTransactionAlerts:body.largeTransactionAlerts===true,
       largeTransactionThreshold:Math.max(0,Math.min(1000000000000,Number(body.largeTransactionThreshold)||0)),
+      scanMode:body.scanMode==="financial_only"?"financial_only":"all_inbox",
+      reportShowTransactions:body.reportShowTransactions!==false,
+      reportShowExceptions:body.reportShowExceptions!==false,
+      reportShowSecurity:body.reportShowSecurity===true,
       updatedAtMs:Date.now()
     };
     await ref.set(settings);
