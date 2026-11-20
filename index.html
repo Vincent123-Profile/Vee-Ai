@@ -1850,6 +1850,21 @@
     #gmailIntelligenceModal .gmail-transaction-detail strong {font-size:12px;line-height:1.45;overflow-wrap:anywhere;white-space:normal}
     @media(max-width:560px){#gmailIntelligenceModal .finance-section:has(#gmailDailyReportEnabled){padding:13px}#gmailIntelligenceModal .gmail-transaction-details{grid-template-columns:1fr}#gmailIntelligenceModal .gmail-transaction-heading{align-items:flex-start;flex-direction:column}}
 
+
+    #gmailIntelligenceModal .gmail-telegram-settings{display:block!important;width:100%;min-width:0;box-sizing:border-box;padding:clamp(14px,3vw,22px);border:1px solid var(--glass-border);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.02));overflow:visible!important}
+    #gmailIntelligenceModal .gmail-settings-heading{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    #gmailIntelligenceModal .gmail-settings-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:rgba(241,76,21,.14);color:var(--orange);font-size:21px}
+    #gmailIntelligenceModal .gmail-settings-heading h3{font-size:16px;font-weight:850;margin:0 0 4px}
+    #gmailIntelligenceModal .gmail-settings-heading p{font-size:12px;line-height:1.5;color:var(--text-secondary);margin:0}
+    #gmailIntelligenceModal .gmail-telegram-settings>label,#gmailIntelligenceModal .gmail-telegram-settings>div>label{display:flex;align-items:flex-start;gap:11px;width:100%;min-width:0;margin:10px 0;padding:12px;border:1px solid var(--glass-border);border-radius:12px;background:rgba(255,255,255,.025);font-size:13px;font-weight:650;line-height:1.5;overflow-wrap:anywhere}
+    #gmailIntelligenceModal .gmail-telegram-settings label input[type=checkbox]{flex:0 0 18px;width:18px;height:18px;margin:1px 0 0;accent-color:#f14c15}
+    #gmailIntelligenceModal .gmail-telegram-settings label[for]{display:block;border:0;background:transparent;padding:4px 0 0;margin:12px 0 5px}
+    #gmailIntelligenceModal .gmail-telegram-settings input[type=time],#gmailIntelligenceModal .gmail-telegram-settings input[type=text],#gmailIntelligenceModal .gmail-telegram-settings input[type=number]{display:block;width:100%;max-width:100%;min-width:0;min-height:46px;box-sizing:border-box;padding:11px 13px;border:1px solid var(--glass-border);border-radius:12px;background:var(--glass-surface);color:var(--text-primary);font:inherit;font-size:15px}
+    #gmailIntelligenceModal .gmail-telegram-settings .gmail-save-preferences,#gmailIntelligenceModal .gmail-telegram-settings .send-btn{width:100%;max-width:100%;min-width:0}
+    #gmailIntelligenceModal #gmailConnectBtn{flex:1 1 220px!important;min-height:48px;white-space:normal}
+    #gmailIntelligenceModal #gmailAccountSelect{flex:1 1 220px;min-width:0!important;width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--glass-border);border-radius:12px;background:var(--glass-surface);color:var(--text-primary);font:inherit}
+    @media(max-width:560px){#gmailIntelligenceModal .gmail-telegram-settings{padding:13px}#gmailIntelligenceModal #gmailConnectBtn,#gmailIntelligenceModal #gmailAccountSelect{flex:1 1 100%;width:100%}}
+
 </style>
 </head>
 <body>
@@ -2190,12 +2205,12 @@
         <div class="finance-stat"><strong id="gmailSecurityCount">0</strong><span>Messages flagged for review</span></div>
       </div>
       <div class="content-studio-actions" style="display:flex;gap:8px;flex-wrap:wrap">
-        <button type="button" class="send-btn" id="gmailConnectBtn" onclick="veeGmailConnect()">Connect Gmail</button>
+        <button type="button" class="send-btn" id="gmailConnectBtn" onclick="veeGmailConnect()">＋ Connect another Gmail</button>
         <select id="gmailAccountSelect" aria-label="Choose connected email account" onchange="veeGmailAccountChanged(this.value)" style="min-width:220px;max-width:100%"><option value="">Choose email account</option></select>
         <button type="button" class="account-secondary" id="gmailSyncBtn" onclick="veeGmailSync()">Scan latest emails</button>
         <button type="button" class="account-secondary" id="gmailDisconnectBtn" onclick="veeGmailDisconnect()">Disconnect Gmail</button>
       </div>
-      <p id="gmailIntelligenceStatus" class="account-copy" role="status" aria-live="polite">You need an approvement from the admin to be able to connect your mail 💌 reach out to the admin</p>
+      <p id="gmailIntelligenceStatus" class="account-copy" role="status" aria-live="polite">Connect one or more Gmail accounts. Select an account below to scan or manage it.</p>
       <div class="finance-section"><h3>Inbox intelligence</h3>
         <div class="planner-filters" id="gmailCategoryFilters" style="display:flex;gap:7px;flex-wrap:wrap">
           <button type="button" class="account-secondary" onclick="veeLoadGmailEmails('all')">All</button>
@@ -2215,13 +2230,13 @@
         <div class="finance-list" id="gmailEmailList" style="margin-top:12px"><div class="home-empty">Connect Gmail and scan your latest messages.</div></div>
       </div>
       <p class="finance-note">Security findings use initial rule-based indicators. A flagged email needs review. A clean result is not proof a message or link is safe. Links are analysed as text and are never opened automatically.</p>
-      <div class="finance-section" style="margin-top:18px">
-        <h3>Telegram alerts and reports</h3>
-        <p class="account-copy">Choose what Vee-AI sends to your linked Telegram account. Reports run in the background, even when this website is closed.</p>
+      <div class="finance-section gmail-telegram-settings" style="margin-top:18px">
+        <div class="gmail-settings-heading"><span class="gmail-settings-icon">✉</span><div><h3>Telegram alerts and reports</h3><p>Choose exactly which email alerts Vee-AI sends to your linked Telegram account.</p></div></div>
+        <p class="account-copy">Your saved preferences run in the background when the website is closed. Link your Telegram account in Settings to receive these alerts.</p>
         <label style="display:flex;gap:10px;align-items:center"><input id="gmailDailyReportEnabled" type="checkbox" style="width:auto"> Send me a daily business email report</label>
         <label for="gmailDailyReportTime">Daily report time</label>
         <input id="gmailDailyReportTime" type="time" value="21:00">
-        <label for="gmailReportTimeZone">Your time zone</label>
+        <label for="gmailReportTimeZone">Your time zone (detected automatically)</label>
         <input id="gmailReportTimeZone" type="text" readonly>
         <div style="display:grid;gap:9px;margin-top:12px">
           <label style="display:flex;gap:10px;align-items:center"><input id="gmailAlertSecurity" type="checkbox" style="width:auto"> Immediate suspicious email and link alerts</label>
@@ -2231,7 +2246,7 @@
           <label for="gmailLargeTransactionThreshold">Large transaction threshold (₦)</label>
           <input id="gmailLargeTransactionThreshold" type="number" min="0" step="1000" placeholder="Example: 500000">
         </div>
-        <div class="content-studio-actions" style="margin-top:14px"><button type="button" class="send-btn" onclick="veeSaveGmailNotificationSettings()">Save Telegram preferences</button></div>
+        <div class="content-studio-actions gmail-save-preferences" style="margin-top:14px"><button type="button" class="send-btn" onclick="veeSaveGmailNotificationSettings()">Save Telegram preferences</button></div>
         <p id="gmailNotificationSettingsStatus" class="account-copy" role="status" aria-live="polite"></p>
       </div>
     </div>
@@ -2649,8 +2664,8 @@
         window.history.replaceState({},document.title,window.location.pathname+(query?"?"+query:"")+window.location.hash);
       }
     }
-    var veeGmailAdminApproved = false;
-    var veeGmailApprovalMessage = "You need an approvement from the admin to be able to connect your mail 💌 reach out to the admin";
+    var veeGmailAdminApproved = true;
+    var veeGmailApprovalMessage = "";
     async function veeRefreshGmailStatus(){
       var status=document.getElementById("gmailIntelligenceStatus");
       if(!veeCurrentUser||!veeCurrentUser.emailVerified){if(status)status.textContent="Sign in with a verified Vee-AI account to connect Gmail.";return;}
@@ -2659,16 +2674,16 @@
         var connected=document.getElementById("gmailConnectionStatus");
         var last=document.getElementById("gmailLastSync");
         var alerts=document.getElementById("gmailSecurityCount");
-        veeGmailAdminApproved = data.approved === true;
+        veeGmailAdminApproved = true;
         var connectButton=document.getElementById("gmailConnectBtn");
-        if(connectButton){connectButton.disabled=!veeGmailAdminApproved;connectButton.textContent=data.connected?"Connect another Gmail":veeGmailAdminApproved?"Connect Gmail":"Request admin approval";}
+        if(connectButton){connectButton.disabled=false;connectButton.textContent="＋ Connect another Gmail";}
         var accountSelect=document.getElementById("gmailAccountSelect");
         var accounts=Array.isArray(data.accounts)?data.accounts:[];
         if(accountSelect){var previous=veeGmailSelectedAccountId;accountSelect.textContent="";accounts.forEach(function(account){var option=document.createElement("option");option.value=account.accountId;option.textContent=(account.gmailAddress||"Connected email")+(account.legacy?" (existing connection)":"");accountSelect.appendChild(option);});if(accounts.length){if(!accounts.some(function(account){return account.accountId===previous;}))previous=accounts[0].accountId;veeGmailSelectedAccountId=previous;accountSelect.value=previous;}else{veeGmailSelectedAccountId="";var empty=document.createElement("option");empty.value="";empty.textContent="No email connected";accountSelect.appendChild(empty);}}
         if(connected)connected.textContent=accounts.length+" email account"+(accounts.length===1?"":"s")+" connected";
         if(last)last.textContent=data.lastSyncAtMs?new Date(data.lastSyncAtMs).toLocaleString():"Not synced";
         if(alerts)alerts.textContent=String(data.securityAlertCount||0);
-        if(status)status.textContent=data.connected?"Gmail is connected with read-only access.":veeGmailAdminApproved?"Your Gmail connection is ready to set up.":veeGmailApprovalMessage;
+        if(status)status.textContent=data.connected?"Your Gmail accounts are connected. Select an account to scan it, or connect another Gmail account.":"Connect your first Gmail account to begin.";
         if(data.connected&&veeGmailSelectedAccountId)veeLoadGmailEmails(veeGmailCurrentFilter);
       }catch(error){if(status)status.textContent=error.message||"Unable to check Gmail connection.";}
     }
@@ -2676,7 +2691,6 @@
     async function veeGmailConnect(){
       var status=document.getElementById("gmailIntelligenceStatus");
       try{
-        if(!veeGmailAdminApproved){if(status)status.textContent=veeGmailApprovalMessage;return;}
         if(status)status.textContent="Preparing secure Google sign-in...";
         var data=await veeGmailRequest("connect");
         if(!data.authorizationUrl)throw new Error("Google sign-in URL was not returned.");
