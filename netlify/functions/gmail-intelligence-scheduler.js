@@ -152,7 +152,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
   const message=(options.demoMode?"📊 <b>Vee-AI Financial Intelligence Demo Report</b>":"📊 <b>Vee-AI Daily Bank Report</b>")+"\n"+(options.demoMode?"All available connected Gmail financial records":"Reporting date: "+clock.date)+" · "+html(zone)+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
   const deliveryKey=options.deliveryKey||("daily_"+clock.date);
   const parts=[];let currentPart="";
-  for(const line of message.split("\\n")){const next=currentPart?currentPart+"\\n"+line:line;if(next.length>3800&&currentPart){parts.push(currentPart);currentPart=line;}else currentPart=next;}
+  for(const line of message.split("\n")){const next=currentPart?currentPart+"\n"+line:line;if(next.length>3800&&currentPart){parts.push(currentPart);currentPart=line;}else currentPart=next;}
   if(currentPart)parts.push(currentPart);
   const delivered=await deliverOnce(db,token,chats,uid,deliveryKey,options.demoMode?parts:[message.slice(0,3900)]);
   if(!delivered){
