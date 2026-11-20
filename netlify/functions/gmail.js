@@ -320,6 +320,17 @@ async function syncMessages(uid, db, token, accountId) {
   });
   return saved;
 }
+exports.runScheduledScan = async (db, uid, accountId) => {
+  if (!/^[a-zA-Z0-9_-]{1,80}$/.test(String(accountId || ""))) throw new Error("Invalid mailbox reference.");
+  const target = db.ref("gmailConnections/" + uid + "/accounts/" + accountId);
+  const tokenSnapshot = await target.child("tokenVault").once("value");
+  if (!tokenSnapshot.exists()) return { skipped:true, reason:"missing_token" };
+  const saved = decrypt(uid, tokenSnapshot.val());
+  const fresh = await refreshAccessToken(uid, db, saved, accountId);
+  const emails = await syncMessages(uid, db, fresh, accountId);
+  return { accountId, gmailAddress:fresh.gmailAddress||"", synced:emails.length, securityAlerts:emails.filter(item=>item.riskLevel!=="none").length };
+};
+
 exports.handler = async event => {
   const method = event.httpMethod || "GET";
   const params = event.queryStringParameters || {};
