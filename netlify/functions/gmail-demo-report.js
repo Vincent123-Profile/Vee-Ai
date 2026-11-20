@@ -41,6 +41,7 @@ exports.handler=async event=>{
         if(!token||!chats.length)throw new Error("Telegram connection is unavailable.");
         const settings=(await db.ref("users/"+user.uid+"/emailIntelligenceSettings").once("value")).val()||{};
         const result=await scheduler.sendDemoReport(db,token,chats,user.uid,settings,new Date(),current.id);
+        if(result.status!=="sent"&&result.status!=="already_sent")throw new Error("Telegram delivery was not confirmed. Result: "+String(result.status||"unknown"));
         await ref.set(Object.assign({},current,{status:"sent",sentAtMs:Date.now(),resultStatus:result.status}));
         return json(200,{status:"sent",sentAtMs:Date.now()});
       }catch(error){
