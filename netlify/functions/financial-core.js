@@ -115,7 +115,7 @@ async function verifyUser(event) {
   const header = headers.authorization || headers.Authorization || "";
   const match = /^Bearer\s+(.+)$/i.exec(header);
   if (!match) throw new Error("Sign in to Vee-AI before using Financial Intelligence.");
-  const decoded = await database().app.auth().verifyIdToken(match[1], true);
+  const decoded = await admin.auth(app).verifyIdToken(match[1], true);
   if (decoded.email_verified !== true) throw new Error("Verify your Vee-AI email before using Financial Intelligence.");
   return decoded;
 }
