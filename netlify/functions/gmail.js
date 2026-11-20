@@ -133,6 +133,7 @@ function extractTransaction(email, text, timeZone) {
   const patterns=[
     /(?:transaction amount|transfer amount|amount transferred|amount credited|amount debited|amount)\s*[:#=-]?\s*(NGN|₦|NAIRA|N|USD|\$|GBP|£|EUR|€)?\s*([\d,]+(?:\.\d{1,2})?)/i,
     /(?:your transfer|transfer|transaction)\s+of\s+(NGN|₦|NAIRA|N|USD|\$|GBP|£|EUR|€)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+    /(?:credited|debited|received|paid|sent|withdrawn)\s+(?:with|of|by)?\s*(NGN|₦|NAIRA|N|USD|\$|GBP|£|EUR|€)?\s*([\d,]+(?:\.\d{1,2})?)/i,
     /(?:NGN|₦|NAIRA|N)\s*([\d,]+(?:\.\d{1,2})?)/i,
     /([\d,]+(?:\.\d{1,2})?)\s*(?:NGN|₦)\b/i,
     /(?:USD|\$)\s*([\d,]+(?:\.\d{1,2})?)/i,
@@ -320,7 +321,7 @@ async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZo
         date:header(headers,"Date").slice(0,120),
         internalDate:Number(message.internalDate || 0),
         snippet:String(message.snippet || "").slice(0,1000),
-        bodyText:textParts.join("\\n").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").slice(0,12000),
+        bodyText:textParts.join("\n").replace(/<[^>]*>/g," ").replace(/\s+/g," ").slice(0,12000),
         unread:(message.labelIds || []).includes("UNREAD"),
         labels:(message.labelIds || []).filter(label => ["INBOX","UNREAD","IMPORTANT","STARRED","SPAM"].includes(label))
       };
