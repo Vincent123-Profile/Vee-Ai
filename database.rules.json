@@ -49,6 +49,10 @@
     "gmailOAuthStates": {
       ".read": false,
       ".write": false
+    },
+    "financialIntelligence": {
+      ".read": false,
+      ".write": false
     }
   }
 }
