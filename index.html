@@ -711,6 +711,16 @@
     @keyframes veeOrbFloat{0%,100%{transform:translateY(0) rotate(-3deg) scale(1)}50%{transform:translateY(-9px) rotate(3deg) scale(1.035)}}
     .app-shell.focus-chat-mode{max-width:none;padding-left:clamp(10px,2vw,28px);padding-right:clamp(10px,2vw,28px)}
     .app-shell.focus-chat-mode .top-nav{display:none}
+    .app-shell.focus-chat-mode .stage{padding-top:58px}
+    .app-shell.focus-chat-mode .chat-stream{scroll-padding-top:12px}
+    .focus-nav-toggle{top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right))}
+    .chat-settings-toggle{width:100%;min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;margin:0 0 6px;border:1px solid var(--glass-border);border-radius:13px;background:var(--glass-surface);color:var(--text-primary);font:700 11.5px "Plus Jakarta Sans",sans-serif;cursor:pointer;text-align:left}
+    .chat-settings-toggle svg{width:16px;height:16px;flex:0 0 auto;transition:transform .2s ease}
+    .chat-settings-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+    .chat-settings-current{margin-left:auto;color:var(--text-muted);font-weight:500;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #chatSettingsPanel[hidden]{display:none!important}
+    .composer-wrap:focus-within .quick-strip{display:none!important}
+    @media(max-width:420px){.chat-settings-toggle{min-height:36px;padding:7px 10px}.chat-settings-current{max-width:52%;font-size:10px}}
     .focus-nav-toggle{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:80;display:none;align-items:center;gap:7px;padding:10px 14px;border:1px solid rgba(241,76,21,.35);border-radius:999px;background:var(--glass-chrome);color:var(--text-primary);box-shadow:0 8px 24px rgba(0,0,0,.14);font:700 12px "Plus Jakarta Sans",sans-serif;cursor:pointer;backdrop-filter:blur(14px)}
     .focus-nav-toggle svg{width:16px;height:16px;stroke:var(--orange)}
     .app-shell.focus-chat-mode .focus-nav-toggle{display:inline-flex}
@@ -1917,7 +1927,12 @@
         <button type="button" class="quick-pill glass-surface" onclick="veeSendPrompt('Kedu, nwanne m?')">Igbo</button>
       </div>
 
-      <div class="ai-mode-bar" aria-label="AI model and language settings">
+      <button type="button" class="chat-settings-toggle glass-surface" id="chatSettingsToggle" onclick="veeToggleChatSettings()" aria-expanded="false" aria-controls="chatSettingsPanel">
+        <span>Chat settings</span>
+        <span class="chat-settings-current" id="chatSettingsCurrent">Vee Brain · Auto detect</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="ai-mode-bar" id="chatSettingsPanel" aria-label="AI model and language settings" hidden>
         <div class="ai-mode-field">
           <label for="veeModelSelect">AI brain</label>
           <select id="veeModelSelect" onchange="veeSetModel(this.value)" aria-label="Choose AI brain">
@@ -1939,7 +1954,7 @@
             <option value="Hausa">Hausa</option>
           </select>
         </div>
-        <div class="ai-mode-caption" id="veeModeCaption">Vee Brain is your flagship AI. Your selected brain and language apply to each new reply.</div>
+        <div class="ai-mode-caption" id="veeModeCaption">Choose the AI brain and response language for your next reply.</div>
       </div>
       <div class="composer-box glass-chrome" id="composerBox" onclick="document.getElementById('userInput').focus()">
         <textarea id="userInput" rows="1" placeholder="Yarn with Vee-AI in Pidgin, English, Yoruba, Hausa or Igbo..." autocomplete="off" enterkeyhint="send" onkeydown="veeHandleKey(event)" oninput="veeResizeInput(this)"></textarea>
@@ -3515,6 +3530,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
        CHAT NAVIGATION & HISTORY
        ========================================================= */
     var veeFocusModeHidden = false;
+    document.addEventListener("DOMContentLoaded", veeUpdateChatSettingsLabel);
     try { veeFocusModeHidden = localStorage.getItem("vee_ai_focus_mode_hidden_v1") === "true"; } catch (e) {}
     function veeApplyFocusMode() {
       var shell = document.getElementById("appShell");
@@ -3530,6 +3546,23 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
         button.title = veeFocusModeHidden ? "Show full navigation" : "Give chat more space";
         button.setAttribute("aria-label", veeFocusModeHidden ? "Show full navigation" : "Hide navigation for a focused chat");
       }
+    }
+    function veeToggleChatSettings(forceOpen) {
+      var panel = document.getElementById("chatSettingsPanel");
+      var button = document.getElementById("chatSettingsToggle");
+      if (!panel || !button) return;
+      var shouldOpen = typeof forceOpen === "boolean" ? forceOpen : panel.hidden;
+      panel.hidden = !shouldOpen;
+      button.setAttribute("aria-expanded", String(shouldOpen));
+    }
+    function veeUpdateChatSettingsLabel() {
+      var model = document.getElementById("veeModelSelect");
+      var language = document.getElementById("veeLanguageSelect");
+      var label = document.getElementById("chatSettingsCurrent");
+      if (!label) return;
+      var modelName = model && model.options[model.selectedIndex] ? model.options[model.selectedIndex].text.split("·")[0].trim() : "Vee Brain";
+      var languageName = language && language.options[language.selectedIndex] ? language.options[language.selectedIndex].text : "Auto detect";
+      label.textContent = modelName + " · " + languageName;
     }
     function veeToggleFocusMode() {
       veeFocusModeHidden = !veeFocusModeHidden;
@@ -3857,6 +3890,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
     }
 
     function veeSetModel(value) {
+      setTimeout(veeUpdateChatSettingsLabel, 0);
       var allowed = ["Vee Brain","Fabzi","Hassign","Kurah","Portable"];
       if (!allowed.includes(value)) value = "Vee Brain";
       veeSelectedModel = value;
@@ -3873,6 +3907,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
     }
 
     function veeSetLanguage(value) {
+      setTimeout(veeUpdateChatSettingsLabel, 0);
       var allowed = ["Auto","Queen's English","Nigerian Pidgin","Yoruba","Igbo","Hausa"];
       if (!allowed.includes(value)) value = "Auto";
       veeSelectedLanguage = value;
