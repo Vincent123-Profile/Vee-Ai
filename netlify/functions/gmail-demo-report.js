@@ -37,7 +37,7 @@ exports.handler=async event=>{
       try{
         const token=(process.env.TELEGRAM_BOT_TOKEN||"").trim();
         const linked=(await db.ref("telegram/accountsByChat").once("value")).val()||{};
-        const chats=Object.entries(linked).filter(([,item])=>item&&String(item.uid)===String(user.uid)).map(([chatId])=>chatId).filter(chatId=>/^\\d{1,24}$/.test(chatId));
+        const chats=Object.entries(linked).filter(([,item])=>item&&String(item.uid)===String(user.uid)).map(([chatId])=>chatId).filter(chatId=>/^\d{1,24}$/.test(chatId));
         if(!token||!chats.length)throw new Error("Telegram connection is unavailable.");
         const settings=(await db.ref("users/"+user.uid+"/emailIntelligenceSettings").once("value")).val()||{};
         const result=await scheduler.sendDemoReport(db,token,chats,user.uid,settings,new Date(),current.id);
