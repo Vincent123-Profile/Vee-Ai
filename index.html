@@ -4024,7 +4024,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
         try{if(localStorage.getItem("vee_ai_welcome_guide_completed_v1")!=="true")veeOpenGuide();}catch(e){}
       }
       if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",checkFirstVisit,{once:true});
-      else setTimeout(checkFirstVisit,450);
+      else setTimeout(checkFirstVisit,2100);
     })();
 
     /* =========================================================
