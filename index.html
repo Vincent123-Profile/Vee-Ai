@@ -2144,6 +2144,7 @@
       </div>
       <div class="content-studio-actions" style="display:flex;gap:8px;flex-wrap:wrap">
         <button type="button" class="send-btn" id="gmailConnectBtn" onclick="veeGmailConnect()">Connect Gmail</button>
+        <select id="gmailAccountSelect" aria-label="Choose connected email account" onchange="veeGmailAccountChanged(this.value)" style="min-width:220px;max-width:100%"><option value="">Choose email account</option></select>
         <button type="button" class="account-secondary" id="gmailSyncBtn" onclick="veeGmailSync()">Scan latest emails</button>
         <button type="button" class="account-secondary" id="gmailDisconnectBtn" onclick="veeGmailDisconnect()">Disconnect Gmail</button>
       </div>
@@ -2518,10 +2519,13 @@
       var button=document.getElementById("particleToggleBtn");if(button)button.textContent=veeParticlesEnabled?"Enabled":"Disabled";
     }
     var veeGmailCurrentFilter = "all";
-    async function veeGmailRequest(action){
+    var veeGmailSelectedAccountId="";
+    async function veeGmailRequest(action, accountId){
       if(!veeCurrentUser||!veeCurrentUser.emailVerified)throw new Error("Sign in with a verified Vee-AI account first.");
       var token=await veeCurrentUser.getIdToken(true);
-      var response=await fetch("/.netlify/functions/gmail",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({action:action})});
+      var payload={action:action};
+      if(accountId)payload.accountId=accountId;
+      var response=await fetch("/.netlify/functions/gmail",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify(payload)});
       var data=await response.json().catch(function(){return {};});
       if(!response.ok)throw new Error(data.error||"Gmail request failed.");
       return data;
@@ -2551,14 +2555,18 @@
         var alerts=document.getElementById("gmailSecurityCount");
         veeGmailAdminApproved = data.approved === true;
         var connectButton=document.getElementById("gmailConnectBtn");
-        if(connectButton){connectButton.disabled=!!data.connected;connectButton.textContent=data.connected?"Gmail connected":veeGmailAdminApproved?"Connect Gmail":"Request admin approval";}
-        if(connected)connected.textContent=data.connected?(data.gmailAddress||"Connected"):"Not connected";
+        if(connectButton){connectButton.disabled=!veeGmailAdminApproved;connectButton.textContent=data.connected?"Connect another Gmail":veeGmailAdminApproved?"Connect Gmail":"Request admin approval";}
+        var accountSelect=document.getElementById("gmailAccountSelect");
+        var accounts=Array.isArray(data.accounts)?data.accounts:[];
+        if(accountSelect){var previous=veeGmailSelectedAccountId;accountSelect.textContent="";accounts.forEach(function(account){var option=document.createElement("option");option.value=account.accountId;option.textContent=(account.gmailAddress||"Connected email")+(account.legacy?" (existing connection)":"");accountSelect.appendChild(option);});if(accounts.length){if(!accounts.some(function(account){return account.accountId===previous;}))previous=accounts[0].accountId;veeGmailSelectedAccountId=previous;accountSelect.value=previous;}else{veeGmailSelectedAccountId="";var empty=document.createElement("option");empty.value="";empty.textContent="No email connected";accountSelect.appendChild(empty);}}
+        if(connected)connected.textContent=accounts.length+" email account"+(accounts.length===1?"":"s")+" connected";
         if(last)last.textContent=data.lastSyncAtMs?new Date(data.lastSyncAtMs).toLocaleString():"Not synced";
         if(alerts)alerts.textContent=String(data.securityAlertCount||0);
         if(status)status.textContent=data.connected?"Gmail is connected with read-only access.":veeGmailAdminApproved?"Your Gmail connection is ready to set up.":veeGmailApprovalMessage;
-        if(data.connected)veeLoadGmailEmails(veeGmailCurrentFilter);
+        if(data.connected&&veeGmailSelectedAccountId)veeLoadGmailEmails(veeGmailCurrentFilter);
       }catch(error){if(status)status.textContent=error.message||"Unable to check Gmail connection.";}
     }
+    function veeGmailAccountChanged(accountId){veeGmailSelectedAccountId=String(accountId||"");if(veeGmailSelectedAccountId)veeLoadGmailEmails(veeGmailCurrentFilter);}
     async function veeGmailConnect(){
       var status=document.getElementById("gmailIntelligenceStatus");
       try{
@@ -2575,7 +2583,8 @@
       try{
         if(button){button.disabled=true;button.textContent="Scanning...";}
         if(status)status.textContent="Reading up to 30 recent messages and checking their categories and links...";
-        var data=await veeGmailRequest("sync");
+        if(!veeGmailSelectedAccountId)throw new Error("Choose a connected email account first.");
+        var data=await veeGmailRequest("sync",veeGmailSelectedAccountId);
         if(status)status.textContent="Scan complete. "+data.synced+" messages analysed, "+data.securityAlerts+" flagged for review.";
         await veeRefreshGmailStatus();
         await veeLoadGmailEmails(veeGmailCurrentFilter);
@@ -2586,7 +2595,8 @@
       var status=document.getElementById("gmailIntelligenceStatus");
       if(!window.confirm("Disconnect Gmail and delete the stored connection and scanned email records from Vee-AI?"))return;
       try{
-        await veeGmailRequest("disconnect");
+        if(!veeGmailSelectedAccountId)throw new Error("Choose an email account to disconnect.");
+        await veeGmailRequest("disconnect",veeGmailSelectedAccountId);
         var list=document.getElementById("gmailEmailList");
         if(list)list.textContent="Gmail disconnected. Stored email analysis has been deleted.";
         await veeRefreshGmailStatus();
@@ -2598,7 +2608,8 @@
       if(!list)return;
       list.textContent="Loading email analysis...";
       try{
-        var data=await veeGmailRequest("list");
+        if(!veeGmailSelectedAccountId){list.textContent="Connect an email account to view messages.";return;}
+        var data=await veeGmailRequest("list",veeGmailSelectedAccountId);
         var allEmails=Array.isArray(data.emails)?data.emails:[];
         var totals={};
         var reviewCount=0;
