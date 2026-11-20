@@ -81,12 +81,12 @@ async function sendImmediateAlerts(db,token,chats,uid,accountId,items,settings){
   }
 }
 async function sendDailyReport(db,token,chats,uid,settings,now){
-  if(settings.dailyReportEnabled!==true||!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(settings.dailyReportTime||"")))return;
+  if(settings.dailyReportEnabled!==true||!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(settings.dailyReportTime||"")))return {status:"disabled_or_invalid_time"};
   const zone=validTimeZone(settings.timeZone)?settings.timeZone:"UTC";
   const clock=localClock(zone,now);
   const current=clock.time.split(":").map(Number),wanted=String(settings.dailyReportTime).split(":").map(Number);
   const elapsed=(current[0]*60+current[1])-(wanted[0]*60+wanted[1]);
-  if(elapsed<0)return;
+  if(elapsed<0)return {status:"not_due",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone};
   const snapshot=await db.ref("gmailConnections/"+uid).once("value"),root=snapshot.val()||{};
   const records=[];
   Object.entries(root.accounts||{}).forEach(([accountId,account])=>Object.values(account&&account.emails||{}).forEach(item=>records.push(Object.assign({accountId},item))));
@@ -113,7 +113,8 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
   const security=records.filter(item=>item&&Number(item.internalDate)>0&&localDateFor(item.internalDate,zone)===clock.date&&item.riskLevel&&item.riskLevel!=="none").length;
   const net=totals.in-totals.out;
   const message="📊 <b>Vee-AI Daily Business Email Report</b>\n"+html(clock.date)+" · "+html(zone)+"\n\n🟢 <b>Credits:</b> "+money(totals.in,"NGN")+"\n🔴 <b>Debits:</b> "+money(totals.out,"NGN")+"\n💰 <b>Net account movement:</b> "+(net>=0?"+":"")+money(net,"NGN")+"\n↩️ <b>Refunds detected:</b> "+money(totals.refunds,"NGN")+"\n\n⚠️ Failed: "+totals.failed+" · Pending: "+totals.pending+" · Needs review: "+totals.review+"\n🛡️ Security findings: "+security+"\n\n<b>Transaction activity</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence bank transactions were identified today.")+"\n\n<i>Net movement is not the same as business profit. Review transaction details in Vee-AI.</i>";
-  await deliverOnce(db,token,chats,uid,"daily_"+clock.date,message.slice(0,3900));
+  const delivered=await deliverOnce(db,token,chats,uid,"daily_"+clock.date,message.slice(0,3900));
+  return {status:delivered?"sent":"already_sent_or_in_progress",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date};
 }
 exports.handler=async()=>{
   const token=(process.env.TELEGRAM_BOT_TOKEN||"").trim();
@@ -157,9 +158,15 @@ exports.handler=async()=>{
         processed++;
       }
       if(processed>=30)break;
-      if(token&&chats.length&&settings.dailyReportEnabled===true){
-        try{await sendDailyReport(db,token,chats,uid,settings,new Date(now));}
-        catch(error){console.error("Vee-AI daily email report failed:",JSON.stringify({uid,error:clean(error.message,180)}));}
+      if(settings.dailyReportEnabled===true){
+        if(!token||!chats.length){
+          console.warn("Vee-AI daily report not sent:",JSON.stringify({uid,reason:!token?"telegram_bot_token_missing":"no_linked_telegram_chat"}));
+        }else{
+          try{
+            const reportResult=await sendDailyReport(db,token,chats,uid,settings,new Date(now));
+            console.log("Vee-AI daily report check:",JSON.stringify({uid,...reportResult}));
+          }catch(error){console.error("Vee-AI daily email report failed:",JSON.stringify({uid,error:clean(error.message,180)}));}
+        }
       }
     }
     return {statusCode:200,body:JSON.stringify({ok:true,processed,outcomes})};
