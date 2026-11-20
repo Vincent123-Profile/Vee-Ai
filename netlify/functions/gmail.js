@@ -104,7 +104,7 @@ function collectText(payload, output) {
   if (payload.mimeType === "text/plain" && payload.body && payload.body.data) output.push(decodeBody(payload.body.data));
   (payload.parts || []).forEach(part => collectText(part,output));
 }
-function transactionDateFromText(source,email){
+function transactionDateFromText(source,email,timeZone){
   const value=String(source||"");
   const iso=value.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})(?:[T ,]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?/i);
   const local=value.match(/\b(\d{1,2})[\/-](\d{1,2})[\/-](20\d{2}|\d{2})(?:[ ,]+(?:at\s*)?(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?/i);
@@ -114,13 +114,19 @@ function transactionDateFromText(source,email){
   if(parts&&parts.year>=2000&&parts.month>=1&&parts.month<=12&&parts.day>=1&&parts.day<=31){
     if(parts.ampm){const pm=String(parts.ampm).toUpperCase()==="PM";parts.hour=parts.hour%12+(pm?12:0);}
     if(parts.hour<=23&&parts.minute<=59&&parts.second<=59){
-      const date=new Date(parts.year,parts.month-1,parts.day,parts.hour,parts.minute,parts.second);
-      if(date.getFullYear()===parts.year&&date.getMonth()===parts.month-1&&date.getDate()===parts.day)return date.getTime();
+      const wallClock=Date.UTC(parts.year,parts.month-1,parts.day,parts.hour,parts.minute,parts.second);
+      try{
+        const zone=String(timeZone||"UTC");
+        const fmt=new Intl.DateTimeFormat("en-GB",{timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
+        const values={};fmt.formatToParts(new Date(wallClock)).forEach(part=>{if(part.type!=="literal")values[part.type]=Number(part.value);});
+        const represented=Date.UTC(values.year,values.month-1,values.day,values.hour,values.minute,values.second);
+        return wallClock-(represented-wallClock);
+      }catch(_){return wallClock;}
     }
   }
   return Number(email.internalDate||Date.parse(email.date)||0)||null;
 }
-function extractTransaction(email, text) {
+function extractTransaction(email, text, timeZone) {
   const source = (email.subject + " " + email.snippet + " " + email.bodyText).replace(/\s+/g," ");
   const amountPatterns = [
     /(?:NGN|₦|N)\s?([\d,]+(?:\.\d{2})?)/i,
@@ -166,7 +172,7 @@ function extractTransaction(email, text) {
     transactionStatus,
     counterparty,
     narration,
-    transactionAtMs:transactionDateFromText(source,email),
+    transactionAtMs:transactionDateFromText(source,email,timeZone),
     reference:reference.slice(0,80),
     hasTransactionLanguage,
     ambiguousDirection:debit && credit
@@ -221,7 +227,7 @@ function identifyBank(email) {
   if(bodyMatches.length===1)return {name:bodyMatches[0][0],confidence:"medium"};
   return {name:"Bank not identified",confidence:"review"};
 }
-function classifyEmail(email) {
+function classifyEmail(email,timeZone) {
   const subject = String(email.subject || "");
   const from = String(email.from || "");
   const body = String(email.bodyText || "");
@@ -229,7 +235,7 @@ function classifyEmail(email) {
   const text = (subject + " " + from + " " + snippet + " " + body).toLowerCase();
   const categories = [];
   const evidence = [];
-  const transaction = extractTransaction(email,text);
+  const transaction = extractTransaction(email,text,timeZone);
   const bank = identifyBank(email);
   const senderAddress = (from.match(/<([^>]+)>/) || [])[1] || from;
   const senderDomain = (senderAddress.split("@").pop() || "").replace(/[>]/g,"").toLowerCase();
@@ -307,7 +313,7 @@ function classifyEmail(email) {
     needsReview
   };
 }
-async function syncMessages(uid, db, token, accountId, afterMs, scanMode) {
+async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZone) {
   const query = Number(afterMs) > 0 ? "messages?maxResults=100&includeSpamTrash=true&q=" + encodeURIComponent("after:" + Math.max(0,Math.floor(Number(afterMs)/1000))) : "messages?maxResults=30&includeSpamTrash=true";
   const list = await gmailFetch(token.accessToken,query);
   const messages = Array.isArray(list.messages) ? list.messages : [];
@@ -332,7 +338,7 @@ async function syncMessages(uid, db, token, accountId, afterMs, scanMode) {
         unread:(message.labelIds || []).includes("UNREAD"),
         labels:(message.labelIds || []).filter(label => ["INBOX","UNREAD","IMPORTANT","STARRED","SPAM"].includes(label))
       };
-      const analysis = classifyEmail(email);
+      const analysis = classifyEmail(email,timeZone);
       return {
         id:email.id, threadId:email.threadId, from:email.from, subject:email.subject,
         date:email.date, internalDate:email.internalDate, snippet:email.snippet,
@@ -369,7 +375,7 @@ exports.runScheduledScan = async (db, uid, accountId) => {
   const fresh = await refreshAccessToken(uid, db, saved, accountId);
   const settingsSnapshot = await db.ref("users/" + uid + "/emailIntelligenceSettings").once("value");
   const settings = settingsSnapshot.val() || {};
-  const emails = await syncMessages(uid, db, fresh, accountId, previousSyncAtMs ? previousSyncAtMs - 10 * 60 * 1000 : 0, settings.scanMode || "all_inbox");
+  const emails = await syncMessages(uid, db, fresh, accountId, previousSyncAtMs ? previousSyncAtMs - 10 * 60 * 1000 : 0, settings.scanMode || "all_inbox", settings.timeZone || "UTC");
   return { accountId, gmailAddress:fresh.gmailAddress||"", synced:emails.length, securityAlerts:emails.filter(item=>item.riskLevel!=="none").length };
 };
 
@@ -498,7 +504,7 @@ exports.handler = async event => {
         const fresh=await refreshAccessToken(user.uid,db,saved,accountId);
         const settingsSnapshot=await db.ref("users/"+user.uid+"/emailIntelligenceSettings").once("value");
         const settings=settingsSnapshot.val()||{};
-        const emails=await syncMessages(user.uid,db,fresh,accountId,0,settings.scanMode||"all_inbox");
+        const emails=await syncMessages(user.uid,db,fresh,accountId,0,settings.scanMode||"all_inbox",settings.timeZone||"UTC");
         await target.child("status").update({connected:true,accountId,gmailAddress:fresh.gmailAddress||"",lastSyncAtMs:Date.now(),lastSyncCount:emails.length,securityAlertCount:emails.filter(item=>item.riskLevel!=="none").length});
         return json(200,{success:true,accountId,synced:emails.length,securityAlerts:emails.filter(item=>item.riskLevel!=="none").length});
       }
