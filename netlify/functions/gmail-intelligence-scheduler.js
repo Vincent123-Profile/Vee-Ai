@@ -162,6 +162,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
   }
   return {status:"sent",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
 }
+exports.sendDemoReport=async(db,token,chats,uid,settings,now,jobId)=>sendDailyReport(db,token,chats,uid,settings,now,{demoMode:true,deliveryKey:"demo_"+String(jobId||"")});
 exports.handler=async()=>{
   const token=(process.env.TELEGRAM_BOT_TOKEN||"").trim();
   const db=database(),now=Date.now(),claimId=crypto.randomBytes(16).toString("hex");
@@ -184,7 +185,7 @@ exports.handler=async()=>{
         const chats=token&&job.chatId==="all"?await chatsForUser(db,uid):[];
         if(!token||!chats.length)throw new Error("Selected Telegram chat is no longer linked.");
         const settings=(await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value")).val()||{};
-        const result=await sendDailyReport(db,token,chats,uid,settings,new Date(now),{demoMode:true,deliveryKey:"demo_"+String(job.id||"")});
+        const result=await exports.sendDemoReport(db,token,chats,uid,settings,new Date(now),job.id);
         await jobRef.set(Object.assign({},job,{status:"sent",sentAtMs:Date.now(),resultStatus:result.status}));
       }catch(error){await jobRef.set(Object.assign({},job,{status:"failed",failedAtMs:Date.now(),failure:"Delivery failed. Check Telegram connection and retry."}));console.error("Vee-AI demo report failed:",clean(error.message,180));}
     }
