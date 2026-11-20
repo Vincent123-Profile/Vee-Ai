@@ -139,16 +139,16 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
     const g=groups[currency],net=g.net;
     return "<b>"+html(currency)+"</b> · Credits "+money(g.in,currency)+" · Debits "+money(g.out,currency)+" · Net "+(net>=0?"+":"")+money(net,currency)+" · Transactions "+g.transactions;
   }).join("\n"):"No bank transaction emails found for this date.";
-  const showTransactions=settings.reportShowTransactions!==false;
-  const showExceptions=settings.reportShowExceptions!==false;
-  const showSecurity=settings.reportShowSecurity===true;
+  const showTransactions=options.demoMode||settings.reportShowTransactions!==false;
+  const showExceptions=options.demoMode||settings.reportShowExceptions!==false;
+  const showSecurity=options.demoMode||settings.reportShowSecurity===true;
   const security=showSecurity?records.filter(item=>{
     const ms=Number(item.transaction&&item.transaction.transactionAtMs||item.internalDate||0);
     return ms>0&&localDateFor(ms,zone)===clock.date&&item.riskLevel&&item.riskLevel!=="none";
   }).length:0;
   const exceptionText=showExceptions?"\nFailed: "+counts.failed+" · Reversed: "+counts.reversed+" · Refunded: "+counts.refunded+" · Pending: "+counts.pending+" · Needs review: "+counts.review:"";
   const securityText=showSecurity?"\n🛡️ Security findings: "+security:"";
-  const transactionText=showTransactions?"\n\n<b>Transaction details</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence transactions to list."):"";
+  const transactionText=showTransactions?"\n\n<b>Transaction details</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence transactions to list.")+(options.demoMode&&unique.length>rows.length?"\n\nShowing the latest "+rows.length+" transaction details. All eligible records are included in the totals.":""):"";
   const message=(options.demoMode?"📊 <b>Vee-AI Financial Intelligence Demo Report</b>":"📊 <b>Vee-AI Daily Bank Report</b>")+"\n"+(options.demoMode?"All available connected Gmail financial records":"Reporting date: "+clock.date)+" · "+html(zone)+"\n\n"+totalsText+"\n\n<b>Activity counts</b>\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\n\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
   const deliveryKey=options.deliveryKey||("daily_"+clock.date);
   const parts=[];let currentPart="";
