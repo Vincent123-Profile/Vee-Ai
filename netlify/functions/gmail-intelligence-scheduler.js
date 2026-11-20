@@ -106,6 +106,7 @@ async function sendDailyReport(db,token,chats,uid,settings,now,options){
     if(seen.has(key))return false;
     seen.add(key);return true;
   });
+  unique.sort((a,b)=>Number(b.transaction&&b.transaction.transactionAtMs||b.internalDate||0)-Number(a.transaction&&a.transaction.transactionAtMs||a.internalDate||0));
   const groups={};
   const counts={successful:0,credits:0,debits:0,failed:0,reversed:0,refunded:0,pending:0,review:0,unknown:0};
   const rows=[];
