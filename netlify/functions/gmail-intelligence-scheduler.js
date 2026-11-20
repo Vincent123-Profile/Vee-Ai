@@ -173,7 +173,20 @@ exports.handler=async()=>{
   const outcomes=[];
   try{
     // Process one-off demo reports independently from normal daily reports.
-    for(const [uid] of Object.entries((await db.ref("gmailConnections").once("value")).val()||{})){\n      const jobRef=db.ref("telegram/emailIntelligenceDemoReports/"+uid+"/pending");\n      const job=(await jobRef.once("value")).val();\n      if(!job||job.status!=="scheduled"||Number(job.scheduledAtMs)>now)continue;\n      const claim=await jobRef.transaction(current=>{if(!current||current.status!=="scheduled"||Number(current.scheduledAtMs)>now)return;return Object.assign({},current,{status:"sending",claimedAtMs:now});},undefined,false);\n      if(!claim.committed)continue;\n      try{\n        const chats=token&&job.chatId==="all"?await chatsForUser(db,uid):[];\n        if(!token||!chats.length)throw new Error("Selected Telegram chat is no longer linked.");\n        const settings=(await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value")).val()||{};\n        const result=await sendDailyReport(db,token,chats,uid,settings,new Date(now),{demoMode:true,deliveryKey:"demo_"+String(job.id||"")});\n        await jobRef.set(Object.assign({},job,{status:"sent",sentAtMs:Date.now(),resultStatus:result.status}));\n      }catch(error){await jobRef.set(Object.assign({},job,{status:"failed",failedAtMs:Date.now(),failure:"Delivery failed. Check Telegram connection and retry."}));console.error("Vee-AI demo report failed:",clean(error.message,180));}\n    }
+    for(const [uid] of Object.entries((await db.ref("gmailConnections").once("value")).val()||{})){
+      const jobRef=db.ref("telegram/emailIntelligenceDemoReports/"+uid+"/pending");
+      const job=(await jobRef.once("value")).val();
+      if(!job||job.status!=="scheduled"||Number(job.scheduledAtMs)>now)continue;
+      const claim=await jobRef.transaction(current=>{if(!current||current.status!=="scheduled"||Number(current.scheduledAtMs)>now)return;return Object.assign({},current,{status:"sending",claimedAtMs:now});},undefined,false);
+      if(!claim.committed)continue;
+      try{
+        const chats=token&&job.chatId==="all"?await chatsForUser(db,uid):[];
+        if(!token||!chats.length)throw new Error("Selected Telegram chat is no longer linked.");
+        const settings=(await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value")).val()||{};
+        const result=await sendDailyReport(db,token,chats,uid,settings,new Date(now),{demoMode:true,deliveryKey:"demo_"+String(job.id||"")});
+        await jobRef.set(Object.assign({},job,{status:"sent",sentAtMs:Date.now(),resultStatus:result.status}));
+      }catch(error){await jobRef.set(Object.assign({},job,{status:"failed",failedAtMs:Date.now(),failure:"Delivery failed. Check Telegram connection and retry."}));console.error("Vee-AI demo report failed:",clean(error.message,180));}
+    }
     const snapshot=await db.ref("gmailConnections").once("value"),users=snapshot.val()||{};
     const userEntries=Object.entries(users).slice(0,100);
     // Run report delivery for all eligible users first. Gmail scans follow in a
