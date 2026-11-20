@@ -136,6 +136,18 @@ exports.handler=async()=>{
       const settingsSnapshot=await db.ref("users/"+uid+"/emailIntelligenceSettings").once("value");
       const settings=settingsSnapshot.val()||{};
       const chats=token?await chatsForUser(db,uid):[];
+      // Deliver the time-sensitive daily report before Gmail API scanning.
+      // Gmail scans can consume the scheduled function's 30-second execution window.
+      if(settings.dailyReportEnabled===true){
+        if(!token||!chats.length){
+          console.warn("Vee-AI daily report not sent:",JSON.stringify({uid,reason:!token?"telegram_bot_token_missing":"no_linked_telegram_chat"}));
+        }else{
+          try{
+            const reportResult=await sendDailyReport(db,token,chats,uid,settings,new Date(now));
+            console.log("Vee-AI daily report check:",JSON.stringify({uid,...reportResult}));
+          }catch(error){console.error("Vee-AI daily email report failed:",JSON.stringify({uid,error:clean(error.message,180)}));}
+        }
+      }
       for(const [accountId,account] of accounts.slice(0,3)){
         if(processed>=30)break;
         try{
@@ -158,16 +170,7 @@ exports.handler=async()=>{
         processed++;
       }
       if(processed>=30)break;
-      if(settings.dailyReportEnabled===true){
-        if(!token||!chats.length){
-          console.warn("Vee-AI daily report not sent:",JSON.stringify({uid,reason:!token?"telegram_bot_token_missing":"no_linked_telegram_chat"}));
-        }else{
-          try{
-            const reportResult=await sendDailyReport(db,token,chats,uid,settings,new Date(now));
-            console.log("Vee-AI daily report check:",JSON.stringify({uid,...reportResult}));
-          }catch(error){console.error("Vee-AI daily email report failed:",JSON.stringify({uid,error:clean(error.message,180)}));}
-        }
-      }
+
     }
     return {statusCode:200,body:JSON.stringify({ok:true,processed,outcomes})};
   }catch(error){
