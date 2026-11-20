@@ -81,7 +81,7 @@ async function sendImmediateAlerts(db,token,chats,uid,accountId,items,settings){
   }
 }
 async function sendDailyReport(db,token,chats,uid,settings,now){
-  if(settings.dailyReportEnabled!==true||!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(settings.dailyReportTime||"")))return {status:"disabled_or_invalid_time"};
+  if(settings.dailyReportEnabled!==true||!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(settings.dailyReportTime||"")))return {status:"disabled_or_invalid_time"};
   const zone=validTimeZone(settings.timeZone)?settings.timeZone:"UTC";
   const clock=localClock(zone,now);
   const current=clock.time.split(":").map(Number),wanted=String(settings.dailyReportTime).split(":").map(Number);
@@ -91,30 +91,67 @@ async function sendDailyReport(db,token,chats,uid,settings,now){
   const records=[];
   Object.entries(root.accounts||{}).forEach(([accountId,account])=>Object.values(account&&account.emails||{}).forEach(item=>records.push(Object.assign({accountId},item))));
   Object.values(root.emails||{}).forEach(item=>records.push(Object.assign({accountId:"legacy"},item)));
-  const today=records.filter(item=>item&&Number(item.internalDate)>0&&localDateFor(item.internalDate,zone)===clock.date&&Array.isArray(item.categories)&&item.categories.includes("bank"));
-  const seenReferences=new Set();
-  const uniqueToday=today.filter(item=>{const tx=item.transaction||{};const bankName=item.bank&&item.bank.name||"unknown";const key=tx.reference?bankName+":"+String(tx.reference).toLowerCase():String(item.accountId)+":"+String(item.id);if(seenReferences.has(key))return false;seenReferences.add(key);return true;});
-  const totals={in:0,out:0,refunds:0,failed:0,pending:0,review:0};
+  const today=records.filter(item=>{
+    if(!item||!Array.isArray(item.categories)||!item.categories.includes("bank"))return false;
+    const tx=item.transaction||{};
+    const eventMs=Number(tx.transactionAtMs||item.internalDate||0);
+    return eventMs>0&&localDateFor(eventMs,zone)===clock.date;
+  });
+  const seen=new Set();
+  const unique=today.filter(item=>{
+    const tx=item.transaction||{};
+    const bankName=String(item.bank&&item.bank.name||"unknown").toLowerCase();
+    const ref=String(tx.reference||"").trim().toLowerCase();
+    const key=ref?bankName+":"+ref: String(item.accountId)+":"+String(item.id);
+    if(seen.has(key))return false;
+    seen.add(key);return true;
+  });
+  const groups={};
+  const counts={successful:0,credits:0,debits:0,failed:0,reversed:0,refunded:0,pending:0,review:0,unknown:0};
   const rows=[];
-  for(const item of uniqueToday){
-    const tx=item.transaction||{},status=tx.transactionStatus||"unknown";
-    if(item.needsReview||item.classificationConfidence!=="high"){totals.review++;continue;}
-    if(status==="failed"){totals.failed++;continue;}
-    if(status==="pending"){totals.pending++;continue;}
-    if(status==="refunded")totals.refunds+=Number(tx.amount||0);
-    if(tx.direction==="in"&&Number(tx.amount)>0)totals.in+=Number(tx.amount);
-    if(tx.direction==="out"&&Number(tx.amount)>0)totals.out+=Number(tx.amount);
-    if((tx.direction==="in"||tx.direction==="out")&&Number(tx.amount)>0&&rows.length<10){
-      const eventTime=Number(tx.transactionAtMs||item.internalDate||0);
-      const timeLabel=eventTime?new Intl.DateTimeFormat("en-NG",{timeZone:zone,hour:"2-digit",minute:"2-digit"}).format(new Date(eventTime)):"Time unavailable";
-      rows.push((tx.direction==="in"?"➕ ":"➖ ")+money(tx.amount,tx.currency)+" · "+html(item.bank&&item.bank.name||"Bank not identified")+" · "+html(timeLabel)+"\n"+html(tx.counterparty||"Name unavailable")+" · "+html(tx.narration||item.subject||item.snippet||"Description unavailable").slice(0,180));
+  for(const item of unique){
+    const tx=item.transaction||{},status=String(tx.transactionStatus||"unknown");
+    const amount=Number(tx.amount||0),currency=String(tx.currency||"UNKNOWN").toUpperCase();
+    if(!groups[currency])groups[currency]={in:0,out:0,net:0,transactions:0};
+    const group=groups[currency];group.transactions++;
+    if(item.needsReview||item.classificationConfidence!=="high"||!(amount>0)||!(tx.direction==="in"||tx.direction==="out")){
+      counts.review++;continue;
+    }
+    if(status==="failed"){counts.failed++;continue;}
+    if(status==="pending"){counts.pending++;continue;}
+    if(status==="reversed")counts.reversed++;
+    else if(status==="refunded"){counts.refunded++;}
+    else if(status==="successful")counts.successful++;
+    else counts.unknown++;
+    if(tx.direction==="in"){group.in+=amount;counts.credits++;}
+    if(tx.direction==="out"){group.out+=amount;counts.debits++;}
+    if(tx.direction==="in"||tx.direction==="out"){
+      if(rows.length<30){
+        const eventTime=Number(tx.transactionAtMs||item.internalDate||0);
+        const timeLabel=eventTime?new Intl.DateTimeFormat("en-NG",{timeZone:zone,dateStyle:"short",timeStyle:"short"}).format(new Date(eventTime)):"Time unavailable";
+        rows.push((tx.direction==="in"?"➕ ":"➖ ")+money(amount,currency)+" · "+html(item.bank&&item.bank.name||"Bank not identified")+" · "+html(timeLabel)+"\\n"+html(tx.counterparty||"Name unavailable")+" · "+html(tx.narration||item.subject||item.snippet||"Description unavailable").slice(0,180));
+      }
     }
   }
-  const security=records.filter(item=>item&&Number(item.internalDate)>0&&localDateFor(item.internalDate,zone)===clock.date&&item.riskLevel&&item.riskLevel!=="none").length;
-  const net=totals.in-totals.out;
-  const message="📊 <b>Vee-AI Daily Business Email Report</b>\n"+html(clock.date)+" · "+html(zone)+"\n\n🟢 <b>Credits:</b> "+money(totals.in,"NGN")+"\n🔴 <b>Debits:</b> "+money(totals.out,"NGN")+"\n💰 <b>Net account movement:</b> "+(net>=0?"+":"")+money(net,"NGN")+"\n↩️ <b>Refunds detected:</b> "+money(totals.refunds,"NGN")+"\n\n⚠️ Failed: "+totals.failed+" · Pending: "+totals.pending+" · Needs review: "+totals.review+"\n🛡️ Security findings: "+security+"\n\n<b>Transaction activity</b>\n"+(rows.length?rows.join("\n\n"):"No high-confidence bank transactions were identified today.")+"\n\n<i>Net movement is not the same as business profit. Review transaction details in Vee-AI.</i>";
+  const currencies=Object.keys(groups).sort();
+  currencies.forEach(currency=>{groups[currency].net=groups[currency].in-groups[currency].out;});
+  const totalsText=currencies.length?currencies.map(currency=>{
+    const g=groups[currency],net=g.net;
+    return "<b>"+html(currency)+"</b> · Credits "+money(g.in,currency)+" · Debits "+money(g.out,currency)+" · Net "+(net>=0?"+":"")+money(net,currency)+" · Transactions "+g.transactions;
+  }).join("\\n"):"No bank transaction emails found for this date.";
+  const showTransactions=settings.reportShowTransactions!==false;
+  const showExceptions=settings.reportShowExceptions!==false;
+  const showSecurity=settings.reportShowSecurity===true;
+  const security=showSecurity?records.filter(item=>{
+    const ms=Number(item.transaction&&item.transaction.transactionAtMs||item.internalDate||0);
+    return ms>0&&localDateFor(ms,zone)===clock.date&&item.riskLevel&&item.riskLevel!=="none";
+  }).length:0;
+  const exceptionText=showExceptions?"\\nFailed: "+counts.failed+" · Reversed: "+counts.reversed+" · Refunded: "+counts.refunded+" · Pending: "+counts.pending+" · Needs review: "+counts.review:"";
+  const securityText=showSecurity?"\\n🛡️ Security findings: "+security:"";
+  const transactionText=showTransactions?"\\n\\n<b>Transaction details</b>\\n"+(rows.length?rows.join("\\n\\n"):"No high-confidence transactions to list."):"";
+  const message="📊 <b>Vee-AI Daily Bank Report</b>\\n"+html(clock.date)+" · "+html(zone)+"\\n\\n"+totalsText+"\\n\\n<b>Activity counts</b>\\nTransactions identified: "+unique.length+" · Successful: "+counts.successful+" · Credits: "+counts.credits+" · Debits: "+counts.debits+exceptionText+securityText+transactionText+"\\n\\n<i>Net account movement is not business profit. Currency totals are kept separate. Failed and pending items are excluded from completed money movement. Reversals are shown as returned money on their transaction date.</i>";
   const delivered=await deliverOnce(db,token,chats,uid,"daily_"+clock.date,message.slice(0,3900));
-  return {status:delivered?"sent":"already_sent_or_in_progress",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date};
+  return {status:delivered?"sent":"already_sent_or_in_progress",localTime:clock.time,scheduledTime:settings.dailyReportTime,timeZone:zone,date:clock.date,transactions:unique.length,currencies};
 }
 exports.handler=async()=>{
   const token=(process.env.TELEGRAM_BOT_TOKEN||"").trim();
