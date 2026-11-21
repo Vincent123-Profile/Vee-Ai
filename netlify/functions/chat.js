@@ -590,10 +590,11 @@ exports.handler = async function (event) {
   ];
 
   try {
+    const isCodingTask = message.startsWith("VEE-AI INTEGRATED CODING WORKFLOW.");
     const isVeeBrain = selectedModel === "Vee Brain";
     const { response, data } = await requestCompletion(apiKey, model, messages, {
-      temperature: isVeeBrain ? 0.55 : 0.78,
-      maxTokens: isVeeBrain ? 1600 : 1100
+      temperature: isCodingTask ? 0.25 : isVeeBrain ? 0.55 : 0.78,
+      maxTokens: isCodingTask ? 6000 : isVeeBrain ? 1600 : 1100
     });
     if (!response.ok) {
       console.error("Vee-AI AI provider error:", response.status, data && data.error && data.error.message || "Unknown provider error");
