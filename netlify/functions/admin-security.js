@@ -20,7 +20,7 @@ const json = (statusCode, body) => ({
 async function verifyAdmin(event) {
   const headers = event.headers || {};
   const header = headers.authorization || headers.Authorization || "";
-  const match = /^Bearer\\s+(.+)$/i.exec(header);
+  const match = /^Bearer\s+(.+)$/i.exec(header);
   if (!match) throw new Error("Administrator sign in is required.");
   const decoded = await getApp().auth().verifyIdToken(match[1], true);
   if ((decoded.email || "").toLowerCase() !== "agboolavincent67@gmail.com" || decoded.email_verified !== true) {
