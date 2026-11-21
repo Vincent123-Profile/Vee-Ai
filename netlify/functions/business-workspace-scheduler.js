@@ -275,7 +275,7 @@ async function processBusiness(db, token, uid, businessId, record, now) {
   const runRef = uidRef.child("runs/" + businessId + "/" + clock.date);
   let run = (await runRef.once("value")).val();
 
-  if (!run || run.status === "failed") {
+  if (!run || run.status === "failed" || (run.status === "generating" && now - Number(run.claimedAtMs || 0) >= 5 * 60 * 1000)) {
     const claimId = crypto.randomBytes(12).toString("hex");
     const claim = await runRef.transaction(current => {
       if (current && current.status === "ready" && current.digest) return;
