@@ -322,21 +322,32 @@ exports.handler = async event => {
       if (!linkedAccount || typeof linkedAccount.uid !== "string") {
         await sendMessage(token, chat.id, "Link your verified Vee-AI account first. Open Vee-AI Settings and generate a Telegram link code.");
       } else {
-        const runsSnapshot = await db.ref("privateBusinessAutomation/" + linkedAccount.uid + "/runs").once("value");
-        const runs = runsSnapshot.val() || {};
-        const recent = Object.entries(runs).filter(([,run]) => run && run.status === "ready" && run.draft)
-          .sort((a,b) => Number(b[1].createdAtMs || 0) - Number(a[1].createdAtMs || 0)).slice(0,4);
-        if (!recent.length) {
-          await sendMessage(token, chat.id, "No scheduled business content ideas are saved yet. Enable background processing and set a content schedule in Business Workspace.");
+        const workspaceSnapshot = await db.ref("privateBusinessWorkspace/" + linkedAccount.uid + "/runs").once("value");
+        const businesses = workspaceSnapshot.val() || {};
+        const recent = [];
+        for (const [businessId, dateRuns] of Object.entries(businesses)) {
+          for (const [localDate, run] of Object.entries(dateRuns || {})) {
+            if (run && run.status === "ready" && run.digest && Array.isArray(run.digest.pieces)) {
+              recent.push({ businessId, localDate, generatedAtMs: Number(run.generatedAtMs || 0), pieces: run.digest.pieces });
+            }
+          }
+        }
+        recent.sort((a, b) => b.localDate.localeCompare(a.localDate) || b.generatedAtMs - a.generatedAtMs);
+        const latest = recent.slice(0, 3);
+        if (!latest.length) {
+          await sendMessage(token, chat.id, "No saved Business Workspace content is available yet. Enable background processing and set a daily schedule for a business.");
         } else {
-          const reply = "Your latest Vee-AI business content ideas:\n\n" + recent.map(([,run],index) => {
-            const draft = run.draft || {};
-            return (index+1) + ". " + String(draft.topic || "Content idea").slice(0,180) +
-              "\nHook: " + String(draft.hook || "").slice(0,250) +
-              "\nScript: " + String(draft.script || "").slice(0,650) +
-              "\nCaption: " + String(draft.caption || "").slice(0,250);
-          }).join("\n\n--------------------\n\n");
-          await sendMessage(token, chat.id, reply);
+          const lines = ["YOUR LATEST VEE-AI BUSINESS CONTENT"];
+          latest.forEach((run, index) => {
+            lines.push("", "BUSINESS " + (index + 1) + " · " + run.localDate);
+            run.pieces.forEach(piece => {
+              lines.push("", piece.pieceNumber + ". " + cleanText(piece.topic, 160));
+              lines.push("Platform: " + (Array.isArray(piece.platforms) ? piece.platforms.join(", ") : "AI recommended"));
+              lines.push(cleanText(piece.content, 900));
+              if (piece.callToAction) lines.push("CTA: " + cleanText(piece.callToAction, 180));
+            });
+          });
+          await sendMessage(token, chat.id, lines.join("\n").slice(0, 3900));
         }
       }
       return json(200, { ok: true });
