@@ -348,19 +348,21 @@ function classifyEmail(email,timeZone) {
   };
 }
 async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZone) {
+  const { analyzeFinancialEmails, toTransaction } = require("./grok-finance");
   const query = Number(afterMs) > 0 ? "messages?maxResults=100&includeSpamTrash=true&q=" + encodeURIComponent("after:" + Math.max(0,Math.floor(Number(afterMs)/1000))) : "messages?maxResults=100&includeSpamTrash=true";
   const list = await gmailFetch(token.accessToken,query);
   const messages = Array.isArray(list.messages) ? list.messages : [];
-  const saved = [];
-  for (let offset=0; offset<messages.length; offset+=5) {
-    const batch = await Promise.all(messages.slice(offset,offset+5).map(async item => {
+  const parsedEmails = [];
+
+  for (let offset=0; offset<messages.length; offset+=10) {
+    const batch = await Promise.all(messages.slice(offset,offset+10).map(async item => {
       const message = await gmailFetch(token.accessToken,"messages/" + encodeURIComponent(item.id) + "?format=full");
       if ((message.labelIds || []).includes("TRASH")) return null;
       const payload = message.payload || {};
       const headers = payload.headers || [];
       const textParts = [], htmlParts = [];
       collectText(payload,textParts,htmlParts);
-      const email = {
+      return {
         id:String(message.id),
         threadId:String(message.threadId || ""),
         from:header(headers,"From").slice(0,300),
@@ -372,29 +374,57 @@ async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZo
         unread:(message.labelIds || []).includes("UNREAD"),
         labels:(message.labelIds || []).filter(label => ["INBOX","UNREAD","IMPORTANT","STARRED","SPAM"].includes(label))
       };
-      const analysis = classifyEmail(email,timeZone);
-      return {
-        id:email.id, threadId:email.threadId, from:email.from, subject:email.subject,
-        date:email.date, internalDate:email.internalDate, snippet:email.snippet,
-        unread:email.unread, labels:email.labels, categories:analysis.categories,
-        linkCount:analysis.linkCount, securityFindings:analysis.securityFindings,
-        riskLevel:analysis.riskLevel, evidence:analysis.evidence,
-        transaction:analysis.transaction, bank:analysis.bank, classificationConfidence:analysis.classificationConfidence,
-        needsReview:analysis.needsReview, flightDetails:analysis.categories.includes("flight") ? extractFlightDetails(email) : null,
-        analysedAtMs:Date.now()
-      };
     }));
-    for (const record of batch.filter(Boolean)) {
-      if (scanMode === "financial_only" && !(record.categories || []).includes("bank")) continue;
-      await db.ref("gmailConnections/" + uid + (accountId==="legacy" ? "/emails/" : "/accounts/" + accountId + "/emails/") + record.id).set(record);
-      saved.push(record);
-    }
+    parsedEmails.push(...batch.filter(Boolean));
   }
+
+  // Grok is the sole authority for financial classification. Existing rule-based
+  // categories remain available for flights, jobs, promotions and security.
+  const aiResults = await analyzeFinancialEmails(parsedEmails);
+  const saved = [];
+  for (const email of parsedEmails) {
+    const base = classifyEmail(email,timeZone);
+    const categories = (base.categories || []).filter(category => category !== "bank");
+    const ai = aiResults.get(email.id) || null;
+    const transaction = toTransaction(email,ai,timeZone);
+    const isFinancial = !!transaction && ai && ai.classification !== "non_financial";
+    const needsReview = isFinancial ? !!transaction.needsReview : false;
+    const providerName = ai && ai.provider ? String(ai.provider).slice(0,100) : "";
+    const identifiedBank = identifyBank(email);
+    if (isFinancial) categories.push("bank");
+    if (!categories.length) categories.push("general");
+
+    const record = {
+      id:email.id, threadId:email.threadId, from:email.from, subject:email.subject,
+      date:email.date, internalDate:email.internalDate, snippet:email.snippet,
+      unread:email.unread, labels:email.labels, categories:Array.from(new Set(categories)),
+      linkCount:base.linkCount, securityFindings:base.securityFindings,
+      riskLevel:base.riskLevel, evidence:isFinancial ? [cleanGrokEvidence(ai)] : base.evidence,
+      transaction:isFinancial ? transaction : null,
+      bank:isFinancial ? {name:providerName || identifiedBank.name,confidence:providerName?"ai_extracted":identifiedBank.confidence} : null,
+      classificationConfidence:isFinancial ? transaction.aiConfidence : categories.includes("flight") || categories.includes("job") ? "medium" : "low",
+      needsReview,
+      analysisEngine:isFinancial ? "grok" : "vee_ai_general",
+      analysisStatus:ai ? "analysed" : "not_financial_candidate",
+      flightDetails:categories.includes("flight") ? extractFlightDetails(email) : null,
+      analysedAtMs:Date.now()
+    };
+
+    if (scanMode === "financial_only" && !record.categories.includes("bank")) continue;
+    await db.ref("gmailConnections/" + uid + (accountId==="legacy" ? "/emails/" : "/accounts/" + accountId + "/emails/") + record.id).set(record);
+    saved.push(record);
+  }
+
   await db.ref("gmailConnections/" + uid + (accountId==="legacy" ? "/status" : "/accounts/" + accountId + "/status")).update({
     connected:true, lastSyncAtMs:Date.now(), lastSyncCount:saved.length,
-    securityAlertCount:saved.filter(item => item.riskLevel !== "none").length
+    securityAlertCount:saved.filter(item => item.riskLevel !== "none").length,
+    lastAiEngine:"grok", lastAiAnalysisAtMs:Date.now()
   });
   return saved;
+}
+
+function cleanGrokEvidence(ai) {
+  return String(ai && ai.evidence || "Grok classified this email using its transaction context.").replace(/\s+/g," ").slice(0,300);
 }
 exports.runScheduledScan = async (db, uid, accountId) => {
   if (!/^[a-zA-Z0-9_-]{1,80}$/.test(String(accountId || ""))) throw new Error("Invalid mailbox reference.");
