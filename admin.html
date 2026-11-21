@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0B0B0B">
+<title>Vee-AI | Admin Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{font-family:"Plus Jakarta Sans",Arial,sans-serif;color:#17191d;background:#f5f6f8;--orange:#f14c15;--surface:#fff;--line:#e8eaf0;--muted:#737985;--soft:#fff1eb}
+*{box-sizing:border-box}body{margin:0;background:#f5f6f8}button,input{font:inherit}button{border:0;border-radius:10px;padding:11px 14px;background:var(--orange);color:white;font-weight:700;cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}.secondary{background:#17191d}.ghost{background:#fff;color:#17191d;border:1px solid var(--line)}.danger{background:#b42318}.wrap{max-width:1400px;margin:auto;padding:26px}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px}.brand{font-size:21px;font-weight:800;letter-spacing:-.7px}.brand span{color:var(--orange)}small,.muted{color:var(--muted)}h1{font-size:27px;margin:0}h2{font-size:17px;margin:0}.panel{background:var(--surface);border:1px solid var(--line);border-radius:17px;padding:19px;box-shadow:0 10px 30px #17203308}
+#login{max-width:420px;margin:10vh auto}label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}input{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;background:#fff}#status{font-size:13px;color:#b42318;margin-top:12px;min-height:18px}
+#app{display:none}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:20px}.head p{margin:6px 0 0;color:var(--muted);font-size:13px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:17px}.stat small{font-size:12px}.stat strong{display:block;font-size:28px;margin-top:7px;letter-spacing:-1px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.toolbar input{flex:1;min-width:220px}.table-wrap{overflow:auto}.accounts{width:100%;border-collapse:collapse;min-width:780px}.accounts th,.accounts td{text-align:left;padding:13px 11px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:middle}.accounts th{color:var(--muted);font-weight:700;background:#fafafa}.accounts tr:last-child td{border-bottom:0}.account-name{font-weight:700;font-size:13px}.account-email{display:block;color:var(--muted);overflow-wrap:anywhere;margin-top:4px}.pill{display:inline-flex;padding:5px 8px;border-radius:30px;background:#f1f2f4;color:#4b5563;font-size:11px;font-weight:700}.pill.good{background:#e8f7ee;color:#167647}.pill.warn{background:#fff4e5;color:#9a5b00}.pill.bad{background:#feeceb;color:#b42318}.actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{padding:7px 9px;font-size:11px}.privacy{margin-top:16px;padding:14px;border:1px solid #d9e9df;border-radius:12px;background:#f2fbf5;color:#245b3d;font-size:12px;line-height:1.6}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.empty{padding:28px;text-align:center;color:var(--muted)}.foot{margin-top:15px;color:var(--muted);font-size:11px}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.wrap{padding:14px}.head{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.panel{padding:14px}h1{font-size:23px}.stat strong{font-size:24px}.toolbar input{min-width:100%}.toolbar button{flex:1}.section-head{align-items:flex-start;flex-wrap:wrap}header{align-items:flex-start}.accounts{min-width:760px}}
+@media(max-width:380px){.stats{grid-template-columns:1fr}.brand{font-size:19px}}
+button:focus-visible,input:focus-visible{outline:3px solid #f14c1540;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div><div class="brand">Vee<span>-AI</span></div><small>Administrator control centre</small></div><button id="logout" class="secondary" style="display:none">Sign out</button></header>
+<section id="login" class="panel">
+<h1>Admin sign in</h1><p class="muted">Use your verified administrator account.</p>
+<form id="loginForm">
+<label for="email">Administrator email</label><input id="email" type="email" autocomplete="username" value="agboolavincent67@gmail.com" required>
+<label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
+<br><br><button id="loginButton" type="submit">Sign in</button>
+</form><div id="status" role="status"></div>
+</section>
+<main id="app">
+<div class="head"><div><h1>Account management</h1><p>Registered accounts, Telegram links, Gmail connections and account status.</p></div><div><small id="updated">Not refreshed yet</small></div></div>
+<div class="stats">
+<div class="panel stat"><small>Registered accounts</small><strong id="totalAccounts">0</strong></div>
+<div class="panel stat"><small>Verified emails</small><strong id="verifiedAccounts">0</strong></div>
+<div class="panel stat"><small>Telegram connected</small><strong id="telegramAccounts">0</strong></div>
+<div class="panel stat"><small>Gmail connected</small><strong id="gmailAccounts">0</strong></div>
+<div class="panel stat"><small>Disabled accounts</small><strong id="disabledAccounts">0</strong></div>
+<div class="panel stat"><small>Total guest browsers</small><strong id="guestAccounts">0</strong></div>
+<div class="panel stat"><small>Active guests today</small><strong id="activeGuestsToday">0</strong></div>
+<div class="panel stat"><small>Guest active days, 7 days</small><strong id="activeGuestsWeek">0</strong></div>
+<div class="panel stat"><small>Guest visits today</small><strong id="guestVisitsToday">0</strong></div>
+</div>
+<section class="panel">
+<div class="section-head"><div><h2>All registered users</h2><small>Account details and linked services only.</small></div><button id="refresh" class="ghost">Refresh</button></div>
+<div class="toolbar"><input id="search" type="search" placeholder="Search name, email, user ID or Telegram username"><button id="export" class="ghost">Export account list</button></div>
+<div class="table-wrap"><table class="accounts"><thead><tr><th>Account</th><th>Registration</th><th>Telegram</th><th>Gmail</th><th>Status</th><th>Management</th></tr></thead><tbody id="accountRows"><tr><td colspan="6" class="empty">Sign in to load accounts.</td></tr></tbody></table></div>
+<div class="privacy"><strong>Privacy boundary.</strong> Administrators see account metadata and connection status. This dashboard does not display user prompts, AI replies, saved conversations, Gmail message contents, personal memories or private workspace records.</div>
+<div class="foot">Account suspension blocks Firebase Authentication sign in. Account deletion permanently removes the account and linked Vee-AI data.</div>
+</section>
+
+<section class="panel" style="margin-top:18px" id="socPanel">
+<div class="section-head"><div><h2>Vee-AI Security Operations Centre</h2><small>Account protection, abuse signals, network controls and security audit events. No chat content is collected.</small></div><button id="socRefresh" class="ghost">Refresh SOC</button></div>
+<div class="stats" style="margin-top:14px">
+ <div class="panel stat"><small>Security events</small><strong id="socTotal">0</strong></div>
+ <div class="panel stat"><small>High severity</small><strong id="socHigh">0</strong></div>
+ <div class="panel stat"><small>Medium severity</small><strong id="socMedium">0</strong></div>
+ <div class="panel stat"><small>Blocked networks</small><strong id="socBlocked">0</strong></div>
+</div>
+<div class="privacy"><strong>Privacy by design.</strong> SOC events store event type, timestamp, risk category, message length and a keyed network fingerprint. They never store user prompts, AI replies, conversation history, Gmail contents or personal memories. Pattern detection is a signal for investigation, not proof of malicious intent.</div>
+<div class="section-head" style="margin-top:18px"><div><h2>Security event stream</h2><small>Latest 250 events.</small></div><button id="socCleanup" class="ghost">Clear events older than 30 days</button></div>
+<div class="table-wrap"><table class="accounts" style="min-width:760px"><thead><tr><th>Time</th><th>Severity</th><th>Event</th><th>Category</th><th>Network fingerprint</th><th>Details</th><th>Action</th></tr></thead><tbody id="socEvents"><tr><td colspan="7" class="empty">Sign in to load SOC events.</td></tr></tbody></table></div>
+<div class="section-head" style="margin-top:20px"><div><h2>Network blocklist</h2><small>Manually block or unblock a network fingerprint after investigation.</small></div></div>
+<div class="table-wrap"><table class="accounts" style="min-width:560px"><thead><tr><th>Fingerprint</th><th>Blocked at</th><th>Reason</th><th>Action</th></tr></thead><tbody id="socBlocks"><tr><td colspan="4" class="empty">No blocked networks.</td></tr></tbody></table></div>
+<div class="foot">Use account management above for verified account suspension, password resets and deletion. Network blocks affect requests sharing the same privacy-preserving network fingerprint. Avoid blocking shared public networks without reviewing impact.</div>
+</section>
+</main>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script>
+const ADMIN_EMAIL="agboolavincent67@gmail.com";
+const firebaseConfig={apiKey:"AIzaSyBQaKkGdQOlHdM-G8YXA5mrAL8kiNIg4eM",authDomain:"vee-ai-e745e.firebaseapp.com",databaseURL:"https://vee-ai-e745e-default-rtdb.firebaseio.com",projectId:"vee-ai-e745e",storageBucket:"vee-ai-e745e.firebasestorage.app",messagingSenderId:"351206567728",appId:"1:351206567728:web:10a197b7c9752daf12e2f5"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(),$=id=>document.getElementById(id);
+let accounts=[],currentAdmin=null;
+const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const date=value=>value?new Date(value).toLocaleString():"Not recorded";
+function status(message){$("status").textContent=message||"";}
+async function api(action,extra={}){
+ if(!auth.currentUser)throw new Error("Sign in again.");
+ const token=await auth.currentUser.getIdToken(true);
+ const response=await fetch("/.netlify/functions/admin-users",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({action,...extra})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||"Admin request failed.");
+ return data;
+}
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();status("");$("loginButton").disabled=true;try{const email=$("email").value.trim().toLowerCase();if(email!==ADMIN_EMAIL)throw new Error("This account is not authorised.");await auth.signInWithEmailAndPassword(email,$("password").value);}catch(error){status(error.message||"Sign in failed.");}finally{$("loginButton").disabled=false;}});
+$("logout").addEventListener("click",()=>auth.signOut());
+auth.onAuthStateChanged(async user=>{
+ currentAdmin=user||null;
+ if(!user){$("login").style.display="block";$("app").style.display="none";$("logout").style.display="none";return;}
+ if((user.email||"").toLowerCase()!==ADMIN_EMAIL||!user.emailVerified){await auth.signOut();status("A verified administrator account is required.");return;}
+ $("login").style.display="none";$("app").style.display="block";$("logout").style.display="inline-block";await Promise.all([loadAccounts(),loadSoc()]);
+});
+async function loadAccounts(){
+ $("accountRows").innerHTML='<tr><td colspan="6" class="empty">Loading registered accounts...</td></tr>';
+ $("refresh").disabled=true;
+ try{
+  const data=await api("list");accounts=Array.isArray(data.accounts)?data.accounts:[];
+  const t=data.totals||{};
+  $("totalAccounts").textContent=t.registered||0;$("verifiedAccounts").textContent=t.verified||0;$("telegramAccounts").textContent=t.telegramConnected||0;$("gmailAccounts").textContent=t.gmailConnected||0;$("disabledAccounts").textContent=t.disabled||0;
+  $("guestAccounts").textContent=t.guests||0;$("activeGuestsToday").textContent=t.activeGuestsToday||0;$("activeGuestsWeek").textContent=t.activeGuestsLast7Days||0;$("guestVisitsToday").textContent=t.guestVisitsToday||0;
+  $("updated").textContent="Updated "+new Date().toLocaleString();renderAccounts();
+ }catch(error){$("accountRows").innerHTML='<tr><td colspan="6" class="empty">'+esc(error.message)+'</td></tr>';}
+ finally{$("refresh").disabled=false;}
+}
+function renderAccounts(){
+ const q=$("search").value.trim().toLowerCase();
+ const rows=accounts.filter(a=>[a.uid,a.email,a.displayName,...(a.telegram||[]).map(x=>x.username)].join(" ").toLowerCase().includes(q));
+ $("accountRows").innerHTML=rows.length?rows.map(a=>{
+  const tg=(a.telegram||[]).map(x=>'<div><span class="pill good">Connected</span><span class="account-email">'+(x.username?"@"+esc(x.username):"Telegram ID "+esc(x.telegramUserId))+'</span><small>'+esc(x.firstName||"")+'</small></div>').join("")||'<span class="pill">Not connected</span>';
+  const gmail=a.gmail&&a.gmail.connected?'<span class="pill good">Connected</span><span class="account-email">'+esc(a.gmail.gmailAddress||"Gmail linked")+'</span>':'<span class="pill">Not connected</span>';
+  const statusPill=a.disabled?'<span class="pill bad">Disabled</span>':a.emailVerified?'<span class="pill good">Active</span>':'<span class="pill warn">Unverified</span>';
+  const action=a.disabled?'<button data-enable="'+esc(a.uid)+'">Enable</button>':'<button class="ghost" data-disable="'+esc(a.uid)+'">Disable</button>';
+  const resetButton='<button class="ghost" data-reset="'+esc(a.uid)+'">Reset password</button>';
+  const deleteButton='<button class="danger" data-delete="'+esc(a.uid)+'">Delete</button>';
+  return '<tr><td><span class="account-name">'+esc(a.displayName||"Name not set")+'</span><span class="account-email">'+esc(a.email||"No email")+'</span><small>'+esc(a.uid)+'</small></td><td>'+esc(date(a.createdAt))+'<span class="account-email">Last sign in: '+esc(date(a.lastSignInAt))+'</span></td><td>'+tg+'</td><td>'+gmail+'</td><td>'+statusPill+'<span class="account-email">'+(a.emailVerified?"Email verified":"Email not verified")+'</span></td><td><div class="actions">'+(a.uid===currentAdmin?.uid?'<span class="pill">You</span>':resetButton+action+deleteButton)+'</div></td></tr>';
+ }).join(""):'<tr><td colspan="6" class="empty">No matching registered accounts.</td></tr>';
+ $("accountRows").querySelectorAll("[data-disable]").forEach(b=>b.addEventListener("click",()=>setDisabled(b.dataset.disable,true)));
+ $("accountRows").querySelectorAll("[data-enable]").forEach(b=>b.addEventListener("click",()=>setDisabled(b.dataset.enable,false)));
+ $("accountRows").querySelectorAll("[data-reset]").forEach(b=>b.addEventListener("click",()=>resetPassword(b.dataset.reset)));
+ $("accountRows").querySelectorAll("[data-delete]").forEach(b=>b.addEventListener("click",()=>deleteAccount(b.dataset.delete)));
+}
+async function setDisabled(uid,disabled){
+ const account=accounts.find(x=>x.uid===uid);if(!account)return;
+ const verb=disabled?"disable":"enable";
+ if(!confirm("Are you sure you want to "+verb+" "+account.email+"?"))return;
+ try{await api("set-disabled",{uid,disabled});await loadAccounts();}catch(error){alert(error.message);}
+}
+async function resetPassword(uid){
+ const account=accounts.find(x=>x.uid===uid);if(!account)return;
+ if(!account.email){alert("This account has no registered email address.");return;}
+ if(!confirm("Send a password reset email to "+account.email+"?"))return;
+ try{
+  const result=await api("reset-password",{uid});
+  await auth.sendPasswordResetEmail(result.email);
+  alert("Password reset email sent to "+result.email+". The user must open the email and choose a new password.");
+ }catch(error){alert(error.message||"Unable to send the password reset email.");}
+}
+async function deleteAccount(uid){
+ const account=accounts.find(x=>x.uid===uid);if(!account)return;
+ const typed=prompt("This permanently deletes the account and linked Vee-AI data. Type the account email to confirm:\n"+account.email);
+ if(typed===null)return;
+ try{await api("delete-account",{uid,confirmEmail:typed});await loadAccounts();}catch(error){alert(error.message);}
+}
+$("search").addEventListener("input",renderAccounts);$("refresh").addEventListener("click",loadAccounts);
+$("export").addEventListener("click",()=>{
+ const headers=["UID","Name","Registration email","Email verified","Disabled","Created","Last sign in","Telegram usernames","Telegram IDs","Gmail connected","Gmail address"];
+ const rows=accounts.map(a=>[a.uid,a.displayName,a.email,a.emailVerified,a.disabled,a.createdAt,a.lastSignInAt,(a.telegram||[]).map(x=>x.username).join("; "),(a.telegram||[]).map(x=>x.telegramUserId).join("; "),a.gmail?.connected,a.gmail?.gmailAddress]);
+ const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
+ const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="vee-ai-accounts.csv";a.click();URL.revokeObjectURL(url);
+});
+
+async function socApi(action,extra={}){
+ if(!auth.currentUser)throw new Error("Sign in again.");
+ const token=await auth.currentUser.getIdToken(true);
+ const response=await fetch("/.netlify/functions/admin-security",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({action,...extra})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||"SOC request failed.");
+ return data;
+}
+const socDate=value=>value?new Date(Number(value)).toLocaleString():"Not recorded";
+async function loadSoc(){
+ $("socRefresh").disabled=true;
+ try{
+  const data=await socApi("list"),events=data.events||[],blocked=data.blocked||[],c=data.counters||{};
+  $("socTotal").textContent=events.length;
+  $("socHigh").textContent=events.filter(x=>x.severity==="high").length;
+  $("socMedium").textContent=events.filter(x=>x.severity==="medium").length;
+  $("socBlocked").textContent=blocked.length;
+  $("socEvents").innerHTML=events.length?events.map(e=>{
+   const sev=e.severity==="high"?"bad":e.severity==="medium"?"warn":"good";
+   const fp=String(e.fingerprint||"");
+   const action=fp&&fp!=="network_unknown"&&!blocked.some(b=>b.fingerprint===fp)?'<button class="danger" data-soc-block="'+esc(fp)+'">Block</button>':'<span class="pill">No action</span>';
+   return '<tr><td>'+esc(socDate(e.createdAtMs))+'</td><td><span class="pill '+sev+'">'+esc(e.severity||"info")+'</span></td><td>'+esc(e.eventType||"event")+'</td><td>'+esc(e.category||"general")+'</td><td><small>'+esc(fp?fp.slice(0,18)+"…": "Unknown")+'</small></td><td>'+esc(e.details||"")+(e.targetUid?'<span class="account-email">Target account: '+esc(e.targetUid)+'</span>':'')+(e.actorUid?'<span class="account-email">Admin UID: '+esc(e.actorUid)+'</span>':'')+(e.riskScore?'<span class="account-email">Risk score: '+esc(e.riskScore)+'/100</span>':'')+(e.indicators&&e.indicators.length?'<span class="account-email">Indicators: '+esc(e.indicators.join(", "))+'</span>':'')+'</td><td>'+action+'</td></tr>';
+  }).join(""):'<tr><td colspan="7" class="empty">No security events recorded yet.</td></tr>';
+  $("socBlocks").innerHTML=blocked.length?blocked.map(b=>'<tr><td><small>'+esc(b.fingerprint)+'</small></td><td>'+esc(socDate(b.blockedAtMs))+'</td><td>'+esc(b.reason)+'</td><td><button class="ghost" data-soc-unblock="'+esc(b.fingerprint)+'">Unblock</button></td></tr>').join(""):'<tr><td colspan="4" class="empty">No blocked networks.</td></tr>';
+  $("socEvents").querySelectorAll("[data-soc-block]").forEach(b=>b.addEventListener("click",async()=>{
+   const reason=prompt("Reason for blocking this network fingerprint:","Repeated suspicious activity");
+   if(reason===null)return;
+   try{await socApi("block",{fingerprint:b.dataset.socBlock,reason});await loadSoc();}catch(error){alert(error.message);}
+  }));
+  $("socBlocks").querySelectorAll("[data-soc-unblock]").forEach(b=>b.addEventListener("click",async()=>{
+   if(!confirm("Remove this network block?"))return;
+   try{await socApi("unblock",{fingerprint:b.dataset.socUnblock});await loadSoc();}catch(error){alert(error.message);}
+  }));
+ }catch(error){
+  $("socEvents").innerHTML='<tr><td colspan="7" class="empty">'+esc(error.message)+'</td></tr>';
+ }finally{$("socRefresh").disabled=false;}
+}
+$("socRefresh").addEventListener("click",loadSoc);
+$("socCleanup").addEventListener("click",async()=>{
+ if(!confirm("Delete SOC event records older than 30 days? Blocklist entries will remain."))return;
+ try{const result=await socApi("clear-old-events");alert("Removed "+result.removed+" old events.");await loadSoc();}catch(error){alert(error.message);}
+});
+
+</script>
+</body>
+</html>

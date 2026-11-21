@@ -1,0 +1,9 @@
+{
+  "name": "vee-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vee-AI Netlify functions",
+  "dependencies": {
+    "firebase-admin": "^13.5.0"
+  }
+}

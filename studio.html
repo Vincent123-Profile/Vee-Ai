@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#F14C15">
+  <title>Vee-AI Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/studio.css">
+</head>
+<body>
+  <header class="studio-topbar">
+    <a class="brand" href="/" aria-label="Back to Vee-AI"><span class="brand-mark">V</span><span>Vee-AI <b>Studio</b></span></a>
+    <div class="top-actions">
+      <span id="saveState" class="save-state">Saved locally</span>
+      <button id="newProjectBtn" class="button quiet">New project</button>
+      <button id="importBtn" class="button quiet">Import</button>
+      <button id="exportBtn" class="button quiet">Export</button>
+      <button id="saveVersionBtn" class="button quiet">Save version</button>
+      <a class="button primary" href="/">Back to chat</a>
+    </div>
+    <input id="importInput" type="file" accept=".json,application/json" hidden>
+  </header>
+
+  <main class="studio-shell">
+    <section class="project-bar">
+      <div class="project-heading">
+        <input id="projectName" class="project-name" value="Untitled project" aria-label="Project name">
+        <span id="projectMeta" class="project-meta">Static web project · Guest workspace</span>
+      </div>
+      <div class="project-tools">
+        <label class="framework-label" for="frameworkSelect">Project type</label>
+        <select id="frameworkSelect" aria-label="Project framework">
+          <option value="html">HTML, CSS and JavaScript</option>
+          <option value="react">React · staged support</option>
+          <option value="next">Next.js · staged support</option>
+          <option value="vue">Vue · staged support</option>
+          <option value="other">Other frontend · staged support</option>
+        </select>
+        <button id="previewBtn" class="button primary">Run preview</button>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <aside class="file-panel panel">
+        <div class="panel-heading"><span>Project files</span><button id="addFileBtn" class="small-button" title="Add file">+</button></div>
+        <div id="fileTree" class="file-tree" role="list"></div>
+        <div class="panel-foot">
+          <button id="historyBtn" class="text-button">Version history</button>
+          <button id="restoreBtn" class="text-button">Restore last version</button>
+        </div>
+      </aside>
+
+      <section class="editor-panel panel">
+        <div class="editor-toolbar">
+          <div class="file-tab"><span class="file-dot"></span><span id="activeFileName">index.html</span><span id="dirtyMark" class="dirty-mark"></span></div>
+          <div class="editor-actions"><button id="undoBtn" class="small-button" title="Undo">↶</button><button id="copyBtn" class="small-button">Copy</button></div>
+        </div>
+        <div class="editor-wrap">
+          <div id="lineNumbers" class="line-numbers" aria-hidden="true">1</div>
+          <textarea id="codeEditor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
+        </div>
+        <div class="editor-status"><span id="languageLabel">HTML</span><span id="editorMessage">Edits save automatically</span></div>
+      </section>
+
+      <section class="preview-panel panel">
+        <div class="preview-toolbar">
+          <div><span class="preview-indicator"></span><strong>Live preview</strong></div>
+          <div class="preview-actions">
+            <button class="small-button device active" data-width="100%" title="Desktop">Desktop</button>
+            <button class="small-button device" data-width="768px" title="Tablet">Tablet</button>
+            <button class="small-button device" data-width="390px" title="Mobile">Mobile</button>
+            <button id="domainsBtn" class="small-button" title="Manage approved external domains">Domains</button><button id="refreshPreviewBtn" class="small-button" title="Refresh preview">↻</button>
+          </div>
+        </div>
+        <div class="preview-stage"><iframe id="previewFrame" title="Website preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div>
+        <div class="console-panel"><div class="console-heading"><span>Preview console</span><button id="clearConsoleBtn" class="text-button">Clear</button></div><div id="consoleOutput" class="console-output" aria-live="polite">Preview messages will appear here.</div></div>
+      </section>
+    </section>
+
+    <section class="assistant-bar panel">
+      <div class="assistant-intro"><span class="assistant-orb">✦</span><div><strong>Vee-AI coding assistant</strong><small>Describe a change. Your existing Vee-AI chat remains available.</small></div></div>
+      <form id="assistantForm" class="assistant-form">
+        <input id="assistantPrompt" type="text" placeholder="Example: Make the header dark and add a contact button" autocomplete="off">
+        <button class="button primary" type="submit">Ask Vee-AI</button>
+      </form>
+      <div id="assistantStatus" class="assistant-status" role="status"></div>
+    </section>
+    <p class="studio-note">Hybrid editing is active. Small edits are applied after review checks. Large structural changes require your approval. Preview code runs in an isolated browser frame.</p>
+  </main>
+
+  <dialog id="approvalDialog" class="modal">
+    <form method="dialog" class="modal-card"><h2>Review major changes</h2><p id="approvalSummary"></p><pre id="approvalDiff"></pre><div class="modal-actions"><button value="cancel" class="button quiet">Cancel</button><button id="approveChangesBtn" value="approve" class="button primary">Approve changes</button></div></form>
+  </dialog>
+  <dialog id="historyDialog" class="modal"><form method="dialog" class="modal-card"><h2>Version history</h2><div id="historyList" class="history-list"></div><div class="modal-actions"><button value="close" class="button quiet">Close</button></div></form></dialog>
+  <script src="/studio.js" defer></script>
+</body>
+</html>
