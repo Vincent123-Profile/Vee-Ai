@@ -53,6 +53,8 @@ async function sendMessage(token, chatId, text) {
   });
 }
 
+function cleanText(value, max) { return String(value || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max); }
+
 async function linkTelegramAccount(token, chat, code, db) {
   const normalisedCode = String(code || "").trim().toUpperCase();
   if (!/^[A-F0-9]{10}$/.test(normalisedCode)) {
