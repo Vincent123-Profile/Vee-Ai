@@ -348,7 +348,7 @@ function classifyEmail(email,timeZone) {
   };
 }
 async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZone) {
-  const query = Number(afterMs) > 0 ? "messages?maxResults=100&includeSpamTrash=true&q=" + encodeURIComponent("after:" + Math.max(0,Math.floor(Number(afterMs)/1000))) : "messages?maxResults=30&includeSpamTrash=true";
+  const query = Number(afterMs) > 0 ? "messages?maxResults=100&includeSpamTrash=true&q=" + encodeURIComponent("after:" + Math.max(0,Math.floor(Number(afterMs)/1000))) : "messages?maxResults=100&includeSpamTrash=true";
   const list = await gmailFetch(token.accessToken,query);
   const messages = Array.isArray(list.messages) ? list.messages : [];
   const saved = [];
