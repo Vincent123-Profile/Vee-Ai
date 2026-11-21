@@ -52,6 +52,22 @@ button:focus-visible,input:focus-visible{outline:3px solid #f14c1540;outline-off
 <div class="privacy"><strong>Privacy boundary.</strong> Administrators see account metadata and connection status. This dashboard does not display user prompts, AI replies, saved conversations, Gmail message contents, personal memories or private workspace records.</div>
 <div class="foot">Account suspension blocks Firebase Authentication sign in. Account deletion permanently removes the account and linked Vee-AI data.</div>
 </section>
+
+<section class="panel" style="margin-top:18px" id="socPanel">
+<div class="section-head"><div><h2>Vee-AI Security Operations Centre</h2><small>Account protection, abuse signals, network controls and security audit events. No chat content is collected.</small></div><button id="socRefresh" class="ghost">Refresh SOC</button></div>
+<div class="stats" style="margin-top:14px">
+ <div class="panel stat"><small>Security events</small><strong id="socTotal">0</strong></div>
+ <div class="panel stat"><small>High severity</small><strong id="socHigh">0</strong></div>
+ <div class="panel stat"><small>Medium severity</small><strong id="socMedium">0</strong></div>
+ <div class="panel stat"><small>Blocked networks</small><strong id="socBlocked">0</strong></div>
+</div>
+<div class="privacy"><strong>Privacy by design.</strong> SOC events store event type, timestamp, risk category, message length and a keyed network fingerprint. They never store user prompts, AI replies, conversation history, Gmail contents or personal memories. Pattern detection is a signal for investigation, not proof of malicious intent.</div>
+<div class="section-head" style="margin-top:18px"><div><h2>Security event stream</h2><small>Latest 250 events.</small></div><button id="socCleanup" class="ghost">Clear events older than 30 days</button></div>
+<div class="table-wrap"><table class="accounts" style="min-width:760px"><thead><tr><th>Time</th><th>Severity</th><th>Event</th><th>Category</th><th>Network fingerprint</th><th>Details</th><th>Action</th></tr></thead><tbody id="socEvents"><tr><td colspan="7" class="empty">Sign in to load SOC events.</td></tr></tbody></table></div>
+<div class="section-head" style="margin-top:20px"><div><h2>Network blocklist</h2><small>Manually block or unblock a network fingerprint after investigation.</small></div></div>
+<div class="table-wrap"><table class="accounts" style="min-width:560px"><thead><tr><th>Fingerprint</th><th>Blocked at</th><th>Reason</th><th>Action</th></tr></thead><tbody id="socBlocks"><tr><td colspan="4" class="empty">No blocked networks.</td></tr></tbody></table></div>
+<div class="foot">Use account management above for verified account suspension, password resets and deletion. Network blocks affect requests sharing the same privacy-preserving network fingerprint. Avoid blocking shared public networks without reviewing impact.</div>
+</section>
 </main>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -79,7 +95,7 @@ auth.onAuthStateChanged(async user=>{
  currentAdmin=user||null;
  if(!user){$("login").style.display="block";$("app").style.display="none";$("logout").style.display="none";return;}
  if((user.email||"").toLowerCase()!==ADMIN_EMAIL||!user.emailVerified){await auth.signOut();status("A verified administrator account is required.");return;}
- $("login").style.display="none";$("app").style.display="block";$("logout").style.display="inline-block";await loadAccounts();
+ $("login").style.display="none";$("app").style.display="block";$("logout").style.display="inline-block";await Promise.all([loadAccounts(),loadSoc()]);
 });
 async function loadAccounts(){
  $("accountRows").innerHTML='<tr><td colspan="6" class="empty">Loading registered accounts...</td></tr>';
@@ -139,6 +155,50 @@ $("export").addEventListener("click",()=>{
  const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
  const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="vee-ai-accounts.csv";a.click();URL.revokeObjectURL(url);
 });
+
+async function socApi(action,extra={}){
+ if(!auth.currentUser)throw new Error("Sign in again.");
+ const token=await auth.currentUser.getIdToken(true);
+ const response=await fetch("/.netlify/functions/admin-security",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({action,...extra})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||"SOC request failed.");
+ return data;
+}
+const socDate=value=>value?new Date(Number(value)).toLocaleString():"Not recorded";
+async function loadSoc(){
+ $("socRefresh").disabled=true;
+ try{
+  const data=await socApi("list"),events=data.events||[],blocked=data.blocked||[],c=data.counters||{};
+  $("socTotal").textContent=Number(c.totalEvents||events.length);
+  $("socHigh").textContent=Number(c.severity_high||events.filter(x=>x.severity==="high").length);
+  $("socMedium").textContent=Number(c.severity_medium||events.filter(x=>x.severity==="medium").length);
+  $("socBlocked").textContent=blocked.length;
+  $("socEvents").innerHTML=events.length?events.map(e=>{
+   const sev=e.severity==="high"?"bad":e.severity==="medium"?"warn":"good";
+   const fp=String(e.fingerprint||"");
+   const action=fp&&fp!=="network_unknown"&&!blocked.some(b=>b.fingerprint===fp)?'<button class="danger" data-soc-block="'+esc(fp)+'">Block</button>':'<span class="pill">No action</span>';
+   return '<tr><td>'+esc(socDate(e.createdAtMs))+'</td><td><span class="pill '+sev+'">'+esc(e.severity||"info")+'</span></td><td>'+esc(e.eventType||"event")+'</td><td>'+esc(e.category||"general")+'</td><td><small>'+esc(fp?fp.slice(0,18)+"…": "Unknown")+'</small></td><td>'+esc(e.details||"")+(e.indicators&&e.indicators.length?'<span class="account-email">Indicators: '+esc(e.indicators.join(", "))+'</span>':'')+'</td><td>'+action+'</td></tr>';
+  }).join(""):'<tr><td colspan="7" class="empty">No security events recorded yet.</td></tr>';
+  $("socBlocks").innerHTML=blocked.length?blocked.map(b=>'<tr><td><small>'+esc(b.fingerprint)+'</small></td><td>'+esc(socDate(b.blockedAtMs))+'</td><td>'+esc(b.reason)+'</td><td><button class="ghost" data-soc-unblock="'+esc(b.fingerprint)+'">Unblock</button></td></tr>').join(""):'<tr><td colspan="4" class="empty">No blocked networks.</td></tr>';
+  $("socEvents").querySelectorAll("[data-soc-block]").forEach(b=>b.addEventListener("click",async()=>{
+   const reason=prompt("Reason for blocking this network fingerprint:","Repeated suspicious activity");
+   if(reason===null)return;
+   try{await socApi("block",{fingerprint:b.dataset.socBlock,reason});await loadSoc();}catch(error){alert(error.message);}
+  }));
+  $("socBlocks").querySelectorAll("[data-soc-unblock]").forEach(b=>b.addEventListener("click",async()=>{
+   if(!confirm("Remove this network block?"))return;
+   try{await socApi("unblock",{fingerprint:b.dataset.socUnblock});await loadSoc();}catch(error){alert(error.message);}
+  }));
+ }catch(error){
+  $("socEvents").innerHTML='<tr><td colspan="7" class="empty">'+esc(error.message)+'</td></tr>';
+ }finally{$("socRefresh").disabled=false;}
+}
+$("socRefresh").addEventListener("click",loadSoc);
+$("socCleanup").addEventListener("click",async()=>{
+ if(!confirm("Delete SOC event records older than 30 days? Blocklist entries will remain."))return;
+ try{const result=await socApi("clear-old-events");alert("Removed "+result.removed+" old events.");await loadSoc();}catch(error){alert(error.message);}
+});
+
 </script>
 </body>
 </html>
