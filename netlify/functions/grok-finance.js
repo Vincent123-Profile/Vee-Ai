@@ -1,4 +1,4 @@
-const MODEL = process.env.XAI_GROK_MODEL || "grok-4.7";
+const MODEL = process.env.XAI_GROK_MODEL || "grok-4.3";
 const API_URL = "https://api.x.ai/v1/responses";
 
 const schema = {
@@ -73,6 +73,7 @@ async function requestBatch(batch) {
       model: MODEL,
       store: false,
       max_output_tokens: 5000,
+      reasoning: { effort: "none" },
       input: [
         {
           role: "system",
@@ -138,7 +139,7 @@ function toTransaction(email, ai, timeZone) {
   const status = ["successful", "failed", "pending", "reversed", "refunded"].includes(ai.status) ? ai.status : "unknown";
   const dateMs = ai.transaction_date ? Date.parse(ai.transaction_date) : NaN;
   const confidence = ["high", "medium", "low"].includes(ai.confidence) ? ai.confidence : "low";
-  const complete = validAmount && validCurrency && validDirection && status === "successful";
+  const complete = validAmount && validCurrency && validDirection && Number.isFinite(dateMs) && status === "successful";
   const needsReview = !complete || confidence !== "high" || ai.direction === "REVIEW" || status !== "successful";
   return {
     amount: validAmount ? amount : null,
@@ -148,7 +149,7 @@ function toTransaction(email, ai, timeZone) {
     directionEvidence: clean(ai.evidence, 300) || "Grok could not provide clear transaction evidence",
     counterparty: clean(ai.counterparty, 100),
     narration: clean(ai.narration, 180),
-    transactionAtMs: Number.isFinite(dateMs) ? dateMs : Number(email.internalDate || 0) || null,
+    transactionAtMs: Number.isFinite(dateMs) ? dateMs : null,
     reference: clean(ai.reference, 100),
     availableBalance: null,
     availableBalanceCurrency: null,
