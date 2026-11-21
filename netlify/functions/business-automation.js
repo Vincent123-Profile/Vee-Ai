@@ -117,7 +117,7 @@ async function createTestDraft(profile, recentIdeas) {
       method:"POST", signal:controller.signal,
       headers:{Authorization:"Bearer "+apiKey,"Content-Type":"application/json"},
       body:JSON.stringify({model:(process.env.GROQ_MODEL||"openai/gpt-oss-20b").trim(),temperature:0.85,max_tokens:1400,response_format:{type:"json_object"},messages:[
-        {role:"system",content:"You are Vee-AI, a practical business content strategist. Create one accurate short-form video idea using only explicit facts in the supplied profile. Never invent or guess a website, URL, address, branch, location, stock, price, offer, product specification, award, guarantee, customer result, delivery service, or business capability. Mention a location or service only when explicitly stated. Never create a website or URL. If a detail is absent, omit it. Use correct spelling and natural English. Return valid JSON only with keys topic, style, format, hook, talkingPoints (array), script, caption, platform, callToAction. Script should fit 30 to 60 seconds. Every idea must have a different topic, angle, hook, structure and style. Rotate product demonstration, myth-versus-fact, buyer education, comparison, FAQ, storytelling, behind-the-scenes, checklist, problem-solution, objection handling, trend commentary and sales announcement. Avoid repeating or closely paraphrasing the recent ideas supplied. Rotate the format and opening hook each time."},
+        {role:"system",content:"You are Vee-AI, a practical business content strategist. Create one accurate short-form video idea using only explicit facts in the supplied profile. Never invent or guess a website, URL, address, branch, location, stock, price, offer, product specification, award, guarantee, customer result, delivery service, or business capability. Mention a location or service only when explicitly stated. Never create a website or URL. If a detail is absent, omit it. Use correct spelling and natural English. Return valid JSON only with keys topic, style, format, hook, talkingPoints (array), script, caption, platform, callToAction. Script should fit 30 to 60 seconds. Every new request must use a genuinely new subject, not a synonym, rewording or minor variation of a recent topic. Treat the recent ideas list as a strict exclusion list. Select a different content pillar and customer problem from recent ideas. Rotate product demonstration, myth-versus-fact, buyer education, comparison, FAQ, storytelling, behind-the-scenes, checklist, problem-solution, objection handling, trend commentary and sales announcement. Do not reuse the same opening hook, structure, format or angle in consecutive requests. If the obvious topic has appeared before, choose a different product, customer question, buying stage or business insight supported by the profile."},
         {role:"user",content:"Create a fresh idea for this delivery. Treat the profile as the only source of truth. Do not fill gaps with assumptions. Recent ideas to avoid repeating: "+JSON.stringify((recentIdeas||[]).slice(0,30))+". Business profile: "+JSON.stringify(context)}
       ]})
     });
@@ -189,8 +189,18 @@ exports.handler = async event => {
       const historyRecords = historySnapshot.val() || {};
       const recentIdeas = Object.values(historyRecords).filter(item => item && item.draft).sort((a,b) => Number(b.createdAtMs||0)-Number(a.createdAtMs||0)).map(item => ({topic:item.draft.topic,style:item.draft.style,format:item.draft.format,hook:item.draft.hook}));
       const draft = await createTestDraft(profile, recentIdeas);
+      const createdAtMs = Date.now();
+      const testRunRef = root.child("runs").push();
+      await testRunRef.set({
+        createdAtMs,
+        updatedAtMs: createdAtMs,
+        source: "telegram_test",
+        status: "generated",
+        draft
+      });
       await sendTestTelegram(db, user.uid, draft);
-      return json(200, { sent: true, message: "Test content idea sent to your linked Telegram account." });
+      await testRunRef.update({ status: "sent", sentAtMs: Date.now() });
+      return json(200, { sent: true, topic: draft.topic, message: "Fresh test content sent to your linked Telegram account." });
     }
     if (body.action === "account-profile-get") {
       const snapshot = await db.ref("privateBusinessAccount/" + user.uid + "/profile").once("value");
