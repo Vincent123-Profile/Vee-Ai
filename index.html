@@ -2618,9 +2618,10 @@
     }
     var veeGmailCurrentFilter = "all";
     var veeGmailSelectedAccountId="";
+    var veeGmailCachedEmailsByAccount = Object.create(null);
     async function veeGmailRequest(action, accountId){
       if(!veeCurrentUser||!veeCurrentUser.emailVerified)throw new Error("Sign in with a verified Vee-AI account first.");
-      var token=await veeCurrentUser.getIdToken(true);
+      var token=await veeCurrentUser.getIdToken();
       var payload={action:action};
       if(accountId)payload.accountId=accountId;
       var response=await fetch("/.netlify/functions/gmail",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify(payload)});
@@ -2738,8 +2739,8 @@
     }
     async function veeOpenGmailIntelligence(){
       veeOpenModal("gmailIntelligenceModal");
-      await veeRefreshGmailStatus();
-      await veeLoadGmailNotificationSettings();
+      veeRefreshGmailStatus();
+      veeLoadGmailNotificationSettings();
       var params=new URLSearchParams(window.location.search);
       var outcome=params.get("gmail");
       var status=document.getElementById("gmailIntelligenceStatus");
@@ -2765,7 +2766,8 @@
         if(connectButton){connectButton.disabled=false;connectButton.textContent="＋ Connect another Gmail";}
         var accountSelect=document.getElementById("gmailAccountSelect");
         var accounts=Array.isArray(data.accounts)?data.accounts:[];
-        if(accountSelect){var previous=veeGmailSelectedAccountId;accountSelect.textContent="";accounts.forEach(function(account){var option=document.createElement("option");option.value=account.accountId;option.textContent=(account.gmailAddress||"Connected email")+(account.legacy?" (existing connection)":"");accountSelect.appendChild(option);});if(accounts.length){if(!accounts.some(function(account){return account.accountId===previous;}))previous=accounts[0].accountId;veeGmailSelectedAccountId=previous;accountSelect.value=previous;}else{veeGmailSelectedAccountId="";var empty=document.createElement("option");empty.value="";empty.textContent="No email connected";accountSelect.appendChild(empty);}}
+        if(accountSelect){var previous=veeGmailSelectedAccountId;accountSelect.textContent="";accounts.forEach(function(account){var option=document.createElement("option");option.value=account.accountId;option.textContent=(account.gmailAddress||"Connected email")+(account.legacy?" (existing connection)":"");accountSelect.appendChild(option);});if(accounts.length){if(!accounts.some(function(account){return account.accountId===previous;}))previous=data.selectedAccountId||accounts[0].accountId;veeGmailSelectedAccountId=previous;accountSelect.value=previous;}else{veeGmailSelectedAccountId="";var empty=document.createElement("option");empty.value="";empty.textContent="No email connected";accountSelect.appendChild(empty);}}
+        if(veeGmailSelectedAccountId&&Array.isArray(data.recentEmails))veeGmailCachedEmailsByAccount[veeGmailSelectedAccountId]=data.recentEmails;
         if(connected)connected.textContent=accounts.length+" email account"+(accounts.length===1?"":"s")+" connected";
         if(last)last.textContent=data.lastSyncAtMs?new Date(data.lastSyncAtMs).toLocaleString():"Not synced";
         if(alerts)alerts.textContent=String(data.securityAlertCount||0);
@@ -2788,7 +2790,7 @@
       var button=document.getElementById("gmailSyncBtn");
       try{
         if(button){button.disabled=true;button.textContent="Scanning...";}
-        if(status)status.textContent="Reading up to 30 recent messages and checking their categories and links...";
+        if(status)status.textContent="Analysing recent emails and checking financial activity...";
         if(!veeGmailSelectedAccountId)throw new Error("Choose a connected email account first.");
         var data=await veeGmailRequest("sync",veeGmailSelectedAccountId);
         if(status)status.textContent="Scan complete. "+data.synced+" messages analysed, "+data.securityAlerts+" flagged for review.";
