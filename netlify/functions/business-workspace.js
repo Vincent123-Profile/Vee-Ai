@@ -200,6 +200,7 @@ exports.handler = async event => {
           businessId,
           profile: decryptProfile(uid, record.encryptedProfile),
           schedule: record.schedule || { enabled: false, time: "09:00", timeZone: "Africa/Lagos" },
+          schedulerStatus: record.schedulerStatus || null,
           createdAtMs: Number(record.createdAtMs || 0),
           updatedAtMs: Number(record.updatedAtMs || 0)
         });
