@@ -334,7 +334,14 @@ async function processBusiness(db, token, uid, businessId, record, now) {
   return deliveryStatus;
 }
 
-exports.handler = async () => {
+exports.handler = async event => {
+  if (event && event.httpMethod) {
+    const secret = (process.env.SCHEDULER_SECRET || "").trim();
+    const header = event.headers && (event.headers.authorization || event.headers.Authorization) || "";
+    if (!secret || header !== "Bearer " + secret) {
+      return { statusCode: 401, body: "Unauthorized." };
+    }
+  }
   const token = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
   if (!token) return { statusCode: 503, body: "Telegram is not configured." };
   try {
