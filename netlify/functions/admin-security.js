@@ -1,6 +1,6 @@
 const admin = require("firebase-admin");
 let app;
-function db() {
+function getApp() {
   if (!app) {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     if (!raw) throw new Error("Firebase service account is not configured.");
@@ -9,8 +9,9 @@ function db() {
       databaseURL: process.env.FIREBASE_DATABASE_URL || "https://vee-ai-e745e-default-rtdb.firebaseio.com"
     }, "vee-ai-admin-security");
   }
-  return app.database();
+  return app;
 }
+function db() { return getApp().database(); }
 const json = (statusCode, body) => ({
   statusCode,
   headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
@@ -21,7 +22,7 @@ async function verifyAdmin(event) {
   const header = headers.authorization || headers.Authorization || "";
   const match = /^Bearer\\s+(.+)$/i.exec(header);
   if (!match) throw new Error("Administrator sign in is required.");
-  const decoded = await db().app.auth().verifyIdToken(match[1], true);
+  const decoded = await getApp().auth().verifyIdToken(match[1], true);
   if ((decoded.email || "").toLowerCase() !== "agboolavincent67@gmail.com" || decoded.email_verified !== true) {
     throw new Error("Administrator access denied.");
   }
