@@ -551,7 +551,14 @@ exports.handler = async event => {
       const accounts = Object.entries(accountsSnapshot.val() || {}).map(([id,record]) => {const status=record&&record.status||{};return {accountId:id,connected:status.connected===true,gmailAddress:status.gmailAddress||"",connectedAtMs:status.connectedAtMs||null,lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0};});
       if(legacyStatus.connected===true)accounts.unshift({accountId:"legacy",connected:true,gmailAddress:legacyStatus.gmailAddress||"",connectedAtMs:legacyStatus.connectedAtMs||null,lastSyncAtMs:legacyStatus.lastSyncAtMs||null,lastSyncCount:legacyStatus.lastSyncCount||0,securityAlertCount:legacyStatus.securityAlertCount||0,legacy:true});
       const status = legacyStatus;
-      return json(200,{approved:true,connected:accounts.some(item=>item.connected),gmailAddress:accounts.length===1?accounts[0].gmailAddress:"",accounts,lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0});
+      const selectedAccountId = accountId || (accounts[0] && accounts[0].accountId) || "";
+      let recentEmails = [];
+      if (selectedAccountId) {
+        const selectedRoot = selectedAccountId === "legacy" ? root : root.child("accounts/" + selectedAccountId);
+        const recentSnapshot = await selectedRoot.child("emails").orderByChild("internalDate").limitToLast(100).once("value");
+        recentEmails = Object.values(recentSnapshot.val() || {}).sort((a,b)=>Number(b.internalDate||0)-Number(a.internalDate||0)).map(item=>Object.assign({accountId:selectedAccountId},item));
+      }
+      return json(200,{approved:true,connected:accounts.some(item=>item.connected),gmailAddress:accounts.length===1?accounts[0].gmailAddress:"",accounts,selectedAccountId,recentEmails,lastSyncAtMs:status.lastSyncAtMs||null,lastSyncCount:status.lastSyncCount||0,securityAlertCount:status.securityAlertCount||0});
     }
     if (body.action === "disconnect") {
       if (!accountId) return json(400,{error:"Choose an email account to disconnect."});
