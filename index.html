@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/coding-workspace.css" />
   <style>
     :root {
       --orange: #F14C15;
@@ -2014,7 +2015,7 @@
       <nav class="workspace-nav" aria-label="Main navigation">
         <button type="button" id="homeNavBtn" class="active" onclick="veeShowHomeView()">Home</button>
         <button type="button" id="chatNavBtn" onclick="veeNewChat()">AI Chat</button>
-        <button type="button" id="studioNavBtn" onclick="window.location.assign('studio.html')">Studio</button>
+        
         <button type="button" onclick="window.location.assign('games.html')">Games</button>
         <button type="button" onclick="veeOpenManual()" class="vee-help-entry">Help &amp; Manual</button>
       </nav>
@@ -4347,24 +4348,6 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       }
     }
 
-    function veeOpenStudioFromMessage(button) {
-      var raw = button && button.parentElement ? (button.parentElement.getAttribute("data-raw") || "") : "";
-      var files = {}, counts = {}, fence = String.fromCharCode(96,96,96);
-      var pattern = new RegExp(fence + "(html|css|javascript|js)(?:\\s+([^\\s]+))?\\s*\\n([\\s\\S]*?)" + fence, "gi");
-      var match;
-      while ((match = pattern.exec(raw))) {
-        var lang = match[1].toLowerCase(), path = match[2] || "";
-        if (!path || !/\.[a-z0-9]+$/i.test(path)) {
-          var ext = lang === "html" ? "html" : lang === "css" ? "css" : "js";
-          counts[ext] = (counts[ext] || 0) + 1;
-          path = ext === "html" ? "index.html" : ext === "css" ? (counts[ext] === 1 ? "style.css" : "style-" + counts[ext] + ".css") : (counts[ext] === 1 ? "script.js" : "script-" + counts[ext] + ".js");
-        }
-        if (/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[\w./-]+\.(html|css|js)$/i.test(path)) files[path] = match[3].replace(/\n$/, "");
-      }
-      if (!Object.keys(files).length) { alert("No supported HTML, CSS or JavaScript files were found in this response."); return; }
-      try { localStorage.setItem("vee_ai_studio_handoff_v1", JSON.stringify({ name: "Chat project", files: files, createdAt: new Date().toISOString() })); window.location.assign("studio.html"); }
-      catch (error) { alert("Unable to prepare this project in browser storage. Try a smaller code response."); }
-    }
 
     function veeAppendMessage(text, sender) {
       var stream = document.getElementById("chatStream");
@@ -4387,6 +4370,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
         md.className = "md-content";
         md.innerHTML = veeRenderMarkdown(text);
         bubble.appendChild(md);
+        if (window.VeeCodingWorkspace) window.VeeCodingWorkspace.attachToMessage(bubble, text);
         row.appendChild(bubble);
 
         var actions = document.createElement("div");
@@ -4395,13 +4379,6 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
         actions.innerHTML =
           '<button type="button" class="act-btn" onclick="veeCopyMessage(this)">Copy</button>' +
           '<button type="button" class="act-btn" onclick="veeRegenerate()">Regenerate</button>';
-        var fenceMarker = String.fromCharCode(96,96,96);
-        if (new RegExp(fenceMarker + "(?:html|css|javascript|js)\\b", "i").test(text)) {
-          var studioButton = document.createElement("button");
-          studioButton.type = "button"; studioButton.className = "act-btn"; studioButton.textContent = "Open in Studio";
-          studioButton.addEventListener("click", function () { veeOpenStudioFromMessage(studioButton); });
-          actions.appendChild(studioButton);
-        }
         row.appendChild(actions);
       }
 
@@ -4579,11 +4556,12 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
 
       try {
         await veeEnsureVisitorIdentity();
+        var backendMessage = window.VeeCodingWorkspace ? window.VeeCodingWorkspace.prepareMessage(message) : message;
         var res = await fetch("/.netlify/functions/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: message,
+            message: backendMessage,
             history: contextHistory,
             selectedModel: veeSelectedModel,
             selectedLanguage: veeSelectedLanguage,
@@ -4969,5 +4947,6 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
     })();
 
   </script>
+  <script src="/coding-workspace.js"></script>
 </body>
 </html>
