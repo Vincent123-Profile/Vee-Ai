@@ -4562,7 +4562,7 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             message: backendMessage,
-            history: contextHistory,
+            history: backendMessage !== message ? contextHistory.slice(-6).map(function(item) { return { role: item.role, content: String(item.content || "").slice(-3500) }; }) : contextHistory,
             selectedModel: veeSelectedModel,
             selectedLanguage: veeSelectedLanguage,
             communicationProfile: veeAdaptiveLearningEnabled ? veeBuildCommunicationProfile(message, contextHistory) : null,
