@@ -236,6 +236,23 @@ exports.handler = async event => {
       return json(200, { saved: true, businessId, profile, schedule: record.schedule });
     }
 
+    if (body.action === "history") {
+      const businessId = body.businessId;
+      if (!safeBusinessId(businessId)) throw new Error("Choose a valid business.");
+      const businessSnapshot = await businessesRef.child(businessId).once("value");
+      const businessRecord = businessSnapshot.val();
+      if (!businessRecord || businessRecord.archived === true) throw new Error("Business profile was not found.");
+      const runsSnapshot = await db.ref("privateBusinessWorkspace/" + uid + "/runs/" + businessId).orderByChild("localDate").limitToLast(30).once("value");
+      const runs = runsSnapshot.val() || {};
+      const history = Object.entries(runs).map(([localDate, run]) => ({
+        localDate,
+        status: run && run.status || "unknown",
+        generatedAtMs: Number(run && run.generatedAtMs || 0),
+        digest: run && run.digest ? run.digest : null
+      })).sort((a, b) => String(b.localDate).localeCompare(String(a.localDate)));
+      return json(200, { history });
+    }
+
     if (body.action === "schedule") {
       const businessId = body.businessId;
       if (!safeBusinessId(businessId)) throw new Error("Choose a valid business.");
