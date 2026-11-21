@@ -378,6 +378,45 @@ function rateLimitDatabase() {
   return rateLimitApp.database();
 }
 
+function securityFingerprint(event) {
+  const secret = (process.env.IP_HASH_SECRET || "").trim();
+  const headers = event.headers || {};
+  const ip = headers["x-nf-client-connection-ip"] || headers["X-Nf-Client-Connection-Ip"] || "";
+  if (secret.length < 32 || !ip) return "";
+  return crypto.createHmac("sha256", secret).update(String(ip).trim()).digest("hex").slice(0, 40);
+}
+function inspectSecuritySignal(message) {
+  const checks = [
+    ["prompt_injection", /ignore\\s+(all\\s+)?(previous|prior|above)\\s+instructions|disregard\\s+(all\\s+)?(rules|instructions)|you\\s+are\\s+now\\s+(the\\s+)?(system|developer)|act\\s+as\\s+(the\\s+)?system/i],
+    ["prompt_extraction", /reveal|print|repeat|show|output|dump.{0,35}(system|developer|hidden).{0,25}(prompt|instruction)|(?:system|developer)\\s+prompt/i],
+    ["credential_extraction", /api\\s*key|access\\s*token|secret\\s*key|environment\\s+variables|private\\s+credentials/i],
+    ["tool_abuse", /run\\s+(this\\s+)?(shell|terminal|command)|execute\\s+(arbitrary|this)\\s+code|bypass\\s+(authentication|security|policy)/i]
+  ];
+  const matches = checks.filter(([, pattern]) => pattern.test(message)).map(([name]) => name);
+  return { matches, score: matches.reduce((sum, name) => sum + (name === "prompt_injection" ? 25 : 20), 0) };
+}
+async function recordSecurityEvent(event, eventType, severity, category, details, extra = {}) {
+  try {
+    const fingerprint = securityFingerprint(event);
+    const database = rateLimitDatabase();
+    const createdAtMs = Date.now();
+    await database.ref("securityCentre/events").push({
+      createdAtMs, eventType, severity, category,
+      fingerprint: fingerprint || "network_unknown",
+      details: String(details || "").slice(0, 180),
+      ...extra
+    });
+    await database.ref("securityCentre/counters").transaction(current => {
+      const value = current || {};
+      value.totalEvents = Number(value.totalEvents || 0) + 1;
+      value.lastEventAtMs = createdAtMs;
+      value["severity_" + severity] = Number(value["severity_" + severity] || 0) + 1;
+      return value;
+    });
+  } catch (error) {
+    console.error("Vee-AI security telemetry unavailable:", error && error.message || error);
+  }
+}
 async function enforceRateLimit(event) {
   const secret = (process.env.IP_HASH_SECRET || "").trim();
   const headers = event.headers || {};
@@ -469,6 +508,26 @@ exports.handler = async function (event) {
     return jsonResponse(400, { error: "Conversation history is invalid or too long." });
   }
 
+  const signal = inspectSecuritySignal(message);
+  const fingerprint = securityFingerprint(event);
+  if (fingerprint) {
+    try {
+      const blocked = await rateLimitDatabase().ref("securityCentre/blockedFingerprints/" + fingerprint).once("value");
+      if (blocked.exists()) {
+        await recordSecurityEvent(event, "blocked_request", "high", "network_control", "Request rejected from a manually blocked network fingerprint.");
+        return jsonResponse(403, { error: "Access from this network has been restricted. Contact support if you believe this is an error." });
+      }
+    } catch (error) {
+      console.error("Vee-AI network control check failed:", error && error.message || error);
+    }
+  }
+  if (signal.matches.length) {
+    await recordSecurityEvent(event, "suspicious_prompt_pattern", signal.score >= 40 ? "high" : "medium", "prompt_security", "Potential instruction-manipulation pattern detected. Message content was not stored.", {
+      indicators: signal.matches,
+      riskScore: Math.min(100, signal.score),
+      messageLength: message.length
+    });
+  }
   if (!Array.isArray(memory) || memory.length > 20) return jsonResponse(400, { error: "Saved memory is invalid or too long." });
   let memoryCharacters = 0;
   const safeMemory = [];
@@ -507,6 +566,7 @@ exports.handler = async function (event) {
     return jsonResponse(503, { error: "Chat protection is temporarily unavailable. Please try again shortly." });
   }
   if (retryAfter) {
+    await recordSecurityEvent(event, "rate_limit_exceeded", "medium", "abuse_prevention", "Chat request rate limit exceeded.", { retryAfterSeconds: retryAfter });
     return jsonResponse(429, { error: "Too many messages. Please wait before sending another message." }, { "Retry-After": String(retryAfter) });
   }
 
