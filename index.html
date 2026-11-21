@@ -2283,7 +2283,7 @@
         <label for="workspaceBusinessDeliveryTime">Daily Telegram delivery time</label>
         <input id="workspaceBusinessDeliveryTime" type="time" value="08:01" required>
         <label for="workspaceBusinessTimezone">Timezone</label>
-        <select id="workspaceBusinessTimezone"><option value="Africa/Lagos">Africa/Lagos (Nigeria)</option><option value="UTC">UTC</option><option value="Europe/London">Europe/London</option><option value="America/New_York">America/New_York</option><option value="Asia/Dubai">Asia/Dubai</option></select>
+        <input id="workspaceBusinessTimezone" type="text" maxlength="80" value="Africa/Lagos" placeholder="Africa/Lagos" required>
         <label style="display:flex;align-items:center;gap:8px"><input id="workspaceBusinessScheduleEnabled" type="checkbox" style="width:auto"> Enable daily three-piece content digest</label>
         <button type="submit" class="send-btn">Save this business schedule</button>
       </form>
@@ -4649,7 +4649,6 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       var time=document.getElementById("workspaceBusinessDeliveryTime"),zone=document.getElementById("workspaceBusinessTimezone"),enabled=document.getElementById("workspaceBusinessScheduleEnabled");
       if(time)time.value=schedule.time||"08:01";
       if(zone)zone.value=schedule.timeZone||veeLocalTimeZone()||"Africa/Lagos";
-      if(zone&&![].some.call(zone.options,function(o){return o.value===zone.value;}))zone.value="Africa/Lagos";
       if(enabled)enabled.checked=schedule.enabled===true;
     }
     function veeRenderWorkspaceBusinesses(){
