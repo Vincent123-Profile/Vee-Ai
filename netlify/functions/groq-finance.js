@@ -98,7 +98,14 @@ async function requestBatch(batch) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     const detail = payload.error && (payload.error.message || payload.error) || "Groq API request failed.";
-    throw new Error("Groq email analysis failed (" + response.status + "): " + String(detail).slice(0, 350));
+    const error = new Error("Groq email analysis failed (" + response.status + "): " + String(detail).slice(0, 350));
+    error.status = response.status;
+    const retryHeader = Number(response.headers.get("retry-after"));
+    const retryMatch = String(detail).match(/try again in\\s+([\\d.]+)\\s*s/i);
+    error.retryAfterMs = Number.isFinite(retryHeader) && retryHeader > 0
+      ? retryHeader * 1000
+      : retryMatch ? Math.ceil(Number(retryMatch[1]) * 1000) : 10000;
+    throw error;
   }
 
   const content = payload.choices && payload.choices[0] && payload.choices[0].message && payload.choices[0].message.content;
@@ -116,15 +123,38 @@ async function requestBatch(batch) {
   return mapped;
 }
 
+async function requestBatchWithBackoff(batch, retries = 2) {
+  try {
+    return await requestBatch(batch);
+  } catch (error) {
+    const rateLimited = error && (error.status === 429 || error.status === 413);
+    if (!rateLimited) throw error;
+
+    // A smaller request often fits when a multi-email request hits the TPM ceiling.
+    if (batch.length > 1) {
+      const midpoint = Math.ceil(batch.length / 2);
+      const left = await requestBatchWithBackoff(batch.slice(0, midpoint), retries);
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      const right = await requestBatchWithBackoff(batch.slice(midpoint), retries);
+      return new Map([...left, ...right]);
+    }
+
+    if (retries <= 0) throw error;
+    const waitMs = Math.min(Math.max(Number(error.retryAfterMs) || 10000, 1000), 60000);
+    await new Promise(resolve => setTimeout(resolve, waitMs + 500));
+    return requestBatchWithBackoff(batch, retries - 1);
+  }
+}
+
 async function analyzeFinancialEmails(emails) {
   const candidates = emails.filter(isCandidate);
   const results = new Map();
   const groups = chunks(candidates, 2);
   for (const group of groups) {
-    const batchResults = await requestBatch(group);
+    const batchResults = await requestBatchWithBackoff(group);
     batchResults.forEach((value, key) => results.set(key, value));
-    // Stay within the free on-demand tier's token-per-minute budget.
-    if (groups.length > 1) await new Promise(resolve => setTimeout(resolve, 1200));
+    // Pace calls to reduce pressure on the free on-demand token budget.
+    if (groups.length > 1) await new Promise(resolve => setTimeout(resolve, 2500));
   }
   return results;
 }
