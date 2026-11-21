@@ -387,10 +387,10 @@ function securityFingerprint(event) {
 }
 function inspectSecuritySignal(message) {
   const checks = [
-    ["prompt_injection", /ignore\\s+(all\\s+)?(previous|prior|above)\\s+instructions|disregard\\s+(all\\s+)?(rules|instructions)|you\\s+are\\s+now\\s+(the\\s+)?(system|developer)|act\\s+as\\s+(the\\s+)?system/i],
-    ["prompt_extraction", /reveal|print|repeat|show|output|dump.{0,35}(system|developer|hidden).{0,25}(prompt|instruction)|(?:system|developer)\\s+prompt/i],
-    ["credential_extraction", /api\\s*key|access\\s*token|secret\\s*key|environment\\s+variables|private\\s+credentials/i],
-    ["tool_abuse", /run\\s+(this\\s+)?(shell|terminal|command)|execute\\s+(arbitrary|this)\\s+code|bypass\\s+(authentication|security|policy)/i]
+    ["prompt_injection", /ignore\s+(all\s+)?(previous|prior|above)\s+instructions|disregard\s+(all\s+)?(rules|instructions)|you\s+are\s+now\s+(the\s+)?(system|developer)|act\s+as\s+(the\s+)?system/i],
+    ["prompt_extraction", /reveal|print|repeat|show|output|dump.{0,35}(system|developer|hidden).{0,25}(prompt|instruction)|(?:system|developer)\s+prompt/i],
+    ["credential_extraction", /api\s*key|access\s*token|secret\s*key|environment\s+variables|private\s+credentials/i],
+    ["tool_abuse", /run\s+(this\s+)?(shell|terminal|command)|execute\s+(arbitrary|this)\s+code|bypass\s+(authentication|security|policy)/i]
   ];
   const matches = checks.filter(([, pattern]) => pattern.test(message)).map(([name]) => name);
   return { matches, score: matches.reduce((sum, name) => sum + (name === "prompt_injection" ? 25 : 20), 0) };
