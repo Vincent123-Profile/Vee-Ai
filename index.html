@@ -3818,6 +3818,7 @@
       }catch(error){if(status)status.textContent=error.message||"Unable to save daily summary settings.";}
     }
     function veeOpenPlanner() {
+      veeLoadPlannerDailySummarySettings();
       veeRenderPlanner();
       veeRenderPlannerReminderSettings();
       veePlannerReminderStatus();
