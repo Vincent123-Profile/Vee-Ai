@@ -2288,7 +2288,7 @@
         <button type="submit" class="send-btn">Save this business schedule</button>
       </form>
       <p id="workspaceBusinessScheduleStatus" class="account-copy" role="status" aria-live="polite">Select a business to manage its schedule.</p>
-      <button type="button" class="account-secondary" onclick="veeArchiveWorkspaceBusiness()">Archive selected business</button>
+      <button type="button" class="account-secondary" onclick="veeArchiveWorkspaceBusiness()">Archive selected business</button><div class="content-studio-actions" style="margin-top:10px"><button type="button" class="send-btn" onclick="veeImportWorkspaceContentToStudio()">Open saved content in Content Studio</button></div><p id="workspaceContentHistoryStatus" class="account-copy" role="status" aria-live="polite">Generated daily content is saved separately for each business.</p>
     </div>
     <div class="finance-section"><div class="content-studio-actions"><button type="button" class="send-btn" onclick="veeSaveBusinessVault()">Save business profile</button></div><p id="businessVaultStatus" class="account-copy" role="status" aria-live="polite"></p></div>
     <div id="businessVaultFields" style="display:none"><div class="finance-section">
@@ -3818,7 +3818,7 @@ function veeFinanceSnapshot(){return {transactions:veeFinanceData.transactions.s
 function veeSaveFinanceLocal(){try{localStorage.setItem("vee_ai_personal_finance_v1",JSON.stringify(veeFinanceSnapshot()));return true;}catch(e){return false;}}
 async function veePersistFinance(){if(!veeSaveFinanceLocal())return false;if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){try{await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/finance").set(veeFinanceSnapshot());}catch(e){console.error("Finance cloud save failed",e);return false;}}return true;}
 var veeContentDrafts=[];
-function veeContentDraftSnapshot(){return veeContentDrafts.slice(0,200).map(function(d){return{id:String(d.id),type:String(d.type||"Social media post"),platform:String(d.platform||"Any platform"),title:String(d.title||"").slice(0,120),body:String(d.body||"").slice(0,12000),createdAtMs:Number(d.createdAtMs||Date.now()),updatedAtMs:Number(d.updatedAtMs||Date.now())};});}
+function veeContentDraftSnapshot(){return veeContentDrafts.slice(0,200).map(function(d){return{id:String(d.id),type:String(d.type||"Social media post"),platform:String(d.platform||"Any platform"),title:String(d.title||"").slice(0,120),body:String(d.body||"").slice(0,12000),businessId:String(d.businessId||""),source:String(d.source||"manual"),status:String(d.status||"Generated"),localDate:String(d.localDate||""),createdAtMs:Number(d.createdAtMs||Date.now()),updatedAtMs:Number(d.updatedAtMs||Date.now())};});}
 function veeSaveContentDraftLocal(){try{localStorage.setItem("vee_ai_content_drafts_v1",JSON.stringify(veeContentDraftSnapshot()));return true;}catch(e){return false;}}
 async function veePersistContentDrafts(){if(!veeSaveContentDraftLocal())return false;if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){try{await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/contentStudio/drafts").set(veeContentDraftSnapshot());}catch(e){console.error("Content Studio cloud save failed",e);return false;}}return true;}
 function veeLoadContentDraftsLocal(){try{var d=JSON.parse(localStorage.getItem("vee_ai_content_drafts_v1")||"[]");veeContentDrafts=Array.isArray(d)?d.slice(0,200):[];}catch(e){veeContentDrafts=[];}}
@@ -4648,6 +4648,44 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       var status=document.getElementById("workspaceBusinessScheduleStatus");
       if(status)status.textContent="Managing "+(item.profile.businessName||"selected business")+". Daily content resets at midnight in its selected timezone.";
       veeBusinessVaultStatus("Loaded "+(item.profile.businessName||"business")+" profile.");
+    }
+    async function veeImportWorkspaceContentToStudio(){
+      var status=document.getElementById("workspaceContentHistoryStatus");
+      try{
+        if(!veeWorkspaceSelectedBusinessId)throw new Error("Select a business first.");
+        if(status)status.textContent="Loading saved daily content...";
+        var data=await veeWorkspaceRequest({action:"history",businessId:veeWorkspaceSelectedBusinessId});
+        var business=veeWorkspaceBusinesses.find(function(item){return item.businessId===veeWorkspaceSelectedBusinessId;});
+        var businessName=business&&business.profile?business.profile.businessName:"Business";
+        var imported=0;
+        (data.history||[]).forEach(function(day){
+          if(!day.digest||!Array.isArray(day.digest.pieces))return;
+          day.digest.pieces.forEach(function(piece){
+            var id="bw_"+veeWorkspaceSelectedBusinessId+"_"+day.localDate+"_"+piece.pieceNumber;
+            if(veeContentDrafts.some(function(existing){return existing.id===id;}))return;
+            var body=[
+              "Category: "+(piece.category||""),
+              "Topic: "+(piece.topic||""),
+              "Recommended platform: "+((piece.platforms||[]).join(", ")||"Choose manually"),
+              piece.platformReason?"Platform reason: "+piece.platformReason:"",
+              "Format: "+(piece.format||""),
+              piece.hook?"Hook: "+piece.hook:"",
+              "Content:\n"+(piece.content||""),
+              piece.caption?"Caption: "+piece.caption:"",
+              piece.callToAction?"Call to action: "+piece.callToAction:"",
+              piece.visualDirection?"Visual direction: "+piece.visualDirection:"",
+              piece.keywords&&piece.keywords.length?"Keywords: "+piece.keywords.join(", "):""
+            ].filter(Boolean).join("\n\n");
+            veeContentDrafts.push({id:id,type:"Business Workspace content",platform:(piece.platforms||[]).join(", ")||"AI recommended",title:piece.topic||"Daily business content",body:body,businessId:veeWorkspaceSelectedBusinessId,businessName:businessName,source:"business_workspace",status:"Generated",localDate:day.localDate,createdAtMs:Number(day.generatedAtMs||Date.now()),updatedAtMs:Date.now()});
+            imported++;
+          });
+        });
+        veeContentDrafts=veeContentDrafts.slice(-200);
+        await veePersistContentDrafts();
+        veeRenderContentDrafts();
+        if(status)status.textContent=imported?imported+" content piece(s) added to Content Studio. Open Content Studio to edit or copy them.":"No new saved content found for this business.";
+        if(imported){veeCloseModal("businessWorkspaceModal");await veeOpenContentStudio();}
+      }catch(error){if(status)status.textContent=error.message||"Unable to load saved content.";}
     }
     function veeCreateWorkspaceBusiness(){
       veeWorkspaceSelectedBusinessId=null;var select=document.getElementById("workspaceBusinessSelect");if(select)select.value="";
