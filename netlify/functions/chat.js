@@ -596,16 +596,19 @@ exports.handler = async function (event) {
       maxTokens: isVeeBrain ? 1600 : 1100
     });
     if (!response.ok) {
-      console.error("Vee-AI Groq error:", response.status, data && data.error && data.error.message || "Unknown provider error");
+      console.error("Vee-AI AI provider error:", response.status, data && data.error && data.error.message || "Unknown provider error");
+      await recordSecurityEvent(event, "ai_provider_failure", "medium", "service_health", "AI provider returned an unsuccessful response.", { providerStatus: response.status });
       return jsonResponse(502, { error: "Vee-AI could not complete the response. Please try again." });
     }
     const reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
     if (typeof reply !== "string" || !reply.trim()) {
+      await recordSecurityEvent(event, "ai_empty_response", "low", "service_health", "AI provider returned an empty response.");
       return jsonResponse(502, { error: "Vee-AI returned an empty response. Please try again." });
     }
     return jsonResponse(200, { reply });
   } catch (error) {
     console.error("Vee-AI chat function error:", error && error.message || error);
+    await recordSecurityEvent(event, "chat_processing_failure", "medium", "service_health", "Chat processing failed before a response was completed.");
     return jsonResponse(502, { error: "A connection problem interrupted the response. Please try again." });
   }
 };
