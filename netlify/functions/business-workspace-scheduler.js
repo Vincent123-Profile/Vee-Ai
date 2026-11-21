@@ -284,6 +284,7 @@ async function processBusiness(db, token, uid, businessId, record, now) {
         status: "generating",
         claimId,
         claimedAtMs: now,
+        attemptCount: Number(current && current.attemptCount || 0) + 1,
         localDate: clock.date,
         timeZone,
         createdAtMs: current && current.createdAtMs ? current.createdAtMs : now
