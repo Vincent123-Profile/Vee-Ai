@@ -169,9 +169,9 @@ async function loadSoc(){
  $("socRefresh").disabled=true;
  try{
   const data=await socApi("list"),events=data.events||[],blocked=data.blocked||[],c=data.counters||{};
-  $("socTotal").textContent=Number(c.totalEvents||events.length);
-  $("socHigh").textContent=Number(c.severity_high||events.filter(x=>x.severity==="high").length);
-  $("socMedium").textContent=Number(c.severity_medium||events.filter(x=>x.severity==="medium").length);
+  $("socTotal").textContent=events.length;
+  $("socHigh").textContent=events.filter(x=>x.severity==="high").length;
+  $("socMedium").textContent=events.filter(x=>x.severity==="medium").length;
   $("socBlocked").textContent=blocked.length;
   $("socEvents").innerHTML=events.length?events.map(e=>{
    const sev=e.severity==="high"?"bad":e.severity==="medium"?"warn":"good";
