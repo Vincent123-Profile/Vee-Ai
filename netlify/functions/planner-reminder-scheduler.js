@@ -91,6 +91,59 @@ async function sendTaskReminder(db, token, chatId, uid, date, taskId, task, now)
   }
 }
 
+async function sendDailyPlannerSummary(db, token, chatId, uid, settings, tasks, now) {
+  const timeZone = validTimeZone(settings.timeZone) ? settings.timeZone : "Africa/Lagos";
+  const clock = localClock(timeZone, new Date(now));
+  if (clock.time !== settings.time) return false;
+  const deliveryRef = db.ref("telegram/plannerDailySummaryDeliveries/" + uid + "/" + clock.date);
+  const claimId = crypto.randomBytes(12).toString("hex");
+  const claim = await deliveryRef.transaction(current => {
+    if (current && current.status === "sent") return;
+    if (current && current.status === "sending" && now - Number(current.claimedAtMs || 0) < 10 * 60 * 1000) return;
+    return { status: "sending", claimId, claimedAtMs: now, localDate: clock.date, timeZone };
+  }, undefined, false);
+  if (!claim.committed) return false;
+
+  const entries = Object.entries(tasks || {}).filter(([, task]) => task && task.done !== true);
+  const overdue = entries.filter(([, task]) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(task.dueDate || "")) && task.dueDate < clock.date);
+  const today = entries.filter(([, task]) => task.dueDate === clock.date);
+  const upcoming = entries.filter(([, task]) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(task.dueDate || "")) && task.dueDate > clock.date && task.dueDate <= addDays(clock.date, 7));
+  const lines = ["📋 YOUR DAILY PLANNER SUMMARY", clock.date, ""];
+  function addGroup(title, list) {
+    lines.push(title + " (" + list.length + ")");
+    if (!list.length) lines.push("None");
+    list.slice(0, 12).forEach(([, task]) => {
+      lines.push("• " + cleanText(task.title, 110) + (task.dueDate ? " · " + task.dueDate : "") + (task.dueTime ? " at " + task.dueTime : ""));
+    });
+    lines.push("");
+  }
+  addGroup("OVERDUE TASKS", overdue);
+  addGroup("TODAY'S TASKS", today);
+  addGroup("UPCOMING DEADLINES (7 DAYS)", upcoming);
+  if (!overdue.length && !today.length && !upcoming.length) lines.push("Your Planner is clear. No pending tasks or upcoming deadlines.");
+  lines.push("Open Vee-AI to update your tasks.");
+  try {
+    const result = await telegramRequest(token, "sendMessage", {
+      chat_id: chatId,
+      text: lines.join("\\n").slice(0, 3900),
+      link_preview_options: { is_disabled: true }
+    });
+    await deliveryRef.set({ status: "sent", sentAtMs: Date.now(), messageId: result && result.message_id || null, localDate: clock.date, timeZone });
+    return true;
+  } catch (error) {
+    const current = (await deliveryRef.once("value")).val();
+    if (current && current.claimId === claimId) await deliveryRef.set({ status: "failed", failedAtMs: Date.now(), error: cleanText(error.message, 160), localDate: clock.date, timeZone });
+    console.error("Daily Planner summary failed:", JSON.stringify({ uid, error: error.message }));
+    return false;
+  }
+}
+
+function addDays(date, count) {
+  const parts = String(date).split("-").map(Number);
+  const value = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2] + count));
+  return value.getUTCFullYear() + "-" + String(value.getUTCMonth() + 1).padStart(2, "0") + "-" + String(value.getUTCDate()).padStart(2, "0");
+}
+
 exports.handler = async () => {
   const token = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
   if (!token) return { statusCode: 503, body: "Telegram is not configured." };
@@ -106,13 +159,19 @@ exports.handler = async () => {
     for (const [chatId, account] of Object.entries(linkedAccounts).slice(0, 200)) {
       if (!account || !account.uid || !/^\d{1,24}$/.test(String(chatId))) continue;
       const uid = String(account.uid);
-      const [settingsSnapshot, tasksSnapshot] = await Promise.all([
+      const [settingsSnapshot, tasksSnapshot, summarySettingsSnapshot] = await Promise.all([
         db.ref("users/" + uid + "/planner/reminderSettings").once("value"),
-        db.ref("users/" + uid + "/planner/tasks").once("value")
+        db.ref("users/" + uid + "/planner/tasks").once("value"),
+        db.ref("users/" + uid + "/planner/dailySummarySettings").once("value")
       ]);
       const settings = settingsSnapshot.val() || {};
-      if (settings.enabled !== true) continue;
+      const summarySettings = summarySettingsSnapshot.val() || {};
+      if (settings.enabled !== true && summarySettings.enabled !== true) continue;
       const tasks = tasksSnapshot.val() || {};
+      if (summarySettings.enabled === true && /^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(summarySettings.time || ""))) {
+        if (await sendDailyPlannerSummary(db, token, chatId, uid, summarySettings, tasks, now)) sent++;
+      }
+      if (settings.enabled !== true) continue;
       const fallbackTime = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(settings.time || "")) ? settings.time : "";
       const fallbackDays = Array.isArray(settings.days) ? settings.days.filter(day => Number.isInteger(day) && day >= 0 && day <= 6) : [];
       for (const [taskId, task] of Object.entries(tasks).slice(0, 100)) {
