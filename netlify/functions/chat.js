@@ -603,9 +603,9 @@ exports.handler = async function (event) {
     safeHistory.push({ role: item.role, content: item.content });
   }
 
-  while (safeHistory.length > 12) safeHistory.shift();
+  while (safeHistory.length > 8) safeHistory.shift();
   let retainedHistoryCharacters = safeHistory.reduce((total, item) => total + item.content.length, 0);
-  while (safeHistory.length && retainedHistoryCharacters > 18000) {
+  while (safeHistory.length && retainedHistoryCharacters > 10000) {
     const removed = safeHistory.shift();
     retainedHistoryCharacters -= removed.content.length;
   }
@@ -650,7 +650,7 @@ exports.handler = async function (event) {
     const isVeeBrain = selectedModel === "Vee Brain";
     const completionOptions = {
       temperature: isCodingTask ? 0.25 : isVeeBrain ? 0.55 : 0.78,
-      maxTokens: isCodingTask ? 3200 : isVeeBrain ? 1000 : 700
+      maxTokens: isCodingTask ? 1800 : isVeeBrain ? 800 : 600
     };
     let response = null;
     let data = null;
@@ -669,7 +669,31 @@ exports.handler = async function (event) {
           const detail = data && data.error && data.error.message || "Unknown provider error";
           console.error("Vee-AI primary AI provider error:", response.status, detail);
           groqFailure = { status: response.status, detail };
-          if (response.status === 429) await setGroqCooldown(providerRetrySeconds(response, data));
+          if (response.status === 429) {
+            const retrySeconds = providerRetrySeconds(response, data);
+            if (retrySeconds <= 8) {
+              console.log("Vee-AI retrying primary AI provider after rate limit. Delay seconds:", retrySeconds);
+              await new Promise(resolve => setTimeout(resolve, retrySeconds * 1000));
+              try {
+                const retryResult = await requestCompletion(apiKey, model, messages, completionOptions);
+                if (retryResult.response.ok) {
+                  const retryReply = retryResult.data && retryResult.data.choices && retryResult.data.choices[0] && retryResult.data.choices[0].message && retryResult.data.choices[0].message.content;
+                  if (typeof retryReply === "string" && retryReply.trim()) return jsonResponse(200, { reply: retryReply, providerRetried: true });
+                  groqFailure = { status: 502, detail: "Empty response from primary AI service after retry." };
+                } else {
+                  const retryDetail = retryResult.data && retryResult.data.error && retryResult.data.error.message || "Unknown provider error";
+                  console.error("Vee-AI primary AI provider retry error:", retryResult.response.status, retryDetail);
+                  groqFailure = { status: retryResult.response.status, detail: retryDetail };
+                  if (retryResult.response.status === 429) await setGroqCooldown(providerRetrySeconds(retryResult.response, retryResult.data));
+                }
+              } catch (retryError) {
+                console.error("Vee-AI primary AI provider retry connection error:", retryError && retryError.message || retryError);
+                await setGroqCooldown(retrySeconds);
+              }
+            } else {
+              await setGroqCooldown(retrySeconds);
+            }
+          }
         }
       } catch (error) {
         console.error("Vee-AI primary AI provider connection error:", error && error.message || error);
