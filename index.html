@@ -2757,7 +2757,7 @@
       var status=document.getElementById("gmailIntelligenceStatus");
       if(!veeCurrentUser||!veeCurrentUser.emailVerified){if(status)status.textContent="Sign in with a verified Vee-AI account to connect Gmail.";return;}
       try{
-        var data=await veeGmailRequest("status");
+        var data=await veeGmailRequest("status",veeGmailSelectedAccountId);
         var connected=document.getElementById("gmailConnectionStatus");
         var last=document.getElementById("gmailLastSync");
         var alerts=document.getElementById("gmailSecurityCount");
@@ -2875,6 +2875,7 @@
               ["Direction rule",tx.directionEvidence||"No clear bank wording matched"],
               ["Status",(tx.transactionStatus||"unknown").toUpperCase()],
               ["Available balance",tx.availableBalance!==null&&tx.availableBalance!==undefined?(tx.availableBalanceCurrency||tx.currency||"Currency not stated")+" "+Number(tx.availableBalance).toLocaleString():"Not stated in email"],
+              ["Naira equivalent",tx.nairaEquivalent!==null&&tx.nairaEquivalent!==undefined?"NGN "+Number(tx.nairaEquivalent).toLocaleString():"No verified exchange rate available"],
               ["Transaction time",tx.transactionAtMs?new Date(tx.transactionAtMs).toLocaleString():"Not available"],
               ["Detection",item.classificationConfidence==="high"&&!item.needsReview?"High confidence":"Needs review"]
             ].forEach(function(pair){
