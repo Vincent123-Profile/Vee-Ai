@@ -417,6 +417,33 @@ async function recordSecurityEvent(event, eventType, severity, category, details
     console.error("Vee-AI security telemetry unavailable:", error && error.message || error);
   }
 }
+async function getGroqCooldownUntil() {
+  try {
+    const snapshot = await rateLimitDatabase().ref("serviceHealth/groq/cooldownUntilMs").once("value");
+    return Math.max(0, Number(snapshot.val()) || 0);
+  } catch (error) {
+    console.error("Vee-AI provider cooldown check failed:", error && error.message || error);
+    return 0;
+  }
+}
+async function setGroqCooldown(seconds) {
+  const cooldownUntilMs = Date.now() + Math.max(1, Math.min(60, Number(seconds) || 10)) * 1000;
+  try {
+    await rateLimitDatabase().ref("serviceHealth/groq/cooldownUntilMs").transaction(current =>
+      Math.max(Number(current) || 0, cooldownUntilMs)
+    );
+  } catch (error) {
+    console.error("Vee-AI provider cooldown save failed:", error && error.message || error);
+  }
+}
+function providerRetrySeconds(response, data) {
+  const headerValue = response && response.headers && response.headers.get("retry-after");
+  const headerSeconds = Number(headerValue);
+  if (Number.isFinite(headerSeconds) && headerSeconds > 0) return Math.min(60, Math.ceil(headerSeconds));
+  const detail = data && data.error && data.error.message || "";
+  const match = String(detail).match(/try again in\\s+([0-9]+(?:\\.[0-9]+)?)\\s*s/i);
+  return match ? Math.max(1, Math.min(60, Math.ceil(Number(match[1])))) : 10;
+}
 async function enforceRateLimit(event) {
   const secret = (process.env.IP_HASH_SECRET || "").trim();
   const headers = event.headers || {};
@@ -558,6 +585,13 @@ exports.handler = async function (event) {
     safeHistory.push({ role: item.role, content: item.content });
   }
 
+  while (safeHistory.length > 12) safeHistory.shift();
+  let retainedHistoryCharacters = safeHistory.reduce((total, item) => total + item.content.length, 0);
+  while (safeHistory.length && retainedHistoryCharacters > 18000) {
+    const removed = safeHistory.shift();
+    retainedHistoryCharacters -= removed.content.length;
+  }
+
   let retryAfter;
   try {
     retryAfter = await enforceRateLimit(event);
@@ -574,6 +608,14 @@ exports.handler = async function (event) {
   if (!apiKey) return jsonResponse(503, { error: "Vee-AI is temporarily unavailable. Please try again shortly." });
 
   const model = (process.env.GROQ_MODEL || "openai/gpt-oss-20b").trim();
+  const cooldownUntilMs = await getGroqCooldownUntil();
+  if (cooldownUntilMs > Date.now()) {
+    const waitSeconds = Math.max(1, Math.ceil((cooldownUntilMs - Date.now()) / 1000));
+    return jsonResponse(429, {
+      error: "Vee-AI is handling a high volume of requests. Please wait " + waitSeconds + " seconds, then try again.",
+      retryAfterSeconds: waitSeconds
+    }, { "Retry-After": String(waitSeconds) });
+  }
   const languageInstruction = selectedLanguage === "Auto"
     ? "Detect the language used by the user and reply naturally in that language. If the user changes language, follow the change."
     : "Respond in " + selectedLanguage + " unless the user explicitly requests another language. For Queen's English, use polished British English.";
@@ -594,11 +636,29 @@ exports.handler = async function (event) {
     const isVeeBrain = selectedModel === "Vee Brain";
     const { response, data } = await requestCompletion(apiKey, model, messages, {
       temperature: isCodingTask ? 0.25 : isVeeBrain ? 0.55 : 0.78,
-      maxTokens: isCodingTask ? 6000 : isVeeBrain ? 1600 : 1100
+      maxTokens: isCodingTask ? 3200 : isVeeBrain ? 1000 : 700
     });
     if (!response.ok) {
-      console.error("Vee-AI AI provider error:", response.status, data && data.error && data.error.message || "Unknown provider error");
+      const providerDetail = data && data.error && data.error.message || "Unknown provider error";
+      console.error("Vee-AI AI provider error:", response.status, providerDetail);
       await recordSecurityEvent(event, "ai_provider_failure", "medium", "service_health", "AI provider returned an unsuccessful response.", { providerStatus: response.status });
+      if (response.status === 429) {
+        const waitSeconds = providerRetrySeconds(response, data);
+        await setGroqCooldown(waitSeconds);
+        return jsonResponse(429, {
+          error: "Vee-AI is handling a high volume of requests. Please wait " + waitSeconds + " seconds, then try again.",
+          retryAfterSeconds: waitSeconds
+        }, { "Retry-After": String(waitSeconds) });
+      }
+      if (response.status === 401 || response.status === 403) {
+        return jsonResponse(502, { error: "Vee-AI's AI service authentication needs attention. Please try again later." });
+      }
+      if (response.status === 400) {
+        return jsonResponse(502, { error: "Vee-AI could not process this request format. Please shorten the request and try again." });
+      }
+      if (response.status >= 500) {
+        return jsonResponse(502, { error: "Vee-AI's AI service is temporarily unavailable. Please try again shortly." });
+      }
       return jsonResponse(502, { error: "Vee-AI could not complete the response. Please try again." });
     }
     const reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
