@@ -59,7 +59,7 @@ function decryptProfile(uid, record) {
 async function verifyUser(event) {
   const headers = event.headers || {};
   const header = headers.authorization || headers.Authorization || "";
-  const match = /^Bearer\\s+(.+)$/i.exec(header);
+  const match = /^Bearer\s+(.+)$/i.exec(header);
   if (!match) throw new Error("Sign in again to continue.");
   const decoded = await firebase().auth().verifyIdToken(match[1], true);
   if (!decoded.email_verified) throw new Error("Verify your email before managing Business Workspace.");
@@ -119,7 +119,7 @@ function validateSchedule(input) {
   }
   const time = String(input.time || "");
   const timeZone = String(input.timeZone || "Africa/Lagos");
-  if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time)) {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
     throw new Error("Choose a valid delivery time in HH:MM format.");
   }
   if (!validTimeZone(timeZone)) throw new Error("Choose a valid timezone.");
@@ -154,7 +154,7 @@ async function migrateLegacyBusiness(db, uid) {
   const legacySchedule = scheduleSnapshot.val() || {};
   const schedule = {
     enabled: legacySchedule.enabled === true,
-    time: /^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(legacySchedule.time || "")) ? legacySchedule.time : "09:00",
+    time: /^([01]\d|2[0-3]):[0-5]\d$/.test(String(legacySchedule.time || "")) ? legacySchedule.time : "09:00",
     timeZone: validTimeZone(legacySchedule.timeZone) ? legacySchedule.timeZone : "Africa/Lagos",
     updatedAtMs: now
   };
