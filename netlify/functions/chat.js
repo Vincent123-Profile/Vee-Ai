@@ -441,7 +441,7 @@ function providerRetrySeconds(response, data) {
   const headerSeconds = Number(headerValue);
   if (Number.isFinite(headerSeconds) && headerSeconds > 0) return Math.min(60, Math.ceil(headerSeconds));
   const detail = data && data.error && data.error.message || "";
-  const match = String(detail).match(/try again in\\s+([0-9]+(?:\\.[0-9]+)?)\\s*s/i);
+  const match = String(detail).match(/try again in\s+([0-9]+(?:\.[0-9]+)?)\s*s/i);
   return match ? Math.max(1, Math.min(60, Math.ceil(Number(match[1])))) : 10;
 }
 async function enforceRateLimit(event) {
