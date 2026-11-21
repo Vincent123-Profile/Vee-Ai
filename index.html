@@ -2272,6 +2272,24 @@
   <div class="modal-backdrop" id="businessWorkspaceModal" onclick="if(event.target===this)veeCloseModal('businessWorkspaceModal')"><div class="modal-panel glass-chrome" style="max-width:760px;max-height:90vh;overflow:auto">
     <div class="modal-head"><h2>Private Business Workspace</h2><button type="button" class="icon-btn" onclick="veeCloseModal('businessWorkspaceModal')">✕</button></div>
     <p class="account-copy">Your Business Workspace is available through your signed-in Vee-AI account. Your saved profile is encrypted before storage and loads automatically after sign-in.</p>
+    <div class="finance-section" id="businessWorkspaceManager">
+      <h3>Your businesses</h3>
+      <p class="account-copy">Each business has its own profile, content history and delivery schedule.</p>
+      <div class="content-studio-actions">
+        <select id="workspaceBusinessSelect" aria-label="Select business" onchange="veeSelectWorkspaceBusiness(this.value)" style="min-width:0;flex:1;padding:12px;border:1px solid var(--glass-border);border-radius:10px;background:var(--glass-surface);color:var(--text-primary)"><option value="">Loading businesses...</option></select>
+        <button type="button" class="account-secondary" onclick="veeCreateWorkspaceBusiness()">Add business</button>
+      </div>
+      <form id="workspaceBusinessScheduleForm" onsubmit="veeSaveWorkspaceBusinessSchedule(event)" class="planner-form" style="margin-top:12px">
+        <label for="workspaceBusinessDeliveryTime">Daily Telegram delivery time</label>
+        <input id="workspaceBusinessDeliveryTime" type="time" value="08:01" required>
+        <label for="workspaceBusinessTimezone">Timezone</label>
+        <select id="workspaceBusinessTimezone"><option value="Africa/Lagos">Africa/Lagos (Nigeria)</option><option value="UTC">UTC</option><option value="Europe/London">Europe/London</option><option value="America/New_York">America/New_York</option><option value="Asia/Dubai">Asia/Dubai</option></select>
+        <label style="display:flex;align-items:center;gap:8px"><input id="workspaceBusinessScheduleEnabled" type="checkbox" style="width:auto"> Enable daily three-piece content digest</label>
+        <button type="submit" class="send-btn">Save this business schedule</button>
+      </form>
+      <p id="workspaceBusinessScheduleStatus" class="account-copy" role="status" aria-live="polite">Select a business to manage its schedule.</p>
+      <button type="button" class="account-secondary" onclick="veeArchiveWorkspaceBusiness()">Archive selected business</button>
+    </div>
     <div class="finance-section"><div class="content-studio-actions"><button type="button" class="send-btn" onclick="veeSaveBusinessVault()">Save business profile</button></div><p id="businessVaultStatus" class="account-copy" role="status" aria-live="polite"></p></div>
     <div id="businessVaultFields" style="display:none"><div class="finance-section">
       <label for="businessName">Business name</label><input id="businessName" maxlength="120" placeholder="Business or brand name">
@@ -4585,11 +4603,174 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
         if(status)status.textContent=settings.enabled?"Saved. Vee-AI will prepare a fresh business-specific idea every 3 hours, starting at "+settings.time+" on your selected days in "+settings.timeZone+". Background processing and Telegram linking are also required for automatic delivery.":"Schedule saved and paused.";
       }catch(error){if(status)status.textContent="Could not save your content schedule. Please try again.";}
     }
-    async function veeOpenBusinessWorkspace(){if(!veeCurrentUser||!veeCurrentUser.emailVerified||!veeAccountDb){veeOpenModal("accountModal");return;}veeBusinessVaultKey=true;veeBusinessVaultSalt=null;veeBusinessVaultUnlockedUid=veeCurrentUser.uid;veeBusinessProfileContext=null;veeBusinessProfileContextUid=null;document.getElementById("businessVaultFields").style.display="block";veeBusinessVaultStatus("Loading your account business profile...");veeOpenModal("businessWorkspaceModal");veeRefreshBusinessAutomationStatus();veeLoadBusinessAutomationDrafts();veeLoadBusinessContentReminder();try{var data=await veeBusinessAutomationRequest("account-profile-get");if(data.profile){veeFillBusinessProfile(data.profile);veeBusinessProfileContext=data.profile;veeBusinessProfileContextUid=veeCurrentUser.uid;veeBusinessVaultStatus("Your saved business profile is ready.");}else{veeFillBusinessProfile({});veeBusinessVaultStatus(data.legacyEncryptedProfileFound?"No account-linked profile exists yet. Your older encrypted profile has been preserved and was not changed. Complete these fields and save a new account-linked profile.":"Welcome. Complete your business details and save your profile.");}}catch(error){veeBusinessVaultStatus(error.message||"Unable to load your business profile.");}}
+    async function veeOpenBusinessWorkspace(){if(!veeCurrentUser||!veeCurrentUser.emailVerified||!veeAccountDb){veeOpenModal("accountModal");return;}veeBusinessVaultKey=true;veeBusinessVaultSalt=null;veeBusinessVaultUnlockedUid=veeCurrentUser.uid;veeBusinessProfileContext=null;veeBusinessProfileContextUid=null;document.getElementById("businessVaultFields").style.display="block";veeBusinessVaultStatus("Loading your businesses...");veeOpenModal("businessWorkspaceModal");veeRefreshBusinessAutomationStatus();veeLoadBusinessAutomationDrafts();veeLoadWorkspaceBusinesses();}
     async function veeUnlockBusinessVault(){return veeOpenBusinessWorkspace();}
-    async function veeSaveBusinessVault(){try{if(!veeCurrentUser||!veeCurrentUser.emailVerified||!veeAccountDb)throw new Error("Sign in with a verified account first.");var profile=veeBusinessProfileFromForm();if(!profile.businessName||!profile.businessProducts||!profile.businessCustomers)throw new Error("Complete your business name, products or services, and target customers first.");veeBusinessVaultStatus("Saving your encrypted business profile...");var data=await veeBusinessAutomationRequest("account-profile-save",profile);veeBusinessVaultKey=true;veeBusinessVaultUnlockedUid=veeCurrentUser.uid;veeBusinessProfileContext=profile;veeBusinessProfileContextUid=veeCurrentUser.uid;veeBusinessVaultStatus(data.message||"Business profile saved securely.");}catch(error){veeBusinessVaultStatus(error.message||"Unable to save your business profile.");}}
+    
+    var veeWorkspaceBusinesses=[],veeWorkspaceSelectedBusinessId=null;
+    async function veeWorkspaceRequest(payload){
+      if(!veeCurrentUser||!veeCurrentUser.emailVerified)throw new Error("Sign in with a verified account first.");
+      var token=await veeCurrentUser.getIdToken();
+      var response=await fetch("/.netlify/functions/business-workspace",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)});
+      var data=await response.json().catch(function(){return {};});
+      if(!response.ok)throw new Error(data.error||"Business Workspace request failed.");
+      return data;
+    }
+    function veeWorkspaceSetSchedule(schedule){
+      schedule=schedule||{};
+      var time=document.getElementById("workspaceBusinessDeliveryTime"),zone=document.getElementById("workspaceBusinessTimezone"),enabled=document.getElementById("workspaceBusinessScheduleEnabled");
+      if(time)time.value=schedule.time||"08:01";
+      if(zone)zone.value=schedule.timeZone||veeLocalTimeZone()||"Africa/Lagos";
+      if(zone&&![].some.call(zone.options,function(o){return o.value===zone.value;}))zone.value="Africa/Lagos";
+      if(enabled)enabled.checked=schedule.enabled===true;
+    }
+    function veeRenderWorkspaceBusinesses(){
+      var select=document.getElementById("workspaceBusinessSelect");if(!select)return;
+      select.innerHTML="";
+      if(!veeWorkspaceBusinesses.length){var empty=document.createElement("option");empty.value="";empty.textContent="No saved businesses";select.appendChild(empty);return;}
+      veeWorkspaceBusinesses.forEach(function(item){var option=document.createElement("option");option.value=item.businessId;option.textContent=item.profile.businessName||"Business";select.appendChild(option);});
+      select.value=veeWorkspaceSelectedBusinessId||veeWorkspaceBusinesses[0].businessId;
+    }
+    async function veeLoadWorkspaceBusinesses(preferredId){
+      var status=document.getElementById("workspaceBusinessScheduleStatus");if(status)status.textContent="Loading your businesses...";
+      try{
+        var data=await veeWorkspaceRequest({action:"list"});veeWorkspaceBusinesses=Array.isArray(data.businesses)?data.businesses:[];
+        veeRenderWorkspaceBusinesses();
+        var selected=veeWorkspaceBusinesses.find(function(item){return item.businessId===(preferredId||veeWorkspaceSelectedBusinessId);})||veeWorkspaceBusinesses[0];
+        if(selected)veeSelectWorkspaceBusiness(selected.businessId);
+        else{veeWorkspaceSelectedBusinessId=null;veeFillBusinessProfile({});veeWorkspaceSetSchedule({});if(status)status.textContent="Add your first business to begin.";}
+      }catch(error){if(status)status.textContent=error.message||"Unable to load businesses.";}
+    }
+    function veeSelectWorkspaceBusiness(id){
+      var item=veeWorkspaceBusinesses.find(function(entry){return entry.businessId===id;});if(!item)return;
+      veeWorkspaceSelectedBusinessId=id;veeRenderWorkspaceBusinesses();veeFillBusinessProfile(item.profile||{});
+      veeBusinessProfileContext=item.profile||{};veeBusinessProfileContextUid=veeCurrentUser&&veeCurrentUser.uid;
+      veeWorkspaceSetSchedule(item.schedule||{});
+      var status=document.getElementById("workspaceBusinessScheduleStatus");
+      if(status)status.textContent="Managing "+(item.profile.businessName||"selected business")+". Daily content resets at midnight in its selected timezone.";
+      veeBusinessVaultStatus("Loaded "+(item.profile.businessName||"business")+" profile.");
+    }
+    function veeCreateWorkspaceBusiness(){
+      veeWorkspaceSelectedBusinessId=null;var select=document.getElementById("workspaceBusinessSelect");if(select)select.value="";
+      veeFillBusinessProfile({});veeBusinessProfileContext=null;veeBusinessProfileContextUid=null;veeWorkspaceSetSchedule({enabled:false,time:"08:01",timeZone:veeLocalTimeZone()||"Africa/Lagos"});
+      veeBusinessVaultStatus("Enter the new business details, then save the profile.");
+      var status=document.getElementById("workspaceBusinessScheduleStatus");if(status)status.textContent="New business. Save its profile before setting a schedule.";
+    }
+    async function veeSaveBusinessVault(){
+      try{
+        var profile=veeBusinessProfileFromForm();
+        if(!profile.businessName||!profile.businessProducts||!profile.businessCustomers)throw new Error("Complete your business name, products or services, and target customers first.");
+        veeBusinessVaultStatus("Encrypting and saving business profile...");
+        var data=await veeWorkspaceRequest({action:"save",businessId:veeWorkspaceSelectedBusinessId||undefined,profile:profile});
+        veeWorkspaceSelectedBusinessId=data.businessId;
+        await veeLoadWorkspaceBusinesses(data.businessId);
+        veeBusinessVaultStatus("Business profile saved securely.");
+      }catch(error){veeBusinessVaultStatus(error.message||"Unable to save your business profile.");}
+    }
+    async function veeSaveWorkspaceBusinessSchedule(event){
+      if(event)event.preventDefault();
+      var status=document.getElementById("workspaceBusinessScheduleStatus");
+      try{
+        if(!veeWorkspaceSelectedBusinessId)throw new Error("Save a business profile before setting its schedule.");
+        var schedule={enabled:!!document.getElementById("workspaceBusinessScheduleEnabled").checked,time:document.getElementById("workspaceBusinessDeliveryTime").value,timeZone:document.getElementById("workspaceBusinessTimezone").value};
+        var data=await veeWorkspaceRequest({action:"schedule",businessId:veeWorkspaceSelectedBusinessId,schedule:schedule});
+        var item=veeWorkspaceBusinesses.find(function(entry){return entry.businessId===veeWorkspaceSelectedBusinessId;});if(item)item.schedule=data.schedule;
+        if(status)status.textContent=schedule.enabled?"Daily digest scheduled for "+schedule.time+" ("+schedule.timeZone+").":"Schedule saved and paused.";
+      }catch(error){if(status)status.textContent=error.message||"Unable to save schedule.";}
+    }
+    async function veeArchiveWorkspaceBusiness(){
+      var status=document.getElementById("workspaceBusinessScheduleStatus");
+      try{if(!veeWorkspaceSelectedBusinessId)throw new Error("Select a business first.");if(!window.confirm("Archive this business and pause its scheduled content?"))return;
+        await veeWorkspaceRequest({action:"archive",businessId:veeWorkspaceSelectedBusinessId});
+        veeWorkspaceBusinesses=veeWorkspaceBusinesses.filter(function(item){return item.businessId!==veeWorkspaceSelectedBusinessId;});
+        veeWorkspaceSelectedBusinessId=null;veeRenderWorkspaceBusinesses();
+        if(veeWorkspaceBusinesses.length)veeSelectWorkspaceBusiness(veeWorkspaceBusinesses[0].businessId);else{veeFillBusinessProfile({});veeWorkspaceSetSchedule({});if(status)status.textContent="Business archived. Add another business whenever you are ready.";}
+      }catch(error){if(status)status.textContent=error.message||"Unable to archive business.";}
+    }
+
     function veeGenerateBusinessContent(){if(!veeBusinessProfileContext||veeBusinessProfileContextUid!==(veeCurrentUser&&veeCurrentUser.uid)){veeBusinessVaultStatus("Save your business profile first.");return;}var profile=veeBusinessProfileFromForm();if(!profile.businessName||!profile.businessProducts||!profile.businessCustomers){veeBusinessVaultStatus("Add your business name, products or services, and target customers first.");return;}var prompt="Use this business profile to generate 7 distinct content ideas for the next week. For each idea include a strong hook, short talking points, a 30 to 60 second video script, caption, call to action, and best platform. Match the brand voice. Do not invent prices, guarantees, stock, credentials or claims. Ask for confirmation where facts are missing. The user has chosen to send this profile to the AI service for this request: "+JSON.stringify(profile);veeBusinessVaultStatus("Sending selected business details to Vee-AI. The AI service provider processes the supplied text.");veeCloseModal("businessWorkspaceModal");veeSendPrompt(prompt);}
 
+
+
+    var veeWorkspaceBusinesses=[],veeWorkspaceSelectedBusinessId=null;
+    async function veeWorkspaceRequest(payload){
+      if(!veeCurrentUser||!veeCurrentUser.emailVerified)throw new Error("Sign in with a verified account first.");
+      var token=await veeCurrentUser.getIdToken();
+      var response=await fetch("/.netlify/functions/business-workspace",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)});
+      var data=await response.json().catch(function(){return {};});
+      if(!response.ok)throw new Error(data.error||"Business Workspace request failed.");
+      return data;
+    }
+    function veeWorkspaceSetSchedule(schedule){
+      schedule=schedule||{};
+      var time=document.getElementById("workspaceBusinessDeliveryTime"),zone=document.getElementById("workspaceBusinessTimezone"),enabled=document.getElementById("workspaceBusinessScheduleEnabled");
+      if(time)time.value=schedule.time||"08:01";
+      if(zone)zone.value=schedule.timeZone||veeLocalTimeZone()||"Africa/Lagos";
+      if(zone&&![].some.call(zone.options,function(o){return o.value===zone.value;}))zone.value="Africa/Lagos";
+      if(enabled)enabled.checked=schedule.enabled===true;
+    }
+    function veeRenderWorkspaceBusinesses(){
+      var select=document.getElementById("workspaceBusinessSelect");if(!select)return;
+      select.innerHTML="";
+      if(!veeWorkspaceBusinesses.length){var empty=document.createElement("option");empty.value="";empty.textContent="No saved businesses";select.appendChild(empty);return;}
+      veeWorkspaceBusinesses.forEach(function(item){var option=document.createElement("option");option.value=item.businessId;option.textContent=item.profile.businessName||"Business";select.appendChild(option);});
+      select.value=veeWorkspaceSelectedBusinessId||veeWorkspaceBusinesses[0].businessId;
+    }
+    async function veeLoadWorkspaceBusinesses(preferredId){
+      var status=document.getElementById("workspaceBusinessScheduleStatus");if(status)status.textContent="Loading your businesses...";
+      try{
+        var data=await veeWorkspaceRequest({action:"list"});veeWorkspaceBusinesses=Array.isArray(data.businesses)?data.businesses:[];
+        veeRenderWorkspaceBusinesses();
+        var selected=veeWorkspaceBusinesses.find(function(item){return item.businessId===(preferredId||veeWorkspaceSelectedBusinessId);})||veeWorkspaceBusinesses[0];
+        if(selected)veeSelectWorkspaceBusiness(selected.businessId);
+        else{veeWorkspaceSelectedBusinessId=null;veeFillBusinessProfile({});veeWorkspaceSetSchedule({});if(status)status.textContent="Add your first business to begin.";}
+      }catch(error){if(status)status.textContent=error.message||"Unable to load businesses.";}
+    }
+    function veeSelectWorkspaceBusiness(id){
+      var item=veeWorkspaceBusinesses.find(function(entry){return entry.businessId===id;});if(!item)return;
+      veeWorkspaceSelectedBusinessId=id;veeRenderWorkspaceBusinesses();veeFillBusinessProfile(item.profile||{});
+      veeBusinessProfileContext=item.profile||{};veeBusinessProfileContextUid=veeCurrentUser&&veeCurrentUser.uid;
+      veeWorkspaceSetSchedule(item.schedule||{});
+      var status=document.getElementById("workspaceBusinessScheduleStatus");
+      if(status)status.textContent="Managing "+(item.profile.businessName||"selected business")+". Daily content resets at midnight in its selected timezone.";
+      veeBusinessVaultStatus("Loaded "+(item.profile.businessName||"business")+" profile.");
+    }
+    function veeCreateWorkspaceBusiness(){
+      veeWorkspaceSelectedBusinessId=null;var select=document.getElementById("workspaceBusinessSelect");if(select)select.value="";
+      veeFillBusinessProfile({});veeBusinessProfileContext=null;veeBusinessProfileContextUid=null;veeWorkspaceSetSchedule({enabled:false,time:"08:01",timeZone:veeLocalTimeZone()||"Africa/Lagos"});
+      veeBusinessVaultStatus("Enter the new business details, then save the profile.");
+      var status=document.getElementById("workspaceBusinessScheduleStatus");if(status)status.textContent="New business. Save its profile before setting a schedule.";
+    }
+    async function veeSaveBusinessVault(){
+      try{
+        var profile=veeBusinessProfileFromForm();
+        if(!profile.businessName||!profile.businessProducts||!profile.businessCustomers)throw new Error("Complete your business name, products or services, and target customers first.");
+        veeBusinessVaultStatus("Encrypting and saving business profile...");
+        var data=await veeWorkspaceRequest({action:"save",businessId:veeWorkspaceSelectedBusinessId||undefined,profile:profile});
+        veeWorkspaceSelectedBusinessId=data.businessId;
+        await veeLoadWorkspaceBusinesses(data.businessId);
+        veeBusinessVaultStatus("Business profile saved securely.");
+      }catch(error){veeBusinessVaultStatus(error.message||"Unable to save your business profile.");}
+    }
+    async function veeSaveWorkspaceBusinessSchedule(event){
+      if(event)event.preventDefault();
+      var status=document.getElementById("workspaceBusinessScheduleStatus");
+      try{
+        if(!veeWorkspaceSelectedBusinessId)throw new Error("Save a business profile before setting its schedule.");
+        var schedule={enabled:!!document.getElementById("workspaceBusinessScheduleEnabled").checked,time:document.getElementById("workspaceBusinessDeliveryTime").value,timeZone:document.getElementById("workspaceBusinessTimezone").value};
+        var data=await veeWorkspaceRequest({action:"schedule",businessId:veeWorkspaceSelectedBusinessId,schedule:schedule});
+        var item=veeWorkspaceBusinesses.find(function(entry){return entry.businessId===veeWorkspaceSelectedBusinessId;});if(item)item.schedule=data.schedule;
+        if(status)status.textContent=schedule.enabled?"Daily digest scheduled for "+schedule.time+" ("+schedule.timeZone+").":"Schedule saved and paused.";
+      }catch(error){if(status)status.textContent=error.message||"Unable to save schedule.";}
+    }
+    async function veeArchiveWorkspaceBusiness(){
+      var status=document.getElementById("workspaceBusinessScheduleStatus");
+      try{if(!veeWorkspaceSelectedBusinessId)throw new Error("Select a business first.");if(!window.confirm("Archive this business and pause its scheduled content?"))return;
+        await veeWorkspaceRequest({action:"archive",businessId:veeWorkspaceSelectedBusinessId});
+        veeWorkspaceBusinesses=veeWorkspaceBusinesses.filter(function(item){return item.businessId!==veeWorkspaceSelectedBusinessId;});
+        veeWorkspaceSelectedBusinessId=null;veeRenderWorkspaceBusinesses();
+        if(veeWorkspaceBusinesses.length)veeSelectWorkspaceBusiness(veeWorkspaceBusinesses[0].businessId);else{veeFillBusinessProfile({});veeWorkspaceSetSchedule({});if(status)status.textContent="Business archived. Add another business whenever you are ready.";}
+      }catch(error){if(status)status.textContent=error.message||"Unable to archive business.";}
+    }
 
     // Vee-AI launch splash and saved chat layout preference
     (function(){
