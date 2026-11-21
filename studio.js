@@ -180,14 +180,18 @@
     state.projects = safeParse(localStorage.getItem(STORAGE_KEY), []);
     if (!Array.isArray(state.projects)) state.projects = [];
     var handoff = safeParse(localStorage.getItem(HANDOFF_KEY), null);
+    var handoffProject = null;
     if (handoff && handoff.files && typeof handoff.files === "object") {
       var valid = {};
       Object.keys(handoff.files).forEach(function (p) { if (safePath(p) && typeof handoff.files[p] === "string" && bytes(handoff.files[p]) <= MAX_FILE_BYTES) valid[p] = handoff.files[p]; });
-      if (Object.keys(valid).length) state.projects.unshift(makeProject(handoff.name || "Chat project", valid, "html"));
+      if (Object.keys(valid).length) {
+        handoffProject = makeProject(handoff.name || "Chat project", valid, "html");
+        state.projects.unshift(handoffProject);
+      }
       localStorage.removeItem(HANDOFF_KEY);
     }
     var activeId = localStorage.getItem(ACTIVE_KEY);
-    var project = state.projects.find(function (p) { return p.id === activeId; }) || state.projects[0];
+    var project = handoffProject || state.projects.find(function (p) { return p.id === activeId; }) || state.projects[0];
     if (!project) { project = makeProject("My first website", null, "html"); state.projects.unshift(project); }
     selectProject(project);
     $("projectName").addEventListener("change", function () { state.project.name = $("projectName").value.trim() || "Untitled project"; persist(); });
