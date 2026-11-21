@@ -1595,7 +1595,110 @@
 @media(max-width:560px){.finance-summary{grid-template-columns:1fr 1fr}.finance-summary .finance-stat:last-child{grid-column:1/-1}.finance-form{grid-template-columns:1fr}.finance-form textarea,.finance-form button{grid-column:1}.finance-row{align-items:flex-start}}
 
   
-    /* Final responsive safeguards for chat, composer and workspace layouts */
+    /* Business Workspace modal and control layout fixes */
+#businessWorkspaceModal{
+  align-items:flex-start;
+  justify-content:center;
+  overflow-x:hidden;
+  overflow-y:auto;
+  padding: max(10px, env(safe-area-inset-top)) 10px max(14px, env(safe-area-inset-bottom));
+}
+#businessWorkspaceModal .modal-panel{
+  width:min(760px,100%);
+  max-width:760px;
+  max-height:calc(100dvh - 24px) !important;
+  height:auto;
+  min-width:0;
+  margin:0 auto;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+#businessWorkspaceModal #businessWorkspaceManager,
+#businessWorkspaceModal #businessVaultFields,
+#businessWorkspaceModal #businessVaultFields > .finance-section,
+#businessWorkspaceModal .finance-section,
+#businessWorkspaceModal .planner-form,
+#businessWorkspaceModal .content-studio-actions{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+#businessWorkspaceModal .planner-form{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:9px;
+}
+#businessWorkspaceModal .planner-form > *,
+#businessWorkspaceModal #businessWorkspaceManager > *,
+#businessWorkspaceModal #businessVaultFields > *{
+  min-width:0;
+  max-width:100%;
+}
+#businessWorkspaceModal .content-studio-actions{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:stretch;
+  gap:9px;
+}
+#businessWorkspaceModal .content-studio-actions > button,
+#businessWorkspaceModal .content-studio-actions > select{
+  flex:1 1 170px;
+  min-width:0;
+  max-width:100%;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+#businessWorkspaceModal button{
+  min-height:42px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+#businessWorkspaceModal input,
+#businessWorkspaceModal textarea,
+#businessWorkspaceModal select,
+#businessWorkspaceModal pre{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  overflow-wrap:anywhere;
+}
+#businessWorkspaceModal input[type="checkbox"]{
+  width:18px !important;
+  min-width:18px;
+  flex:0 0 18px;
+}
+#businessWorkspaceModal label{
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+#businessWorkspaceModal .modal-head{
+  position:sticky;
+  top:-1px;
+  z-index:3;
+  padding:5px 0 10px;
+  background:var(--glass-chrome);
+}
+@media(max-width:600px){
+  #businessWorkspaceModal{padding:8px 7px max(12px,env(safe-area-inset-bottom))}
+  #businessWorkspaceModal .modal-panel{
+    width:100%;
+    max-height:calc(100dvh - 16px) !important;
+    padding:14px;
+    border-radius:17px;
+  }
+  #businessWorkspaceModal .content-studio-actions > button,
+  #businessWorkspaceModal .content-studio-actions > select{
+    flex:1 1 100%;
+    width:100%;
+  }
+  #businessWorkspaceModal .modal-head h2{font-size:17px}
+}
+
+/* Final responsive safeguards for chat, composer and workspace layouts */
     *, *::before, *::after { box-sizing: border-box; }
     html, body { width: 100%; min-width: 0; min-height: 100%; overflow-x: hidden; }
     body { min-height: 100vh; min-height: 100dvh; }
