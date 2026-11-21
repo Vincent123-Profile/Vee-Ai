@@ -58,7 +58,7 @@ function cleanText(value, max) {
 
 async function sendTaskReminder(db, token, chatId, uid, date, taskId, task, now) {
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(taskId)) return false;
-  const deliveryDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(String(task.dueDate || "")) ? String(task.dueDate) : date;
+  const deliveryDate = /^\d{4}-\d{2}-\d{2}$/.test(String(task.dueDate || "")) ? String(task.dueDate) : date;
   const deliveryRef = db.ref("telegram/reminderDeliveries/" + uid + "/" + deliveryDate + "/" + taskId);
   const claimId = crypto.randomBytes(12).toString("hex");
   const claim = await deliveryRef.transaction(current => {
@@ -105,9 +105,9 @@ async function sendDailyPlannerSummary(db, token, chatId, uid, settings, tasks, 
   if (!claim.committed) return false;
 
   const entries = Object.entries(tasks || {}).filter(([, task]) => task && task.done !== true);
-  const overdue = entries.filter(([, task]) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(task.dueDate || "")) && task.dueDate < clock.date);
+  const overdue = entries.filter(([, task]) => /^\d{4}-\d{2}-\d{2}$/.test(String(task.dueDate || "")) && task.dueDate < clock.date);
   const today = entries.filter(([, task]) => task.dueDate === clock.date);
-  const upcoming = entries.filter(([, task]) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(task.dueDate || "")) && task.dueDate > clock.date && task.dueDate <= addDays(clock.date, 7));
+  const upcoming = entries.filter(([, task]) => /^\d{4}-\d{2}-\d{2}$/.test(String(task.dueDate || "")) && task.dueDate > clock.date && task.dueDate <= addDays(clock.date, 7));
   const lines = ["📋 YOUR DAILY PLANNER SUMMARY", clock.date, ""];
   function addGroup(title, list) {
     lines.push(title + " (" + list.length + ")");
@@ -125,7 +125,7 @@ async function sendDailyPlannerSummary(db, token, chatId, uid, settings, tasks, 
   try {
     const result = await telegramRequest(token, "sendMessage", {
       chat_id: chatId,
-      text: lines.join("\\n").slice(0, 3900),
+      text: lines.join("\n").slice(0, 3900),
       link_preview_options: { is_disabled: true }
     });
     await deliveryRef.set({ status: "sent", sentAtMs: Date.now(), messageId: result && result.message_id || null, localDate: clock.date, timeZone });
@@ -168,7 +168,7 @@ exports.handler = async () => {
       const summarySettings = summarySettingsSnapshot.val() || {};
       if (settings.enabled !== true && summarySettings.enabled !== true) continue;
       const tasks = tasksSnapshot.val() || {};
-      if (summarySettings.enabled === true && /^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(summarySettings.time || ""))) {
+      if (summarySettings.enabled === true && /^([01]\d|2[0-3]):[0-5]\d$/.test(String(summarySettings.time || ""))) {
         if (await sendDailyPlannerSummary(db, token, chatId, uid, summarySettings, tasks, now)) sent++;
       }
       if (settings.enabled !== true) continue;
