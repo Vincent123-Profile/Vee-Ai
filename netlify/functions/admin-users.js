@@ -29,6 +29,17 @@ async function verifyAdmin(event) {
   return decoded;
 }
 
+async function writeAdminAudit(db, actorUid, action, targetUid, details) {
+  await db.ref("securityCentre/events").push({
+    createdAtMs: Date.now(),
+    eventType: "account_" + action,
+    severity: action === "disabled" || action === "deleted" ? "high" : "medium",
+    category: "account_management",
+    actorUid,
+    targetUid,
+    details: String(details || "").slice(0, 180)
+  });
+}
 async function listAllUsers(auth) {
   const users = [];
   let pageToken;
@@ -141,6 +152,7 @@ exports.handler = async event => {
       if (typeof body.disabled !== "boolean") return json(400, { error: "A valid account status is required." });
       await auth.updateUser(uid, { disabled: body.disabled });
       if (body.disabled) await auth.revokeRefreshTokens(uid);
+      await writeAdminAudit(db, adminUser.uid, body.disabled ? "disabled" : "enabled", uid, "Administrator changed account access status.");
       return json(200, { success: true, disabled: body.disabled });
     }
 
@@ -150,6 +162,7 @@ exports.handler = async event => {
       if (uid === adminUser.uid) return json(400, { error: "Use the account recovery option for the active administrator account." });
       const target = await auth.getUser(uid);
       if (!target.email || target.disabled) return json(400, { error: "This account has no available email address or is disabled." });
+      await writeAdminAudit(db, adminUser.uid, "password_reset_requested", uid, "Administrator requested a password reset email.");
       return json(200, { success: true, email: target.email });
     }
 
@@ -161,6 +174,7 @@ exports.handler = async event => {
       const target = await auth.getUser(uid);
       if (!target.email || confirmEmail !== target.email.toLowerCase()) return json(400, { error: "The account email confirmation does not match." });
 
+      await writeAdminAudit(db, adminUser.uid, "deleted", uid, "Administrator initiated permanent account deletion.");
       const telegramSnap = await db.ref("telegram/accountsByChat").once("value");
       const linkedChats = Object.entries(telegramSnap.val() || {}).filter(([, item]) => item && item.uid === uid).map(([chatId]) => chatId);
       await auth.deleteUser(uid);
