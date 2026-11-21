@@ -87,12 +87,12 @@
     state.project.files[state.activeFile] = value;
     state.dirty = false; $("dirtyMark").style.display = "none"; persist();
   }
-  function renderPreviewDocument() {
+  function approvedHosts() {\n    return ALLOWLIST.concat((state.project.approvedDomains || []).filter(function (host) { return typeof host === "string"; }));\n  }\n  function renderPreviewDocument() {
     var files = state.project.files;
     var html = files["index.html"] || "<!doctype html><html><head></head><body></body></html>";
     var css = files["style.css"] || files["styles.css"] || "";
     var js = files["script.js"] || files["app.js"] || "";
-    var hosts = ALLOWLIST.map(function (h) { return "https://" + h; }).join(" ");
+    var hosts = approvedHosts().map(function (h) { return "https://" + h; }).join(" ");
     var csp = "default-src 'none'; script-src 'unsafe-inline' " + hosts + "; style-src 'unsafe-inline' " + hosts + "; font-src data: " + hosts + "; img-src data: blob: " + hosts + "; connect-src " + hosts + ";";
     var meta = '<meta http-equiv="Content-Security-Policy" content="' + csp + '">';
     var bridge = "<script>(function(){function send(type,args){try{parent.postMessage({source:'vee-studio-preview',type:type,args:Array.prototype.slice.call(args||[]).map(function(v){try{return typeof v==='string'?v:JSON.stringify(v)}catch(e){return String(v)}})},'*')}catch(e){}}['log','info','warn','error'].forEach(function(k){var old=console[k];console[k]=function(){send(k,arguments);if(old)old.apply(console,arguments)}});window.addEventListener('error',function(e){send('error',[e.message+' at '+e.lineno+':'+e.colno])});window.addEventListener('unhandledrejection',function(e){send('error',[String(e.reason)])});})();<\/script>";
@@ -216,6 +216,20 @@
     $("exportBtn").addEventListener("click", exportProject);
     $("importBtn").addEventListener("click", function () { $("importInput").click(); });
     $("importInput").addEventListener("change", importProject);
+    $("domainsBtn").addEventListener("click", function () {
+      var current = state.project.approvedDomains || [];
+      var entry = prompt("Approved external domains for this project:\n" + (current.length ? current.join("\\n") : "No custom domains approved.") + "\\n\\nEnter a hostname such as api.example.com to add it, or enter an existing hostname to remove it.");
+      if (entry === null || !entry.trim()) return;
+      var host = entry.trim().toLowerCase().replace(/^https?:\\/\\//, "").split("/")[0].split(":")[0];
+      if (!/^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$/.test(host) || /^(localhost|.*\\.local|.*\\.internal)$/.test(host)) {
+        alert("Enter a public DNS hostname only. Localhost, private IP addresses and local domains are blocked."); return;
+      }
+      state.project.approvedDomains = current.slice();
+      if (state.project.approvedDomains.includes(host)) {
+        if (confirm("Remove " + host + " from this project's approved list?")) state.project.approvedDomains = state.project.approvedDomains.filter(function (item) { return item !== host; });
+      } else state.project.approvedDomains.push(host);
+      persist(); runPreview();
+    });
     $("clearConsoleBtn").addEventListener("click", function () { $("consoleOutput").textContent = "Console cleared."; });
     document.querySelectorAll(".device").forEach(function (button) { button.addEventListener("click", function () { document.querySelectorAll(".device").forEach(function (b) { b.classList.remove("active"); }); button.classList.add("active"); $("previewFrame").style.width = button.dataset.width; }); });
     $("assistantForm").addEventListener("submit", function (event) { event.preventDefault(); var promptText = $("assistantPrompt").value.trim(); if (!promptText) return; $("assistantPrompt").value = ""; askVeeAI(promptText); });
