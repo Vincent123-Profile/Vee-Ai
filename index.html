@@ -2870,6 +2870,7 @@
               ["Bank",item.bank&&item.bank.name?item.bank.name:"Not identified"],
               [tx.direction==="in"?"Sender":"Recipient",tx.counterparty||"Not identified in email"],
               ["Narration / purpose",tx.narration||"Not provided by the bank email"],
+              ["Direction rule",tx.directionEvidence||"No clear bank wording matched"],
               ["Status",(tx.transactionStatus||"unknown").toUpperCase()],
               ["Available balance",tx.availableBalance!==null&&tx.availableBalance!==undefined?(tx.availableBalanceCurrency||tx.currency||"Currency not stated")+" "+Number(tx.availableBalance).toLocaleString():"Not stated in email"],
               ["Transaction time",tx.transactionAtMs?new Date(tx.transactionAtMs).toLocaleString():"Not available"],
