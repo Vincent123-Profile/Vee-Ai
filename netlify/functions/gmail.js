@@ -159,35 +159,40 @@ function extractTransaction(email, text, timeZone) {
   const balanceMatch=source.match(/(?:available balance|account balance|new balance|closing balance|balance)\s*(?:is|:|=|-)?\s*(NGN|₦|NAIRA|N|USD|\$|GBP|£|EUR|€)?\s*([\d,]+(?:\.\d{1,2})?)/i);
   const availableBalance=balanceMatch?Number(String(balanceMatch[2]).replace(/,/g,"")):null;
   const availableBalanceCurrency=balanceMatch?currencyCode(balanceMatch[1]||balanceMatch[0]):null;
-  // Bank wording tags. Prefer the message body, then snippet, then subject.
-  // Subject labels often conflict with the actual movement described in the alert.
-  const debitPattern=/\b(your transfer of|you transferred|you have transferred|you've transferred|you successfully transferred|successfully transferred|transfer to|sent to|you sent|you just sent|you have just sent|you've just sent|you have sent|you've sent|successfully sent|you just paid|money sent|amount sent|outgoing transfer|funds transferred to|your account (?:has been|was) debited|debited from your account|account debited|debit alert|debit transaction|has left your|have left your|left your account|withdrawn|withdrawal|cash withdrawal|pos purchase|pos transaction|card purchase|card transaction|payment made|paid to|you paid|purchase of|spent)\b/i;
+  // Direction is decided from the action and the money's destination.
+  // Bills, airtime, data, electricity and subscriptions are money-out events.
+  const debitPattern=/\b(your transfer of|you transferred|you have transferred|you've transferred|you successfully transferred|successfully transferred|transfer to|sent to|you sent|you just sent|you have just sent|you've just sent|you have sent|you've sent|successfully sent|you just paid|money sent|amount sent|outgoing transfer|funds transferred to|your account (?:has been|was) debited|debited from your account|account debited|debit amount|debit alert|debit transaction|has left your|have left your|left your account|withdrawn|withdrawal|cash withdrawal|pos purchase|pos transaction|card purchase|card transaction|payment made|paid to|you paid|paid for|payment for|bill payment|bill paid|airtime purchase|airtime recharge|data purchase|data bundle purchase|internet bundle purchase|electricity token purchase|electricity bill payment|utility bill payment|subscription payment|tv subscription payment|dstv payment|gotv payment|startimes payment|top.?up|recharge card|you purchased|purchase of|spent)\b/i;
   const creditPattern=/\b(your account (?:has been|was) credited|credited to your account|account credited|you received|you have received|received from|money received|amount received|funds received|incoming transfer|transfer from|just sent you|sent you|has been sent to you|was sent to you|you received some money|credit amount|credit alert|deposit(?:ed)?|cash deposit|cashback received|refund(?:ed)?)\b/i;
-  const bodyDebit=debitPattern.test(body),bodyCredit=creditPattern.test(body);
-  const snippetDebit=debitPattern.test(String(email.snippet||"")),snippetCredit=creditPattern.test(String(email.snippet||""));
-  const subjectDebit=debitPattern.test(String(email.subject||"")),subjectCredit=creditPattern.test(String(email.subject||""));
-  const debit=bodyDebit||snippetDebit||subjectDebit,credit=bodyCredit||snippetCredit||subjectCredit;
-  let hasTransactionLanguage=debit||credit;
-  const evidenceFor=(pattern,value)=>{const match=String(value||"").match(pattern);return match?match[0]:"";};
+  const billServicePattern=/\b(airtime|data bundle|data plan|internet bundle|electricity(?: token| bill)?|utility bill|bill payment|dstv|gotv|startimes|tv subscription|cable subscription|school fees|water bill|gas bill|recharge card|top.?up)\b/i;
+  const billActionPattern=/\b(purchase|purchased|payment|paid|pay|recharge|bought|top.?up|successful|successfully|debited|deducted|transaction|token)\b/i;
+  const billDebit=billServicePattern.test(source)&&billActionPattern.test(source);
+  const debitLabel=/\b(debit amount|debit alert|debit transaction|account debited)\b/i;
+  const creditLabel=/\b(credit amount|credit alert|credit transaction|account credited)\b/i;
+  const outgoingAction=/\b(your transfer of|you just sent|you sent|you have sent|you've sent|sent to|transfer to|has left your|left your account|you just paid|you paid|paid to|paid for|bill payment|airtime purchase|airtime recharge|data purchase|data bundle purchase|electricity token purchase|electricity bill payment|utility bill payment|subscription payment|top.?up|recharge card|you purchased|purchase of|withdrawal|withdrawn|debited from your account)\b/i;
+  const incomingAction=/\b(just sent you|sent you|you received|you have received|received from|money received|funds received|incoming transfer|transfer from|credited to your account|your account (?:has been|was) credited|has been sent to you|was sent to you)\b/i;
+  const bodyText=body, snippetText=String(email.snippet||""), subjectText=String(email.subject||"");
+  const bodyDebit=debitPattern.test(bodyText)||billDebit;
+  const bodyCredit=creditPattern.test(bodyText);
+  const snippetDebit=debitPattern.test(snippetText);
+  const snippetCredit=creditPattern.test(snippetText);
+  const subjectDebit=debitPattern.test(subjectText);
+  const subjectCredit=creditPattern.test(subjectText);
+  const allText=subjectText+" "+snippetText+" "+bodyText;
+  const outgoingStrong=outgoingAction.test(allText)||billDebit;
+  const incomingStrong=incomingAction.test(allText);
+  const debitScore=(outgoingStrong?7:0)+(debitLabel.test(allText)?3:0)+(subjectDebit?1:0);
+  const creditScore=(incomingStrong?7:0)+(creditLabel.test(allText)?3:0)+(subjectCredit?1:0);
+  let hasTransactionLanguage=debitScore>0||creditScore>0||bodyDebit||bodyCredit||snippetDebit||snippetCredit;
   let direction=null,directionEvidence="",directionConflict=false;
-  const layers=[
-    {name:"email body",text:body,debit:bodyDebit,credit:bodyCredit},
-    {name:"email preview",text:String(email.snippet||""),debit:snippetDebit,credit:snippetCredit},
-    {name:"email subject",text:String(email.subject||""),debit:subjectDebit,credit:subjectCredit}
-  ];
-  for(const layer of layers){
-    if(!layer.debit&&!layer.credit)continue;
-    if(layer.debit&&layer.credit){directionConflict=true;directionEvidence="Conflicting credit and debit wording in "+layer.name;break;}
-    direction=layer.debit?"out":"in";
-    directionEvidence=(layer.debit?evidenceFor(debitPattern,layer.text):evidenceFor(creditPattern,layer.text))+" ("+layer.name+")";
-    break;
-  }
-  if(!direction&&!directionConflict){
-    const subjectDebitLabel=/\b(debit alert|debit transaction)\b/i.test(String(email.subject||""));
-    const subjectCreditLabel=/\b(credit alert|credit transaction)\b/i.test(String(email.subject||""));
-    if(subjectDebitLabel&&!subjectCreditLabel){direction="out";directionEvidence="Debit Alert (email subject)";hasTransactionLanguage=true;}
-    else if(subjectCreditLabel&&!subjectDebitLabel){direction="in";directionEvidence="Credit Alert (email subject)";hasTransactionLanguage=true;}
-    else if(subjectDebitLabel&&subjectCreditLabel){directionConflict=true;directionEvidence="Conflicting debit and credit labels in email subject";}
+  if(debitScore>creditScore){
+    direction="out";
+    directionEvidence=billDebit?"Bill or service payment wording":outgoingStrong?"Outgoing payment or transfer wording": "Debit bank label";
+  }else if(creditScore>debitScore){
+    direction="in";
+    directionEvidence=incomingStrong?"Incoming payment or transfer wording":"Credit bank label";
+  }else if(debitScore>0&&creditScore>0){
+    directionConflict=true;
+    directionEvidence="Conflicting incoming and outgoing transaction evidence";
   }
   const explicitBodyDebit=bodyDebit&&!bodyCredit;
   const explicitBodyCredit=bodyCredit&&!bodyDebit;
@@ -269,9 +274,10 @@ function classifyEmail(email,timeZone) {
   const senderDomain = (senderAddress.split("@").pop() || "").replace(/[>]/g,"").toLowerCase();
   const knownBankNames = /\b(access bank|first bank|gtbank|guaranty trust|uba|united bank for africa|zenith bank|moniepoint|opay|palmpay|kuda|wema|sterling bank|fidelity bank|fcmb|union bank|providus|stanbic|polaris bank|ecobank|jaiz bank|citibank|chase|barclays|hsbc|natwest|lloyds|revolut|wise)\b/i;
   const senderLooksFinancial = knownBankNames.test(from) || /\b(bank|banking|alerts?|transaction|payments?)\b/i.test(senderDomain);
-  const transactionSubject = /\b(debit|credit|transaction|transfer|withdrawal|deposit|payment|pos alert|card alert|account alert|statement)\b/i.test(subject);
+  const transactionSubject = /\b(debit|credit|transaction|transfer|withdrawal|deposit|payment|pos alert|card alert|account alert|statement|bill|airtime|recharge|data bundle|electricity|utility|subscription|dstv|gotv|startimes)\b/i.test(subject);
+  const billPaymentEvidence = /\b(airtime|data bundle|data plan|internet bundle|electricity(?: token| bill)?|utility bill|bill payment|dstv|gotv|startimes|tv subscription|cable subscription|school fees|water bill|gas bill|recharge card|top.?up)\b/i.test(subject+" "+snippet+" "+body) && /\b(purchase|purchased|payment|paid|pay|recharge|bought|top.?up|successful|successfully|debited|deducted|transaction|token)\b/i.test(subject+" "+snippet+" "+body);
   const strongTransaction = transaction.hasTransactionLanguage && transaction.amount !== null && !!transaction.direction;
-  const financialContext = (senderLooksFinancial && (transactionSubject || strongTransaction)) || (transactionSubject && strongTransaction);
+  const financialContext = (senderLooksFinancial && transactionSubject) || strongTransaction || billPaymentEvidence;
   if ((email.labels || []).includes("SPAM")) {
     categories.push("spam");
     evidence.push("Gmail marked this message as spam");
