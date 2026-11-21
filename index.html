@@ -2349,6 +2349,14 @@
         </div>
         <button class="send-btn" type="submit">Save reminder schedule</button>
       </form>
+      <div class="finance-section" id="plannerDailySummarySettings" style="margin-top:14px">
+        <h3>Daily Planner summary</h3>
+        <label style="display:flex;align-items:center;gap:8px"><input id="plannerDailySummaryEnabled" type="checkbox" style="width:auto"> Send me a daily Telegram summary</label>
+        <label for="plannerDailySummaryTime" class="account-copy">Delivery time, exact minute in your timezone</label>
+        <input id="plannerDailySummaryTime" type="time" value="08:01" style="width:100%;min-height:46px;padding:10px;border:1px solid var(--glass-border);border-radius:10px;background:var(--glass-surface);color:var(--text-primary)">
+        <button type="button" class="send-btn" onclick="veeSavePlannerDailySummarySettings()">Save daily summary settings</button>
+        <p id="plannerDailySummaryStatus" class="account-copy" role="status" aria-live="polite">Daily summary is optional. Link Telegram to receive it while Vee-AI is closed.</p>
+      </div>
       <p class="account-copy" id="plannerReminderStatus" role="status" aria-live="polite">Enable reminders and link Telegram. Individual task reminders are sent automatically at the saved date and time, even when the website is closed. Times use your device time zone.</p>
       <div class="planner-filters" role="group" aria-label="Filter tasks"><button type="button" class="planner-filter active" data-planner-filter="all">All</button><button type="button" class="planner-filter" data-planner-filter="open">Open</button><button type="button" class="planner-filter" data-planner-filter="done">Completed</button></div>
       <div id="plannerTaskList" aria-live="polite"><div class="home-empty">Your tasks will appear here.</div></div>
@@ -3788,6 +3796,26 @@
           console.warn("Vee-AI reminder notification failed:", error);
         }
       });
+    }
+    async function veeLoadPlannerDailySummarySettings(){
+      var enabled=document.getElementById("plannerDailySummaryEnabled"),time=document.getElementById("plannerDailySummaryTime"),status=document.getElementById("plannerDailySummaryStatus");
+      try{
+        var settings={enabled:false,time:"08:01",timeZone:veeLocalTimeZone()};
+        if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){var snap=await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/planner/dailySummarySettings").once("value");if(snap.exists())settings=Object.assign(settings,snap.val()||{});}
+        else{try{settings=Object.assign(settings,JSON.parse(localStorage.getItem("vee_ai_planner_daily_summary")||"{}"));}catch(e){}}
+        if(enabled)enabled.checked=settings.enabled===true;if(time)time.value=/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(settings.time||""))?settings.time:"08:01";
+        if(status)status.textContent=settings.enabled?"Daily summary is scheduled for "+settings.time+" ("+(settings.timeZone||veeLocalTimeZone())+").":"Daily summary is turned off.";
+      }catch(error){if(status)status.textContent="Unable to load daily summary settings.";}
+    }
+    async function veeSavePlannerDailySummarySettings(){
+      var enabled=document.getElementById("plannerDailySummaryEnabled"),time=document.getElementById("plannerDailySummaryTime"),status=document.getElementById("plannerDailySummaryStatus");
+      try{
+        if(!time||!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time.value))throw new Error("Choose a valid delivery time.");
+        var settings={enabled:!!(enabled&&enabled.checked),time:time.value,timeZone:veeLocalTimeZone(),updatedAtMs:Date.now()};
+        if(veeCurrentUser&&veeCurrentUser.emailVerified&&veeAccountDb){await veeAccountDb.ref("users/"+veeCurrentUser.uid+"/planner/dailySummarySettings").set(settings);}
+        else{localStorage.setItem("vee_ai_planner_daily_summary",JSON.stringify(settings));}
+        if(status)status.textContent=settings.enabled?"Saved. Your daily Telegram summary is set for "+settings.time+" in "+settings.timeZone+".":"Daily summary paused.";
+      }catch(error){if(status)status.textContent=error.message||"Unable to save daily summary settings.";}
     }
     function veeOpenPlanner() {
       veeRenderPlanner();
