@@ -87,7 +87,10 @@
     state.project.files[state.activeFile] = value;
     state.dirty = false; $("dirtyMark").style.display = "none"; persist();
   }
-  function approvedHosts() {\n    return ALLOWLIST.concat((state.project.approvedDomains || []).filter(function (host) { return typeof host === "string"; }));\n  }\n  function renderPreviewDocument() {
+  function approvedHosts() {
+    return ALLOWLIST.concat((state.project.approvedDomains || []).filter(function (host) { return typeof host === "string"; }));
+  }
+  function renderPreviewDocument() {
     var files = state.project.files;
     var html = files["index.html"] || "<!doctype html><html><head></head><body></body></html>";
     var css = files["style.css"] || files["styles.css"] || "";
@@ -218,19 +221,19 @@
     $("importInput").addEventListener("change", importProject);
     $("domainsBtn").addEventListener("click", function () {
       var current = state.project.approvedDomains || [];
-      var entry = prompt("Approved external domains for this project:\n" + (current.length ? current.join("\\n") : "No custom domains approved.") + "\\n\\nEnter a hostname such as api.example.com to add it, or enter an existing hostname to remove it.");
+      var entry = prompt("Approved external domains for this project:\n" + (current.length ? current.join("\n") : "No custom domains approved.") + "\n\nEnter a hostname such as api.example.com to add it, or enter an existing hostname to remove it.");
       if (entry === null || !entry.trim()) return;
-      var host = entry.trim().toLowerCase().replace(/^https?:\\/\\//, "").split("/")[0].split(":")[0];
-      if (!/^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$/.test(host) || /^(localhost|.*\\.local|.*\\.internal)$/.test(host)) {
+      var host = entry.trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0].split(":")[0];
+      if (!/^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(host) || /^(localhost|.*\.local|.*\.internal)$/.test(host)) {
         alert("Enter a public DNS hostname only. Localhost, private IP addresses and local domains are blocked."); return;
       }
       state.project.approvedDomains = current.slice();
       if (state.project.approvedDomains.includes(host)) {
-        if (confirm("Remove " + host + " from this project's approved list?")) state.project.approvedDomains = state.project.approvedDomains.filter(function (item) { return item !== host; });
+        if (confirm("Remove " + host + " from the approved list?")) state.project.approvedDomains = state.project.approvedDomains.filter(function (item) { return item !== host; });
       } else state.project.approvedDomains.push(host);
       persist(); runPreview();
     });
-    $("clearConsoleBtn").addEventListener("click", function () { $("consoleOutput").textContent = "Console cleared."; });
+        $("clearConsoleBtn").addEventListener("click", function () { $("consoleOutput").textContent = "Console cleared."; });
     document.querySelectorAll(".device").forEach(function (button) { button.addEventListener("click", function () { document.querySelectorAll(".device").forEach(function (b) { b.classList.remove("active"); }); button.classList.add("active"); $("previewFrame").style.width = button.dataset.width; }); });
     $("assistantForm").addEventListener("submit", function (event) { event.preventDefault(); var promptText = $("assistantPrompt").value.trim(); if (!promptText) return; $("assistantPrompt").value = ""; askVeeAI(promptText); });
     $("approveChangesBtn").addEventListener("click", function (event) {
