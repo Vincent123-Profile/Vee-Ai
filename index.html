@@ -4771,13 +4771,20 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
         else{veeWorkspaceSelectedBusinessId=null;veeFillBusinessProfile({});veeWorkspaceSetSchedule({});if(status)status.textContent="Add your first business to begin.";}
       }catch(error){if(status)status.textContent=error.message||"Unable to load businesses.";}
     }
+    function veeWorkspaceSchedulerSummary(item){
+      var state=item&&item.schedulerStatus;
+      if(!state||!state.lastCheckedAtMs)return "Scheduler status: waiting for its first background check.";
+      var checked=new Date(Number(state.lastCheckedAtMs)).toLocaleString();
+      if(state.lastStatus==="failed")return "Last scheduler check: "+checked+". Status: failed. "+(state.lastError||"Open Netlify function logs for details.");
+      return "Last scheduler check: "+checked+". Status: "+String(state.lastStatus||"checked")+".";
+    }
     function veeSelectWorkspaceBusiness(id){
       var item=veeWorkspaceBusinesses.find(function(entry){return entry.businessId===id;});if(!item)return;
       veeWorkspaceSelectedBusinessId=id;veeRenderWorkspaceBusinesses();veeFillBusinessProfile(item.profile||{});
       veeBusinessProfileContext=item.profile||{};veeBusinessProfileContextUid=veeCurrentUser&&veeCurrentUser.uid;
       veeWorkspaceSetSchedule(item.schedule||{});
       var status=document.getElementById("workspaceBusinessScheduleStatus");
-      if(status)status.textContent="Managing "+(item.profile.businessName||"selected business")+". Daily content resets at midnight in its selected timezone.";
+      if(status)status.textContent="Managing "+(item.profile.businessName||"selected business")+". Daily content resets at midnight in its selected timezone. "+veeWorkspaceSchedulerSummary(item);
       veeBusinessVaultStatus("Loaded "+(item.profile.businessName||"business")+" profile.");
     }
     async function veeImportWorkspaceContentToStudio(){
