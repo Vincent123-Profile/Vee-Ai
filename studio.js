@@ -5,7 +5,7 @@
   var HANDOFF_KEY = "vee_ai_studio_handoff_v1";
   var MAX_FILES = 40, MAX_FILE_BYTES = 250000, MAX_PROJECT_BYTES = 2000000;
   var ALLOWLIST = ["fonts.googleapis.com","fonts.gstatic.com","cdn.jsdelivr.net","cdnjs.cloudflare.com","unpkg.com","use.fontawesome.com"];
-  var state = { projects: [], project: null, activeFile: "index.html", dirty: false, undo: [], pending: null, previewWidth: "100%" };
+  var state = { projects: [], project: null, activeFile: "index.html", dirty: false, undo: [], pending: null, previewWidth: "100%", assistantBusy: false };
   var $ = function (id) { return document.getElementById(id); };
   var starter = {
     "index.html": "<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>My first Vee-AI Studio project</title>\n  <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n  <main class=\"card\">\n    <span class=\"eyebrow\">BUILT WITH VEE-AI STUDIO</span>\n    <h1>Your next idea starts here.</h1>\n    <p>Edit this project or ask Vee-AI to improve it.</p>\n    <button id=\"helloButton\">Test interaction</button>\n    <p id=\"result\" aria-live=\"polite\"></p>\n  </main>\n  <script src=\"script.js\"></script>\n</body>\n</html>",
@@ -160,9 +160,14 @@
     $("approvalDialog").showModal();
   }
   async function askVeeAI(prompt) {
+    if (state.assistantBusy) return;
+    state.assistantBusy = true;
+    var askButton = $("assistantForm").querySelector("button[type=submit]");
+    if (askButton) askButton.disabled = true;
     saveEditor();
     var context = Object.keys(state.project.files).map(function (path) { return "\nFILE: " + path + "\n```" + (path.split(".").pop()) + "\n" + state.project.files[path] + "\n```"; }).join("\n");
     var message = "You are helping edit a user's frontend project in Vee-AI Studio. Follow the request and preserve existing functionality. Return each changed file as a fenced code block with the exact relative file path immediately after the language, for example ```html index.html. Return complete file contents, not partial snippets. Do not claim a change was made unless you include the changed file. Do not modify Vee-AI internal infrastructure.\nUSER REQUEST: " + prompt + "\nPROJECT: " + state.project.name + "\nCURRENT FILES:" + context;
+    if (message.length > 50000) { setStatus("This project context is too large for one AI request. Reduce the project or ask about fewer files.", true); state.assistantBusy = false; if (askButton) askButton.disabled = false; return; }
     $("assistantStatus").textContent = "Vee-AI is reviewing your project…";
     try {
       var response = await fetch("/.netlify/functions/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({message:message,history:[],selectedModel:"Vee Brain",selectedLanguage:"Auto",memory:[]}) });
@@ -175,6 +180,7 @@
       if (major) showApproval(changes, prompt);
       else applyChanges(changes, "Automatic small change.");
     } catch (error) { setStatus(error.message || "Unable to contact Vee-AI.", true); }
+    finally { state.assistantBusy = false; if (askButton) askButton.disabled = false; }
   }
   function init() {
     state.projects = safeParse(localStorage.getItem(STORAGE_KEY), []);
