@@ -275,7 +275,7 @@ async function processBusiness(db, token, uid, businessId, record, now) {
   const runRef = uidRef.child("runs/" + businessId + "/" + clock.date);
   let run = (await runRef.once("value")).val();
 
-  if (!run || run.status === "failed" || (run.status === "generating" && now - Number(run.claimedAtMs || 0) >= 5 * 60 * 1000)) {
+  if (!run || (run.status === "failed" && now >= Number(run.nextRetryAtMs || 0)) || (run.status === "generating" && now - Number(run.claimedAtMs || 0) >= 5 * 60 * 1000)) {
     const claimId = crypto.randomBytes(12).toString("hex");
     const claim = await runRef.transaction(current => {
       if (current && current.status === "ready" && current.digest) return;
@@ -313,7 +313,16 @@ async function processBusiness(db, token, uid, businessId, record, now) {
         });
         run = { status: "ready", digest, telegramParts: parts };
       } catch (error) {
-        await runRef.update({ status: "failed", failedAtMs: Date.now(), error: clean(error.message, 220) });
+        const failedRecord = (await runRef.once("value")).val() || {};
+        const attemptCount = Number(failedRecord.attemptCount || 0) + 1;
+        const delayMs = Math.min(30 * 60 * 1000, Math.max(60 * 1000, Math.pow(2, Math.min(attemptCount - 1, 5)) * 60 * 1000));
+        await runRef.update({
+          status: "failed",
+          attemptCount,
+          failedAtMs: Date.now(),
+          nextRetryAtMs: Date.now() + delayMs,
+          error: clean(error.message, 220)
+        });
         throw error;
       }
     } else {
