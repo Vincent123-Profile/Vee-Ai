@@ -378,7 +378,7 @@ async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZo
     parsedEmails.push(...batch.filter(Boolean));
   }
 
-  // Grok is the sole authority for financial classification. Existing rule-based
+  // Groq is the sole authority for financial classification. Existing rule-based
   // categories remain available for flights, jobs, promotions and security.
   const aiResults = await analyzeFinancialEmails(parsedEmails);
   const saved = [];
@@ -404,7 +404,7 @@ async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZo
       bank:isFinancial ? {name:providerName || identifiedBank.name,confidence:providerName?"ai_extracted":identifiedBank.confidence} : null,
       classificationConfidence:isFinancial ? transaction.aiConfidence : categories.includes("flight") || categories.includes("job") ? "medium" : "low",
       needsReview,
-      analysisEngine:isFinancial ? "grok" : "vee_ai_general",
+      analysisEngine:isFinancial ? "groq" : "vee_ai_general",
       analysisStatus:ai ? "analysed" : "not_financial_candidate",
       flightDetails:categories.includes("flight") ? extractFlightDetails(email) : null,
       analysedAtMs:Date.now()
@@ -418,13 +418,13 @@ async function syncMessages(uid, db, token, accountId, afterMs, scanMode, timeZo
   await db.ref("gmailConnections/" + uid + (accountId==="legacy" ? "/status" : "/accounts/" + accountId + "/status")).update({
     connected:true, lastSyncAtMs:Date.now(), lastSyncCount:saved.length,
     securityAlertCount:saved.filter(item => item.riskLevel !== "none").length,
-    lastAiEngine:"grok", lastAiAnalysisAtMs:Date.now()
+    lastAiEngine:"groq", lastAiAnalysisAtMs:Date.now()
   });
   return saved;
 }
 
 function cleanGrokEvidence(ai) {
-  return String(ai && ai.evidence || "Grok classified this email using its transaction context.").replace(/\s+/g," ").slice(0,300);
+  return String(ai && ai.evidence || "Groq classified this email using its transaction context.").replace(/\s+/g," ").slice(0,300);
 }
 exports.runScheduledScan = async (db, uid, accountId) => {
   if (!/^[a-zA-Z0-9_-]{1,80}$/.test(String(accountId || ""))) throw new Error("Invalid mailbox reference.");
