@@ -3387,6 +3387,8 @@
             veeSessions.forEach(function(session) { if (session && session.id) veeAccountGuestSessionIds[session.id] = true; });
             veeAccountSyncPromise = veeLoadAccountSessions(user).then(function() {
               return veeLoadFocusModePreference();
+            }).then(function() {
+              window.dispatchEvent(new Event("vee-account-sync-ready"));
             }).catch(function(error) {
               veeAccountSyncReady = false;
               console.error("Vee-AI account sync initialisation failed:", error);
