@@ -4354,12 +4354,12 @@ document.addEventListener("click",async function(e){var el=e.target.closest("[da
       var match;
       while ((match = pattern.exec(raw))) {
         var lang = match[1].toLowerCase(), path = match[2] || "";
-        if (!path || !/\\.[a-z0-9]+$/i.test(path)) {
+        if (!path || !/\.[a-z0-9]+$/i.test(path)) {
           var ext = lang === "html" ? "html" : lang === "css" ? "css" : "js";
           counts[ext] = (counts[ext] || 0) + 1;
           path = ext === "html" ? "index.html" : ext === "css" ? (counts[ext] === 1 ? "style.css" : "style-" + counts[ext] + ".css") : (counts[ext] === 1 ? "script.js" : "script-" + counts[ext] + ".js");
         }
-        if (/^(?!\\/)(?!.*(?:^|\\/)\\.\\.(?:\\/|$))[\\w./-]+\\.(html|css|js)$/i.test(path)) files[path] = match[3].replace(/\\n$/, "");
+        if (/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[\w./-]+\.(html|css|js)$/i.test(path)) files[path] = match[3].replace(/\n$/, "");
       }
       if (!Object.keys(files).length) { alert("No supported HTML, CSS or JavaScript files were found in this response."); return; }
       try { localStorage.setItem("vee_ai_studio_handoff_v1", JSON.stringify({ name: "Chat project", files: files, createdAt: new Date().toISOString() })); window.location.assign("studio.html"); }
