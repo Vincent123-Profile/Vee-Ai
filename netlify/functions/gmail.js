@@ -169,7 +169,7 @@ function extractTransaction(email, text, timeZone) {
   const debitLabel=/\b(debit amount|debit alert|debit transaction|account debited)\b/i;
   const creditLabel=/\b(credit amount|credit alert|credit transaction|account credited)\b/i;
   const outgoingAction=/\b(your transfer of|you just sent|you sent|you have sent|you've sent|sent to|transfer to|has left your|left your account|you just paid|you paid|paid to|paid for|bill payment|airtime purchase|airtime recharge|data purchase|data bundle purchase|electricity token purchase|electricity bill payment|utility bill payment|subscription payment|top.?up|recharge card|you purchased|purchase of|withdrawal|withdrawn|debited from your account)\b/i;
-  const incomingAction=/\b(just sent you|sent you|you received|you have received|received from|money received|funds received|incoming transfer|transfer from|credited to your account|your account (?:has been|was) credited|has been sent to you|was sent to you)\b/i;
+  const incomingAction=/\b(just sent you|sent you|you received|you have received|received from|money received|funds received|incoming transfer|transfer from|credited to your account|your account (?:has been|was) credited|has been sent to you|was sent to you|deposit(?:ed)?|cash deposit|cashback received|refund(?:ed)?)\b/i;
   const bodyText=body, snippetText=String(email.snippet||""), subjectText=String(email.subject||"");
   const bodyDebit=debitPattern.test(bodyText)||billDebit;
   const bodyCredit=creditPattern.test(bodyText);
