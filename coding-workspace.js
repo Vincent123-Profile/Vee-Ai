@@ -3,7 +3,7 @@
 var KEY="vee_ai_chat_coding_project_v1",MAX_FILES=40,MAX_FILE=250000,MAX_TOTAL=2000000,tick=String.fromCharCode(96);
 var state={project:null,pending:null,activeFile:"index.html"};
 function size(s){return new Blob([String(s)]).size}
-function safe(p){p=String(p||"").replace(/\/g,"/");return !!p&&p.length<121&&!p.startsWith("/")&&!p.split("/").some(function(x){return !x||x==="."||x===".."})&&/\.(html|css|js|mjs|json|svg|md|txt|xml)$/i.test(p)}
+function safe(p){p=String(p||"").split(String.fromCharCode(92)).join("/");return !!p&&p.length<121&&!p.startsWith("/")&&!p.split("/").some(function(x){return !x||x==="."||x===".."})&&/\.(html|css|js|mjs|json|svg|md|txt|xml)$/i.test(p)}
 function load(){try{var p=JSON.parse(localStorage.getItem(KEY)||"null");if(!p||!p.files)return null;var f={};Object.keys(p.files).forEach(function(k){if(safe(k)&&typeof p.files[k]==="string"&&size(p.files[k])<=MAX_FILE)f[k]=p.files[k]});p.files=f;p.versions=Array.isArray(p.versions)?p.versions:[];return Object.keys(f).length?p:null}catch(e){return null}}
 function save(){if(!state.project)return;try{localStorage.setItem(KEY,JSON.stringify(state.project))}catch(e){console.warn("Project save failed",e)}}
 function snapshot(){state.project.versions.unshift({date:new Date().toISOString(),files:JSON.parse(JSON.stringify(state.project.files))});state.project.versions=state.project.versions.slice(0,20)}
