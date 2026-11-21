@@ -681,7 +681,7 @@ exports.handler = async function (event) {
       groqFailure = { status: 503, detail: "Primary AI service is not configured." };
     }
 
-    const shouldFallback = !groqFailure || [429, 500, 502, 503, 504].includes(groqFailure.status);
+    const shouldFallback = !groqFailure || [401, 403, 429, 500, 502, 503, 504].includes(groqFailure.status);
     if (zaiApiKey && shouldFallback) {
       try {
         console.log("Vee-AI activating backup AI provider. Primary status:", groqFailure.status);
@@ -711,6 +711,14 @@ exports.handler = async function (event) {
       }
     }
 
+    if (groqFailure && groqFailure.status === 429 && !zaiApiKey) {
+      const untilMs = await getGroqCooldownUntil();
+      const waitSeconds = Math.max(1, Math.ceil((untilMs - Date.now()) / 1000));
+      return jsonResponse(429, {
+        error: "Vee-AI is handling a high volume of requests. Please wait " + waitSeconds + " seconds, then try again.",
+        retryAfterSeconds: waitSeconds
+      }, { "Retry-After": String(waitSeconds) });
+    }
     if (groqFailure && [401, 403].includes(groqFailure.status)) {
       return jsonResponse(502, { error: "Vee-AI's AI service authentication needs attention. Please check the service configuration." });
     }
