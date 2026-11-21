@@ -366,15 +366,27 @@ exports.handler = async event => {
         if (processed >= 500) break;
         processed++;
         try {
-          const status = await processBusiness(db, token, uid, businessId, record, Date.now());
+          const checkedAtMs = Date.now();
+          const status = await processBusiness(db, token, uid, businessId, record, checkedAtMs);
+          await db.ref("privateBusinessWorkspace/" + uid + "/businesses/" + businessId + "/schedulerStatus").set({
+            lastCheckedAtMs: checkedAtMs,
+            lastStatus: status,
+            lastError: null
+          });
           outcomes.push({ uid, businessId, status });
         } catch (error) {
+          const message = clean(error && error.message, 180);
           console.error("Business Workspace job failed:", JSON.stringify({
             uid,
             businessId,
-            error: clean(error.message, 180)
+            error: message
           }));
-          outcomes.push({ uid, businessId, status: "failed" });
+          await db.ref("privateBusinessWorkspace/" + uid + "/businesses/" + businessId + "/schedulerStatus").set({
+            lastCheckedAtMs: Date.now(),
+            lastStatus: "failed",
+            lastError: message
+          }).catch(statusError => console.error("Could not save scheduler status:", statusError.message));
+          outcomes.push({ uid, businessId, status: "failed", error: message });
         }
       }
       if (processed >= 500) break;
