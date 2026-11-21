@@ -59,8 +59,8 @@ async function requestBatch(batch) {
     sender: clean(email.from, 300),
     subject: clean(email.subject, 300),
     email_date: clean(email.date, 120),
-    snippet: clean(email.snippet, 1000),
-    body: clean(email.bodyText, 9000)
+    snippet: clean(email.snippet, 450),
+    body: clean(email.bodyText, 2800)
   }));
 
   const response = await fetch(API_URL, {
@@ -72,7 +72,7 @@ async function requestBatch(batch) {
     body: JSON.stringify({
       model: MODEL,
       temperature: 0.1,
-      max_tokens: 5000,
+      max_tokens: 1400,
       reasoning_effort: "low",
       messages: [
         {
@@ -119,10 +119,12 @@ async function requestBatch(batch) {
 async function analyzeFinancialEmails(emails) {
   const candidates = emails.filter(isCandidate);
   const results = new Map();
-  const groups = chunks(candidates, 8);
-  for (let i = 0; i < groups.length; i += 3) {
-    const parallel = await Promise.all(groups.slice(i, i + 3).map(requestBatch));
-    parallel.forEach(map => map.forEach((value, key) => results.set(key, value)));
+  const groups = chunks(candidates, 2);
+  for (const group of groups) {
+    const batchResults = await requestBatch(group);
+    batchResults.forEach((value, key) => results.set(key, value));
+    // Stay within the free on-demand tier's token-per-minute budget.
+    if (groups.length > 1) await new Promise(resolve => setTimeout(resolve, 1200));
   }
   return results;
 }
