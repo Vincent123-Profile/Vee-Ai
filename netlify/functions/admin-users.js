@@ -184,7 +184,8 @@ exports.handler = async event => {
         ["privateBusiness/" + uid]: null,
         ["privateBusinessAccount/" + uid]: null,
         ["privateBusinessAutomation/" + uid]: null,
-        ["privateBusinessAutomationRate/" + uid]: null
+        ["privateBusinessAutomationRate/" + uid]: null,
+        ["privateBusinessWorkspace/" + uid]: null
       };
       linkedChats.forEach(chatId => {
         updates["telegram/accountsByChat/" + chatId] = null;
